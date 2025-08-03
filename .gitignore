@@ -1,0 +1,48 @@
+# Node
+node_modules/
+.pnpm/
+.pnpm-debug.log*
+
+# Output
+dist/
+lib/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Rollup
+.rollup.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# IDEs/Editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Mac/Linux/Windows system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+
+# Test output
+coverage/
+*.log
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.tgz
+*.gz
+*.zip

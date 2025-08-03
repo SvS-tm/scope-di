@@ -1,0 +1,2 @@
+export type AllowedDependencyKey =
+    string;

@@ -1,0 +1,38 @@
+{
+  "name": "@svs-tm/system",
+  "version": "1.0.0",
+  "description": "System helpers collection",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "svs-tm",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "@jest/globals": "^30.0.5",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "jest": "^30.0.5",
+    "rollup": "^4.46.2",
+    "rollup-plugin-dts": "^6.2.1",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2"
+  }
+}
