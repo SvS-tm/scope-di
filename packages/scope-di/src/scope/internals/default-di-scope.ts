@@ -11,14 +11,14 @@ import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { InjectionResult } from "../../types/utilities/injection-result";
 
-export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies> 
+export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
 {
     private readonly resolvedDependencies = new Map<AllowedDependencyKey, unknown>();
 
     public constructor
     (
-        private readonly descriptors: Map<AllowedDependencyKey, DependencyDescriptor>,
+        private readonly registry: Map<AllowedDependencyKey, DependencyDescriptor[]>,
         private readonly root?: DefaultDiScope<T_RegisteredDependencies>,
         private readonly parent?: DefaultDiScope<T_RegisteredDependencies>,
     )
@@ -34,13 +34,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private readonly resolveSubDependencies = async (keys?: AllowedDependencyKey[]) =>
     {
-        const descriptors = keys?.map
-        (
-            (key) => this.descriptors.get(key) ?? throwError<DependencyDescriptor>
-            (
-                new DependencyNotRegisteredError(key)
-            )
-        );
+        const descriptors = keys?.map((key) => this.getDescriptor(key));
 
         if (isNotSafeReference(descriptors))
             return null;
@@ -130,7 +124,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private readonly getDescriptor = (key: AllowedDependencyKey) =>
     {
-        const descriptor = this.descriptors.get(key);
+        const descriptor = this.registry.get(key)?.[0];
 
         if (isNotSafeReference(descriptor))
             throw new DependencyNotRegisteredError(key);
@@ -209,12 +203,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public readonly getDescriptors = (): readonly Readonly<DependencyDescriptor>[] => 
     {
-        return [...this.descriptors.values()];
+        return [...this.registry.values().map(([descriptor]) => descriptor)];
     };
 
     public readonly createChildScope = (): DiScope<T_RegisteredDependencies> => 
     {
-        return new DefaultDiScope(this.descriptors, this.root ?? this, this);
+        return new DefaultDiScope(this.registry, this.root ?? this, this);
     };
 
     private readonly disposeAsyncDependencies = async (dependencies: unknown[]) =>

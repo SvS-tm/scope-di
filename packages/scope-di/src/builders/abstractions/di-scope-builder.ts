@@ -1,19 +1,15 @@
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { AvailableDependencyKey } from "../../types/available-dependency-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { DiMappingBuilder } from "./di-mapping-builder";
-import type { DependencyKey } from "../../types/dependency-key";
-import type { RemoveDependency } from "../../types/utilities/remove-dependency";
 import type { DiScope } from "../../scope/abstractions/di-scope";
+import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependencyKey } from "../../types/dependency-key";
+import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
+import type { DiMappingBuilder } from "./di-mapping-builder";
 
-export type DiScopeBuilder
-<
-    T_RegisteredDependencies extends RegisteredDependencies = {}
-> =
+export type DiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> =
 {
     map<T_DependencyKey extends AllowedDependencyKey>
     (
-        key: AvailableDependencyKey<T_DependencyKey, T_RegisteredDependencies>
+        key: T_DependencyKey
     )
         : DiMappingBuilder<T_RegisteredDependencies, T_DependencyKey>;
 
@@ -25,7 +21,7 @@ export type DiScopeBuilder
         key: T_DependencyKey
     )
         : DiScopeBuilder<
-            RemoveDependency<
+            RemoveDependenciesCollection<
                 T_RegisteredDependencies, 
                 T_DependencyKey
             >
