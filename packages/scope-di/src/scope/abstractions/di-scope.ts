@@ -1,7 +1,8 @@
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { DependencyKey } from "../../types/dependency-key";
-import type { InjectionResult } from "../../types/utilities/injection-result";
+import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
+import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { InjectionResult } from "../../types/utilities/injection-result";
 
 export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> = 
 (
@@ -10,11 +11,17 @@ export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> =
     AsyncDisposable
         &
     {
-        resolve<T_DependencyKey extends DependencyKey<T_RegisteredDependencies>>
+        resolve<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
         (
-            key: T_DependencyKey
+            key: T_DependencyMappingKey
         )
-            : InjectionResult<T_RegisteredDependencies, T_DependencyKey>;
+            : InjectionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
+
+        resolve<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+        (
+            key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
+        )
+            : InjectionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
 
         getDescriptors(): readonly Readonly<DependencyDescriptor>[];
 

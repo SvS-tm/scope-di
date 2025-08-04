@@ -1,6 +1,6 @@
 import type { Constructor, Promised } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { DependencyKey } from "../../types/dependency-key";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { InjectedDependencies } from "../../types/utilities/injcted-dependencies";
@@ -12,9 +12,9 @@ import type { AwaitedInjectedDependencies } from "../../types/utilities/awaited-
 
 export type DiDependentMappingBuilder
 <
-    T_DependencyKey extends AllowedDependencyKey,
+    T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
-    T_Keys extends DependencyKey<T_RegisteredDependencies>[]
+    T_Keys extends DependencyMappingKey<T_RegisteredDependencies>[]
 > 
     =
 {
@@ -29,7 +29,7 @@ export type DiDependentMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
             >
@@ -46,7 +46,7 @@ export type DiDependentMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
             >
@@ -63,7 +63,7 @@ export type DiDependentMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
             >
@@ -80,7 +80,7 @@ export type DiDependentMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
             >

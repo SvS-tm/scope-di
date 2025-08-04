@@ -5,10 +5,10 @@ import type { RegisteredDependencies } from "../registered-dependencies";
 export type GetDependenciesCollectionMetadata
 <
     T_RegisteredDependencies extends RegisteredDependencies, 
-    T_Key extends AllowedDependencyKey
+    T_DependencyMappingKey extends AllowedDependencyKey
 > =
 (
-    T_RegisteredDependencies extends DependenciesCollectionMetadata<T_Key, any>
+    T_RegisteredDependencies extends DependenciesCollectionMetadata<T_DependencyMappingKey, any>
         ? T_RegisteredDependencies
         : never
 );

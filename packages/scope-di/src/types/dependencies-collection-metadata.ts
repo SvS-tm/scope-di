@@ -4,10 +4,10 @@ import type { DependencyMetadata } from "./dependency-metadata";
 
 export type DependenciesCollectionMetadata
 <
-    T_Key extends AllowedDependencyKey, 
+    T_DependencyMappingKey extends AllowedDependencyKey, 
     T_Dependencies extends DependencyMetadata<any, DependencyDescriptorType>[]
 > = 
 {
-    key: T_Key;
+    key: T_DependencyMappingKey;
     dependencies: T_Dependencies;
 };

@@ -1,7 +1,7 @@
 import { DefaultDiScope } from "../../scope/internals/default-di-scope";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
-import type { DependencyKey } from "../../types/dependency-key";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
 import type { DiScopeBuilder } from "../abstractions";
@@ -21,22 +21,22 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
         this.registry.set(descriptor.key, descriptors);
     };
 
-    public readonly map = <T_DependencyKey extends AllowedDependencyKey>(key: T_DependencyKey) =>
+    public readonly map = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) =>
     {
         return new DefaultDiMappingBuilder(this, key);
     };
 
-    public readonly removeMapping = <T_DependencyKey extends DependencyKey<T_RegisteredDependencies>>
+    public readonly removeMapping = <T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
-        key: T_DependencyKey
+        key: T_DependencyMappingKey
     ) => 
     {
         this.registry.delete(key);
 
-        return this as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyKey>>;
+        return this as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
     };
 
-    public readonly hasMapping = <T_Key extends AllowedDependencyKey>(key: T_Key) => 
+    public readonly hasMapping = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) => 
     {
         return this.registry.has(key);
     };

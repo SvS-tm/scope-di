@@ -5,6 +5,6 @@ import type { GetDependenciesCollectionMetadata } from "./get-dependencies-colle
 export type GetDefaultDependencyMetadata
 <
     T_RegisteredDependencies extends RegisteredDependencies, 
-    T_Key extends AllowedDependencyKey
+    T_DependencyMappingKey extends AllowedDependencyKey
 > = 
-    GetDependenciesCollectionMetadata<T_RegisteredDependencies, T_Key>["dependencies"][0];
+    GetDependenciesCollectionMetadata<T_RegisteredDependencies, T_DependencyMappingKey>["dependencies"][0];

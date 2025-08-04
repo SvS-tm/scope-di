@@ -1,5 +1,6 @@
 import type { RegisteredDependencies } from "../registered-dependencies";
-import type { AllowedDependencyKey } from "../allowed-dependency-key";
+import type { AllowedDependencyKey } from "../allowed-dependency-key"; 
+import type { DependenciesCollectionMetadata } from "../dependencies-collection-metadata";
 
 export type RemoveDependenciesCollection
 <
@@ -7,7 +8,7 @@ export type RemoveDependenciesCollection
     T_ExistingKey extends AllowedDependencyKey
 > = 
 (
-    T_RegisteredDependencies["key"] extends T_ExistingKey
+    T_RegisteredDependencies extends DependenciesCollectionMetadata<T_ExistingKey, any>
         ? never
         : T_RegisteredDependencies
 );

@@ -3,9 +3,9 @@ import type { DependencyLifetime } from "./dependency-lifetime";
 
 export type CommonDependencyDescriptorData
 <
-    T_DependencyKey extends AllowedDependencyKey = AllowedDependencyKey
+    T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey
 > = 
 {
-    key: T_DependencyKey;
+    key: T_DependencyMappingKey;
     lifetime: DependencyLifetime;
 };
