@@ -1,6 +1,7 @@
 import type { AllowedDependencyKey } from "./allowed-dependency-key";
 import type { DependencyDescriptorType } from "./dependency-descriptor-type";
 import type { DependencyFactory } from "./dependency-factory";
+import type { DependencyResolutionKey } from "./dependency-resolution-key";
 
 /**
  * @note this is descriptor of a factory function.
@@ -10,6 +11,6 @@ import type { DependencyFactory } from "./dependency-factory";
 export type FactoryDependencyDescriptor<T_Dependency> =
 {
     type: DependencyDescriptorType.Factory;
-    subDependenciesKeys?: AllowedDependencyKey[];
+    subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
     factory: DependencyFactory<any[], T_Dependency>;
 };

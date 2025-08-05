@@ -8,11 +8,11 @@ import type { CommonDependencyDescriptorData } from "./common-dependency-descrip
 
 export type DependencyDescriptor
 <
-    T_DependencyKey extends AllowedDependencyKey = AllowedDependencyKey, 
+    T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey, 
     T_Dependency = unknown
 > =
 (
-    CommonDependencyDescriptorData<T_DependencyKey>
+    CommonDependencyDescriptorData<T_DependencyMappingKey>
         &
     (
         ValueDependencyDescriptor<T_Dependency>

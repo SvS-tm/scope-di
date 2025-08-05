@@ -21,12 +21,6 @@ yarn-error.log*
 lerna-debug.log*
 pnpm-debug.log*
 
-# IDEs/Editors
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
 # Mac/Linux/Windows system files
 .DS_Store
 Thumbs.db

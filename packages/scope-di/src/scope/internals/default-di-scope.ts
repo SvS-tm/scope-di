@@ -1,24 +1,26 @@
-import { isNotSafeReference, isSafeReference, throwError } from "@svs-tm/system";
+import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
+import { isDependenciesCollectionResolutionKey } from "../../helpers/internals/is-dependencies-collection-resolution-key";
+import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependencyDescriptor } from "../../types/dependency-descriptor";
+import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
+import { DependencyLifetime } from "../../types/dependency-lifetime";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
+import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
+import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { InjectionResult } from "../../types/utilities/injection-result";
 import type { DiScope } from "../abstractions";
 import { DependencyNotRegisteredError } from "../errors/dependency-not-registered-error";
 import { UnknownDependencyLifetimeError } from "../errors/unknown-dependency-lifetime-error";
 import { UnknownDependencyTypeError } from "../errors/unknown-dependency-type-error";
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { DependencyDescriptor } from "../../types/dependency-descriptor";
-import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
-import type { DependencyKey } from "../../types/dependency-key";
-import { DependencyLifetime } from "../../types/dependency-lifetime";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { InjectionResult } from "../../types/utilities/injection-result";
 
-export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies> 
+export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
 {
     private readonly resolvedDependencies = new Map<AllowedDependencyKey, unknown>();
 
     public constructor
     (
-        private readonly descriptors: Map<AllowedDependencyKey, DependencyDescriptor>,
+        private readonly registry: Map<AllowedDependencyKey, DependencyDescriptor[]>,
         private readonly root?: DefaultDiScope<T_RegisteredDependencies>,
         private readonly parent?: DefaultDiScope<T_RegisteredDependencies>,
     )
@@ -32,37 +34,66 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         type === DependencyDescriptorType.FactoryAsync
     );
 
-    private readonly resolveSubDependencies = async (keys?: AllowedDependencyKey[]) =>
+    private readonly resolveAsyncSubDependencies = async (keys?: DependencyResolutionKey<AllowedDependencyKey>[]) =>
     {
-        const descriptors = keys?.map
-        (
-            (key) => this.descriptors.get(key) ?? throwError<DependencyDescriptor>
-            (
-                new DependencyNotRegisteredError(key)
-            )
-        );
+        const descriptors = keys?.map((key) => this.resolveDescriptors(key));
 
         if (isNotSafeReference(descriptors))
             return null;
 
-        const asyncDependencies = descriptors
-            .filter(this.isAsyncDependency)
-            .map(({ key }) => this.resolve(key as DependencyKey<T_RegisteredDependencies>));
+        const asyncDependencies: Promise<any>[] = [];
 
-        const syncDependencies = descriptors
-            .filter((descriptor) => !this.isAsyncDependency(descriptor))
-            .map(({ key }) => this.resolve(key as DependencyKey<T_RegisteredDependencies>));
-
-        const awaitedDependencies = await Promise.all(asyncDependencies);
-
-        const dependencies = descriptors.map
+        const results: (unknown | unknown[])[] = descriptors.map
         (
-            ({ key }) => syncDependencies.find((dependency) => dependency.key === key)
-                ?? awaitedDependencies.find((dependency) => dependency.key === key)
-                ?? throwError(new DependencyNotRegisteredError(key))
+            (descriptorOrCollection, index) => 
+            {
+                if (Array.isArray(descriptorOrCollection))
+                {
+                    const collection = Array.from({ length: descriptorOrCollection.length });
+
+                    for(let index = 0; index < descriptorOrCollection.length; ++index)
+                    {
+                        const descriptor = descriptorOrCollection[index];
+
+                        const result = this.resolveByDescriptor(descriptor);
+                        
+                        if (this.isAsyncDependency(descriptor))
+                        {
+                            const awaitAndSetDependency = async () => 
+                                void (collection[index] = await result);
+
+                            asyncDependencies.push(awaitAndSetDependency());
+                        }
+                        else
+                            collection[index] = result;
+                    }
+
+                    return collection;
+                }
+                else
+                {
+                    const result = this.resolveByDescriptor(descriptorOrCollection);
+
+                    if (this.isAsyncDependency(descriptorOrCollection))
+                    {
+                        const awaitAndSetDependency = async () => 
+                            void (results[index] = await result);
+
+                        asyncDependencies.push(awaitAndSetDependency());
+
+                        return undefined;
+                    }
+                    else
+                        return result;
+                }
+                    
+            }
         );
 
-        return dependencies;
+        if (asyncDependencies.length > 0)
+            await Promise.all(asyncDependencies);
+
+        return results;
     };
 
     private readonly instantiate = (descriptor: DependencyDescriptor) =>
@@ -75,7 +106,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const dependencies = descriptor.subDependenciesKeys?.map
                 (
-                    (key) => this.resolve(key as DependencyKey<T_RegisteredDependencies>)
+                    (key) => this.resolve(key as DependencyMappingKey<T_RegisteredDependencies>)
                 );
 
                 return isSafeReference(dependencies) 
@@ -86,7 +117,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const resolveAsync = async () =>
                 {
-                    const dependencies = await this.resolveSubDependencies(descriptor.subDependenciesKeys);
+                    const dependencies = await this.resolveAsyncSubDependencies(descriptor.subDependenciesKeys);
 
                     return isSafeReference(dependencies) 
                         ? await new descriptor.constructor(...dependencies)
@@ -99,7 +130,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const dependencies = descriptor.subDependenciesKeys?.map
                 (
-                    (key) => this.resolve(key as DependencyKey<T_RegisteredDependencies>)
+                    (key) => this.resolve(key as DependencyMappingKey<T_RegisteredDependencies>)
                 );
 
                 return isSafeReference(dependencies) 
@@ -110,7 +141,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const resolveAsync = async () =>
                 {
-                    const dependencies = await this.resolveSubDependencies(descriptor.subDependenciesKeys);
+                    const dependencies = await this.resolveAsyncSubDependencies(descriptor.subDependenciesKeys);
 
                     return isSafeReference(dependencies) 
                         ? await descriptor.factory(...dependencies)
@@ -128,14 +159,26 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    private readonly getDescriptor = (key: AllowedDependencyKey) =>
+    private readonly resolveDescriptors = (key: DependencyResolutionKey<AllowedDependencyKey>) =>
     {
-        const descriptor = this.descriptors.get(key);
+        if (isDependenciesCollectionResolutionKey(key))
+        {
+            const descriptors = this.registry.get(key.mappingKey);
 
-        if (isNotSafeReference(descriptor))
-            throw new DependencyNotRegisteredError(key);
+            if (isNotSafeReference(descriptors))
+                throw new DependencyNotRegisteredError(key.mappingKey);
 
-        return descriptor;
+            return descriptors;
+        }
+        else
+        {
+            const descriptor = this.registry.get(key)?.[0];
+    
+            if (isNotSafeReference(descriptor))
+                throw new DependencyNotRegisteredError(key);
+    
+            return descriptor;
+        }
     };
 
     private readonly resolveFromCurrentScope = (descriptor: DependencyDescriptor) =>
@@ -195,26 +238,35 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public readonly resolve = 
     <
-        T_DependencyKey extends DependencyKey<T_RegisteredDependencies>
+        T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>
     >
     (
-        key: T_DependencyKey
+        key: DependencyResolutionKey<T_DependencyMappingKey>
     )
-        : InjectionResult<T_RegisteredDependencies, T_DependencyKey> =>
+        : InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>> =>
     {
-        const descriptor = this.getDescriptor(key);
+        const descriptorOrCollection = this.resolveDescriptors(key);
 
-        return this.resolveByDescriptor(descriptor);
+        if (Array.isArray(descriptorOrCollection))
+        {
+            return descriptorOrCollection.map((descriptor) => this.resolveByDescriptor(descriptor)) as
+                 InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
+        }
+        else
+        {
+            return this.resolveByDescriptor(descriptorOrCollection) as 
+                InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
+        }
     };
 
     public readonly getDescriptors = (): readonly Readonly<DependencyDescriptor>[] => 
     {
-        return [...this.descriptors.values()];
+        return [...this.registry.values().map(([descriptor]) => descriptor)];
     };
 
     public readonly createChildScope = (): DiScope<T_RegisteredDependencies> => 
     {
-        return new DefaultDiScope(this.descriptors, this.root ?? this, this);
+        return new DefaultDiScope(this.registry, this.root ?? this, this);
     };
 
     private readonly disposeAsyncDependencies = async (dependencies: unknown[]) =>

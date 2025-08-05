@@ -1,12 +1,12 @@
 import type { Constructor } from "@svs-tm/system";
-import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyKey, DependencyLifetime, RegisteredDependencies } from "../../types";
+import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies } from "../../types";
 import type { DiDependentMappingBuilder } from "./di-dependent-mapping-builder";
 import type { DiScopeBuilder } from "./di-scope-builder";
 
 export type DiMappingBuilder
 <
     T_RegisteredDependencies extends RegisteredDependencies,
-    T_DependencyKey extends AllowedDependencyKey 
+    T_DependencyMappingKey extends AllowedDependencyKey 
 > =
 {
     asValue<T_Abstraction>
@@ -16,7 +16,7 @@ export type DiMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey,
+                T_DependencyMappingKey,
                 T_Abstraction,
                 DependencyDescriptorType.Value
             >
@@ -30,7 +30,7 @@ export type DiMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
             >
@@ -44,7 +44,7 @@ export type DiMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
             >
@@ -58,7 +58,7 @@ export type DiMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
             >
@@ -72,15 +72,15 @@ export type DiMappingBuilder
         : DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
             >
         >;
 
-    asDependent<T_Keys extends DependencyKey<T_RegisteredDependencies>[]>
+    asDependent<T_Keys extends DependencyMappingKey<T_RegisteredDependencies>[]>
     (
         ...keys: T_Keys
     )
-        : DiDependentMappingBuilder<T_DependencyKey, T_RegisteredDependencies, T_Keys>;
+        : DiDependentMappingBuilder<T_DependencyMappingKey, T_RegisteredDependencies, T_Keys>;
 };

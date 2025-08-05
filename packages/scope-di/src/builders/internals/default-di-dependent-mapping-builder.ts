@@ -4,7 +4,7 @@ import type { DiScopeBuilder } from "../abstractions/di-scope-builder";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import type { DependencyFactory } from "../../types/dependency-factory";
-import type { DependencyKey } from "../../types/dependency-key";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AddDependency } from "../../types/utilities/add-dependency";
@@ -14,16 +14,16 @@ import type { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 
 export class DefaultDiDependentMappingBuilder
 <
-    T_DependencyKey extends AllowedDependencyKey,
+    T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
-    T_Keys extends DependencyKey<T_RegisteredDependencies>[]
+    T_Keys extends DependencyMappingKey<T_RegisteredDependencies>[]
 >
-    implements DiDependentMappingBuilder<T_DependencyKey, T_RegisteredDependencies, T_Keys>
+    implements DiDependentMappingBuilder<T_DependencyMappingKey, T_RegisteredDependencies, T_Keys>
 {
     public constructor
     (
         private readonly diScopeBuilder: DefaultDiScopeBuilder<T_RegisteredDependencies>,
-        private readonly key: T_DependencyKey,
+        private readonly key: T_DependencyMappingKey,
         private readonly subDependenciesKeys: T_Keys
     )
     {
@@ -52,7 +52,7 @@ export class DefaultDiDependentMappingBuilder
         return this.diScopeBuilder as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
             >
@@ -81,7 +81,7 @@ export class DefaultDiDependentMappingBuilder
         return this.diScopeBuilder as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
             >
@@ -111,7 +111,7 @@ export class DefaultDiDependentMappingBuilder
         return this.diScopeBuilder as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
             >
@@ -141,7 +141,7 @@ export class DefaultDiDependentMappingBuilder
         return this.diScopeBuilder as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
-                T_DependencyKey, 
+                T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
             >

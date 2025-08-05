@@ -1,37 +1,33 @@
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { AvailableDependencyKey } from "../../types/available-dependency-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { DiMappingBuilder } from "./di-mapping-builder";
-import type { DependencyKey } from "../../types/dependency-key";
-import type { RemoveDependency } from "../../types/utilities/remove-dependency";
 import type { DiScope } from "../../scope/abstractions/di-scope";
+import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
+import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
+import type { DiMappingBuilder } from "./di-mapping-builder";
 
-export type DiScopeBuilder
-<
-    T_RegisteredDependencies extends RegisteredDependencies = {}
-> =
+export type DiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> =
 {
-    map<T_DependencyKey extends AllowedDependencyKey>
+    map<T_DependencyMappingKey extends AllowedDependencyKey>
     (
-        key: AvailableDependencyKey<T_DependencyKey, T_RegisteredDependencies>
+        key: T_DependencyMappingKey
     )
-        : DiMappingBuilder<T_RegisteredDependencies, T_DependencyKey>;
+        : DiMappingBuilder<T_RegisteredDependencies, T_DependencyMappingKey>;
 
     removeMapping
     <
-        T_DependencyKey extends DependencyKey<T_RegisteredDependencies>
+        T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>
     >
     (
-        key: T_DependencyKey
+        key: T_DependencyMappingKey
     )
         : DiScopeBuilder<
-            RemoveDependency<
+            RemoveDependenciesCollection<
                 T_RegisteredDependencies, 
-                T_DependencyKey
+                T_DependencyMappingKey
             >
         >;
     
-    hasMapping<T_Key extends AllowedDependencyKey>(key: T_Key): boolean;
+    hasMapping<T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey): boolean;
 
     build(): DiScope<T_RegisteredDependencies>;
 };

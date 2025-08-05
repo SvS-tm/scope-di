@@ -1,7 +1,11 @@
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
-import type { DependencyMetadata } from "../../types/dependency-metadata";
+import type { DependenciesCollectionMetadata } from "../dependencies-collection-metadata";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { RemoveDependenciesCollection } from "./remove-dependencies-collection";
+import type { DependencyMetadata } from "../dependency-metadata";
+import type { IsNever } from "@svs-tm/system";
+import type { GetDependenciesCollectionMetadata } from "./get-dependencies-collection-metadata";
 
 export type AddDependency
 <
@@ -11,9 +15,16 @@ export type AddDependency
     T_NewDependencyType extends DependencyDescriptorType
 > = 
 (
-    T_RegisteredDependencies 
-        & 
-    {
-        [T_Key in T_NewKey]: DependencyMetadata<T_NewDependency, T_NewDependencyType>;
-    }
+    RemoveDependenciesCollection<T_RegisteredDependencies, T_NewKey>
+        |
+    DependenciesCollectionMetadata<
+        T_NewKey, 
+        [
+            DependencyMetadata<T_NewDependency, T_NewDependencyType>, 
+            ...(IsNever<GetDependenciesCollectionMetadata<T_RegisteredDependencies, T_NewKey>["dependencies"]> extends false
+                ? GetDependenciesCollectionMetadata<T_RegisteredDependencies, T_NewKey>["dependencies"]
+                : []
+            )
+        ]
+    >
 );
