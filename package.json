@@ -1,13 +1,9 @@
 {
   "name": "scope-di",
-  "version": "1.0.0",
-  "description": "The monorepo with scope-di related packages",
   "scripts": {
-    "build": "pnpm -r build",
-    "test": "pnpm -r test"
+    "build-all": "pnpm -r build",
+    "pack-all": "pnpm -r pack",
+    "test-all": "pnpm -r test"
   },
-  "keywords": [],
-  "author": "svs-tm",
-  "license": "ISC",
   "packageManager": "pnpm@10.14.0"
 }
