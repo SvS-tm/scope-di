@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "rollup -c",
-    "test": "jest"
+    "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+    "test": "jest --passWithNoTests"
   },
   "keywords": [],
   "author": "svs-tm",

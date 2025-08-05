@@ -22,10 +22,6 @@
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
         "exactOptionalPropertyTypes": true,
-        /**
-         * @note Avoids legacy "export =" behavior
-         */
-        "verbatimModuleSyntax": true,
         "useDefineForClassFields": true,
         "resolveJsonModule": true
     },

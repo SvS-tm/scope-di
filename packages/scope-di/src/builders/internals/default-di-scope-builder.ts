@@ -12,6 +12,9 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 {
     private readonly registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
 
+    /**
+     * @internal This is internal method, its not safe to use it.
+     */
     public readonly register = (descriptor: DependencyDescriptor) =>
     {
         const descriptors = this.registry.get(descriptor.key) ?? [];

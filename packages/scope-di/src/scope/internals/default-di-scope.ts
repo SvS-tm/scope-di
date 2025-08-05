@@ -16,7 +16,7 @@ import { UnknownDependencyTypeError } from "../errors/unknown-dependency-type-er
 export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
 {
-    private readonly resolvedDependencies = new Map<AllowedDependencyKey, unknown>();
+    private readonly resolvedDependencies = new Map<DependencyDescriptor, unknown>();
 
     public constructor
     (
@@ -51,7 +51,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 {
                     const collection = Array.from({ length: descriptorOrCollection.length });
 
-                    for(let index = 0; index < descriptorOrCollection.length; ++index)
+                    for (let index = 0; index < descriptorOrCollection.length; ++index)
                     {
                         const descriptor = descriptorOrCollection[index];
 
@@ -183,29 +183,29 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private readonly resolveFromCurrentScope = (descriptor: DependencyDescriptor) =>
     {
-        if (this.resolvedDependencies.has(descriptor.key))
-            return this.resolvedDependencies.get(descriptor.key);
+        if (this.resolvedDependencies.has(descriptor))
+            return this.resolvedDependencies.get(descriptor);
 
         const dependency = this.instantiate(descriptor);
 
-        this.resolvedDependencies.set(descriptor.key, dependency);
+        this.resolvedDependencies.set(descriptor, dependency);
 
         return dependency;
     };
 
     private readonly getHierarchy = function* (this: DefaultDiScope<T_RegisteredDependencies>)
     {
-        for(let current = this.parent; isSafeReference(current); current = current.parent)
+        for (let current = this.parent; isSafeReference(current); current = current.parent)
             yield current;
     };
 
     private readonly resolveFromScopeHierarchy = (descriptor: DependencyDescriptor) =>
     {
         const hierarchyScope = [...this.getHierarchy()]
-            .findLast(({ resolvedDependencies }) => resolvedDependencies.has(descriptor.key));
+            .findLast(({ resolvedDependencies }) => resolvedDependencies.has(descriptor));
 
         if (isSafeReference(hierarchyScope))
-            return hierarchyScope.resolvedDependencies.get(descriptor.key);
+            return hierarchyScope.resolvedDependencies.get(descriptor);
 
         return this.resolveFromCurrentScope(descriptor);
     }
@@ -284,7 +284,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private readonly disposeSyncDependencies = (dependencies: unknown[]) =>
     {
-        for(const dependency of dependencies)
+        for (const dependency of dependencies)
         {
             if 
             (
