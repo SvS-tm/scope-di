@@ -14,7 +14,6 @@ describe
             • In a sync parent (sync class/factory depends on a collection), injected collection contains promises at async positions (not awaited).
             • In an async parent (async class/factory depends on a collection), all members are awaited before the parent is invoked.
             • Duplicates allowed: registering the same instance twice produces two identical references in the collection.
-            • Empty collection: resolving a collection key when no descriptors exist throws DependencyNotRegisteredError.
          */
     }
 );
