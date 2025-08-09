@@ -261,7 +261,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public readonly getDescriptors = (): readonly Readonly<DependencyDescriptor>[] => 
     {
-        return [...this.registry.values().map(([descriptor]) => descriptor)];
+        return [...this.registry.values().flatMap((descriptors) => descriptors)];
     };
 
     public readonly createChildScope = (): DiScope<T_RegisteredDependencies> => 
