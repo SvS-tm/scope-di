@@ -43,52 +43,52 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
         const asyncDependencies: Promise<any>[] = [];
 
-        const results: (unknown | unknown[])[] = descriptors.map
-        (
-            (descriptorOrCollection, index) => 
+        const results: (unknown | unknown[])[] = Array.from({ length: descriptors.length });
+
+        for (let index = 0; index < results.length; ++index)
+        {
+            const descriptorOrCollection = descriptors[index];
+
+            if (Array.isArray(descriptorOrCollection))
             {
-                if (Array.isArray(descriptorOrCollection))
+                const collection = Array.from({ length: descriptorOrCollection.length });
+
+                for (let index = 0; index < descriptorOrCollection.length; ++index)
                 {
-                    const collection = Array.from({ length: descriptorOrCollection.length });
+                    const descriptor = descriptorOrCollection[index];
 
-                    for (let index = 0; index < descriptorOrCollection.length; ++index)
+                    const result = this.resolveByDescriptor(descriptor);
+                    
+                    if (this.isAsyncDependency(descriptor))
                     {
-                        const descriptor = descriptorOrCollection[index];
+                        const awaitAndSetDependency = async () => 
+                            void (collection[index] = await result);
 
-                        const result = this.resolveByDescriptor(descriptor);
-                        
-                        if (this.isAsyncDependency(descriptor))
-                        {
-                            const awaitAndSetDependency = async () => 
-                                void (collection[index] = await result);
-
-                            asyncDependencies.push(awaitAndSetDependency());
-                        }
-                        else
-                            collection[index] = result;
+                        asyncDependencies.push(awaitAndSetDependency());
                     }
+                    else
+                        collection[index] = result;
+                }
 
-                    return collection;
+                results[index] = collection;
+            }
+            else
+            {
+                const result = this.resolveByDescriptor(descriptorOrCollection);
+
+                if (this.isAsyncDependency(descriptorOrCollection))
+                {
+                    const awaitAndSetDependency = async () => 
+                        void (results[index] = await result);
+
+                    asyncDependencies.push(awaitAndSetDependency());
                 }
                 else
                 {
-                    const result = this.resolveByDescriptor(descriptorOrCollection);
-
-                    if (this.isAsyncDependency(descriptorOrCollection))
-                    {
-                        const awaitAndSetDependency = async () => 
-                            void (results[index] = await result);
-
-                        asyncDependencies.push(awaitAndSetDependency());
-
-                        return undefined;
-                    }
-                    else
-                        return result;
+                    results[index] = result;
                 }
-                    
             }
-        );
+        }
 
         if (asyncDependencies.length > 0)
             await Promise.all(asyncDependencies);
