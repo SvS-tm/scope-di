@@ -1,4 +1,4 @@
-import type { Config } from 'jest';
+import type { Config } from "jest";
 
 const config: Config = {
   clearMocks: true,
@@ -6,6 +6,9 @@ const config: Config = {
   coverageDirectory: "coverage",
   coverageProvider: "v8",
   preset: "ts-jest",
+  setupFiles: [
+    "./src/tests-setup.ts"
+  ]
 };
 
 export default config;

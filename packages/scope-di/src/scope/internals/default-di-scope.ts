@@ -250,7 +250,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         if (Array.isArray(descriptorOrCollection))
         {
             return descriptorOrCollection.map((descriptor) => this.resolveByDescriptor(descriptor)) as
-                 InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
+                InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
         }
         else
         {
