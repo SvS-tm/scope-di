@@ -1,5 +1,4 @@
 import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
-import { isDependenciesCollectionResolutionKey } from "../../helpers/internals/is-dependencies-collection-resolution-key";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
@@ -161,12 +160,13 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private readonly resolveDescriptors = (key: DependencyResolutionKey<AllowedDependencyKey>) =>
     {
-        if (isDependenciesCollectionResolutionKey(key))
+        if (Array.isArray(key))
         {
-            const descriptors = this.registry.get(key.mappingKey);
+            const [mappingKey] = key;
+            const descriptors = this.registry.get(mappingKey);
 
             if (isNotSafeReference(descriptors))
-                throw new DependencyNotRegisteredError(key.mappingKey);
+                throw new DependencyNotRegisteredError(mappingKey);
 
             return descriptors;
         }
