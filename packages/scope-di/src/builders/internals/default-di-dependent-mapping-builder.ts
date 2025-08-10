@@ -9,14 +9,15 @@ import type { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { AwaitedInjectedDependencies } from "../../types/utilities/awaited-injected-dependencies";
-import type { InjectedDependencies } from "../../types/utilities/injcted-dependencies";
+import type { InjectedDependencies } from "../../types/utilities/injected-dependencies";
 import type { DefaultDiScopeBuilder } from "./default-di-scope-builder";
+import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
 
 export class DefaultDiDependentMappingBuilder
 <
     T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
-    T_Keys extends DependencyMappingKey<T_RegisteredDependencies>[]
+    T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
 >
     implements DiDependentMappingBuilder<T_DependencyMappingKey, T_RegisteredDependencies, T_Keys>
 {
@@ -49,7 +50,7 @@ export class DefaultDiDependentMappingBuilder
             }
         );
 
-        return this.diScopeBuilder as DiScopeBuilder<
+        return this.diScopeBuilder as unknown as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
                 T_DependencyMappingKey, 
@@ -78,7 +79,7 @@ export class DefaultDiDependentMappingBuilder
             }
         );
 
-        return this.diScopeBuilder as DiScopeBuilder<
+        return this.diScopeBuilder as unknown as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
                 T_DependencyMappingKey, 
@@ -108,7 +109,7 @@ export class DefaultDiDependentMappingBuilder
             }
         );
 
-        return this.diScopeBuilder as DiScopeBuilder<
+        return this.diScopeBuilder as unknown as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
                 T_DependencyMappingKey, 
@@ -138,7 +139,7 @@ export class DefaultDiDependentMappingBuilder
             }
         );
 
-        return this.diScopeBuilder as DiScopeBuilder<
+        return this.diScopeBuilder as unknown as DiScopeBuilder<
             AddDependency<
                 T_RegisteredDependencies, 
                 T_DependencyMappingKey, 

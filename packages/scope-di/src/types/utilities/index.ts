@@ -3,7 +3,7 @@ export * from "./awaited-injected-dependencies";
 export * from "./awaited-injection-result";
 export * from "./get-default-dependency-metadata";
 export * from "./get-dependencies-collection-metadata";
-export * from "./injcted-dependencies";
+export * from "./injected-dependencies";
 export * from "./injection-result";
 export * from "./is-allowed-dependency-key";
 export * from "./remove-dependencies-collection";

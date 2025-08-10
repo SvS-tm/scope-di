@@ -1,5 +1,5 @@
 import type { Constructor } from "@svs-tm/system";
-import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies } from "../../types";
+import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies, DependencyResolutionKey } from "../../types";
 import type { DiDependentMappingBuilder } from "./di-dependent-mapping-builder";
 import type { DiScopeBuilder } from "./di-scope-builder";
 
@@ -50,7 +50,7 @@ export type DiMappingBuilder
             >
         >;
 
-    classAsync<T_Abstraction>
+    asClassAsync<T_Abstraction>
     (
         constructor: Constructor<[], Promise<T_Abstraction>>,
         lifetime: DependencyLifetime
@@ -64,7 +64,7 @@ export type DiMappingBuilder
             >
         >;  
         
-    factoryAsync<T_Abstraction>
+    asFactoryAsync<T_Abstraction>
     (
         factory: DependencyFactory<[], Promise<T_Abstraction>>,
         lifetime: DependencyLifetime
@@ -78,7 +78,7 @@ export type DiMappingBuilder
             >
         >;
 
-    asDependent<T_Keys extends DependencyMappingKey<T_RegisteredDependencies>[]>
+    asDependent<T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_Keys
     )

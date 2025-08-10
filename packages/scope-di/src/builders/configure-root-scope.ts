@@ -3,5 +3,5 @@ import { DefaultDiScopeBuilder } from "./internals/default-di-scope-builder";
 
 export const configureRootScope = (): DiScopeBuilder =>
 {
-    return new DefaultDiScopeBuilder();
+    return new DefaultDiScopeBuilder<never>();
 };

@@ -36,7 +36,7 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
     {
         this.registry.delete(key);
 
-        return this as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
+        return this as unknown as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
     };
 
     public readonly hasMapping = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) => 
