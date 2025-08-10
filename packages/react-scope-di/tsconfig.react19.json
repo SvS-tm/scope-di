@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": [
+            "@types/jest",
+            "@types/react19",
+            "@types/react-dom19"
+        ]
+    }
+}

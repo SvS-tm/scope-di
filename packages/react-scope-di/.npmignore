@@ -1,0 +1,5 @@
+.types
+.rollup.cache
+*.tsbuildinfo
+src
+tests-setup.ts

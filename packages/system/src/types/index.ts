@@ -6,3 +6,4 @@ export * from "./overloaded-delegate";
 export * from "./promised";
 export * from "./tuple-keys";
 export * from "./is-never";
+export * from "./patch";
