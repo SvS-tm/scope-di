@@ -1,11 +1,13 @@
 import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { InjectedDependencies } from "../../types/utilities/injected-dependencies";
 import type { InjectionResult } from "../../types/utilities/injection-result";
 import type { DiScope } from "../abstractions";
 import { DependencyNotRegisteredError } from "../errors/dependency-not-registered-error";
@@ -25,6 +27,38 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     )
     {
     }
+
+    private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    (
+        key: T_DependencyMappingKey
+    )
+        : InjectionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
+
+    private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    (
+        key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
+    )
+        : InjectionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
+
+    private resolveNonBound<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    (
+        ...keys: T_DependencyResolutionKeys
+    )
+        : InjectedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
+    
+    private resolveNonBound(...keys: DependencyResolutionKey<any>[])
+    {
+        if (keys.length === 1)
+        {
+            const [key] = keys;
+
+            return this.resolveSingleDependency(key);
+        }
+        else
+            return keys.map((key) => this.resolveSingleDependency(key));
+    }
+
+    public readonly resolve: typeof this.resolveNonBound = this.resolveNonBound.bind(this);
 
     private readonly isAsyncDependency = ({ type }: DependencyDescriptor) => 
     (
@@ -105,7 +139,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const dependencies = descriptor.subDependenciesKeys?.map
                 (
-                    (key) => this.resolve(key as DependencyMappingKey<T_RegisteredDependencies>)
+                    (key) => this.resolveSingleDependency(key as DependencyMappingKey<T_RegisteredDependencies>)
                 );
 
                 return isSafeReference(dependencies) 
@@ -129,7 +163,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const dependencies = descriptor.subDependenciesKeys?.map
                 (
-                    (key) => this.resolve(key as DependencyMappingKey<T_RegisteredDependencies>)
+                    (key) => this.resolveSingleDependency(key as DependencyMappingKey<T_RegisteredDependencies>)
                 );
 
                 return isSafeReference(dependencies) 
@@ -236,7 +270,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    public readonly resolve = 
+    private readonly resolveSingleDependency = 
     <
         T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>
     >
