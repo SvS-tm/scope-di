@@ -1,4 +1,5 @@
 import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
+import type { AwaitedInjectedDependencies, AwaitedInjectionResult } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
@@ -27,6 +28,50 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     )
     {
     }
+
+    private resolveNonBoundAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    (
+        key: T_DependencyMappingKey
+    )
+        : Promise<AwaitedInjectionResult<T_RegisteredDependencies, T_DependencyMappingKey>>;
+
+    private resolveNonBoundAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    (
+        key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
+    )
+        : Promise<AwaitedInjectionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>>;
+
+    private resolveNonBoundAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    (
+        ...keys: T_DependencyResolutionKeys
+    )
+        : Promise<AwaitedInjectedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
+    
+    private async resolveNonBoundAsync(...keys: DependencyResolutionKey<any>[])
+    {
+        const dependencies = await  this.resolveAsyncDependencies(keys);
+
+        if (isSafeReference(dependencies))
+        {
+            switch (keys.length)
+            {
+                case 0:
+                    return [];
+                case 1:
+                {
+                    const [dependency] = dependencies;
+
+                    return dependency;
+                }
+                default:
+                    return dependencies;
+            }
+        }
+        else
+            return [];
+    }
+
+    public readonly resolveAsync: typeof this.resolveNonBoundAsync = this.resolveNonBoundAsync.bind(this);
 
     private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
@@ -67,7 +112,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         type === DependencyDescriptorType.FactoryAsync
     );
 
-    private readonly resolveAsyncSubDependencies = async (keys?: DependencyResolutionKey<AllowedDependencyKey>[]) =>
+    private readonly resolveAsyncDependencies = async (keys?: DependencyResolutionKey<AllowedDependencyKey>[]) =>
     {
         const descriptors = keys?.map((key) => this.resolveDescriptors(key));
 
@@ -150,7 +195,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const resolveAsync = async () =>
                 {
-                    const dependencies = await this.resolveAsyncSubDependencies(descriptor.subDependenciesKeys);
+                    const dependencies = await this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
 
                     return isSafeReference(dependencies) 
                         ? await new descriptor.constructor(...dependencies)
@@ -174,7 +219,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             {
                 const resolveAsync = async () =>
                 {
-                    const dependencies = await this.resolveAsyncSubDependencies(descriptor.subDependenciesKeys);
+                    const dependencies = await this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
 
                     return isSafeReference(dependencies) 
                         ? await descriptor.factory(...dependencies)

@@ -46,6 +46,6 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 
     public readonly build = () => 
     {
-        return new DefaultDiScope(new Map(this.registry));
+        return new DefaultDiScope<T_RegisteredDependencies>(new Map(this.registry));
     };
 }
