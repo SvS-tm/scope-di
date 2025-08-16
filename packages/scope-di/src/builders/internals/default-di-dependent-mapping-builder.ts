@@ -8,8 +8,8 @@ import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AddDependency } from "../../types/utilities/add-dependency";
-import type { AwaitedInjectedDependencies } from "../../types/utilities/awaited-injected-dependencies";
-import type { InjectedDependencies } from "../../types/utilities/injected-dependencies";
+import type { AwaitedResolvedDependencies } from "../../types/utilities/awaited-resolved-dependencies";
+import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import type { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
 
@@ -33,7 +33,7 @@ export class DefaultDiDependentMappingBuilder
     public readonly class = <T_Abstraction>
     (
         constructor: Constructor<
-            InjectedDependencies<T_RegisteredDependencies, T_Keys>, 
+            ResolvedDependencies<T_RegisteredDependencies, T_Keys>, 
             T_Abstraction
         >, 
         lifetime: DependencyLifetime
@@ -62,7 +62,7 @@ export class DefaultDiDependentMappingBuilder
     public readonly factory = <T_Abstraction>
     (
         factory: Delegate<
-            InjectedDependencies<T_RegisteredDependencies, T_Keys>, 
+            ResolvedDependencies<T_RegisteredDependencies, T_Keys>, 
             T_Abstraction
         >, 
         lifetime: DependencyLifetime
@@ -92,7 +92,7 @@ export class DefaultDiDependentMappingBuilder
     public readonly classAsync = <T_Abstraction>
     (
         constructor: Constructor<
-            AwaitedInjectedDependencies<T_RegisteredDependencies, T_Keys>,
+            AwaitedResolvedDependencies<T_RegisteredDependencies, T_Keys>,
             Promised<T_Abstraction>
         >, 
         lifetime: DependencyLifetime
@@ -122,7 +122,7 @@ export class DefaultDiDependentMappingBuilder
     public readonly factoryAsync = <T_Abstraction>
     (
         factory: DependencyFactory<
-            AwaitedInjectedDependencies<T_RegisteredDependencies, T_Keys>,
+            AwaitedResolvedDependencies<T_RegisteredDependencies, T_Keys>,
             Promise<T_Abstraction>
         >, 
         lifetime: DependencyLifetime

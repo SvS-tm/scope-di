@@ -3,16 +3,17 @@ import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { InjectedDependencies } from "../../types/utilities/injected-dependencies";
+import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import type { DiScopeBuilder } from "./di-scope-builder";
 import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import type { DependencyFactory } from "../../types/dependency-factory";
-import type { AwaitedInjectedDependencies } from "../../types/utilities/awaited-injected-dependencies";
+import type { AwaitedResolvedDependencies } from "../../types/utilities/awaited-resolved-dependencies";
 import type { DependencyResolutionKey } from "../../types";
 
 export type DiDependentMappingBuilder
 <
+
     T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
     T_ResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
@@ -22,7 +23,7 @@ export type DiDependentMappingBuilder
     class<T_Abstraction>
     (
         constructor: Constructor<
-            InjectedDependencies<T_RegisteredDependencies, T_ResolutionKeys>, 
+            ResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>, 
             T_Abstraction
         >,
         lifetime: DependencyLifetime
@@ -39,7 +40,7 @@ export type DiDependentMappingBuilder
     factory<T_Abstraction>
     (
         factory: DependencyFactory<
-            InjectedDependencies<T_RegisteredDependencies, T_ResolutionKeys>, 
+            ResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>, 
             T_Abstraction
         >,
         lifetime: DependencyLifetime
@@ -56,7 +57,7 @@ export type DiDependentMappingBuilder
     classAsync<T_Abstraction>
     (
         constructor: Constructor<
-            AwaitedInjectedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,
+            AwaitedResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,
             Promised<T_Abstraction>
         >,
         lifetime: DependencyLifetime
@@ -73,7 +74,7 @@ export type DiDependentMappingBuilder
     factoryAsync<T_Abstraction>
     (
         factory: DependencyFactory<
-            AwaitedInjectedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,
+            AwaitedResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,
             Promise<T_Abstraction>
         >,
         lifetime: DependencyLifetime

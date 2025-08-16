@@ -1,5 +1,5 @@
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { AllowedDependencyKey } from "../allowed-dependency-key";
+import type { RegisteredDependencies } from "../registered-dependencies";
 import type { DependenciesCollectionResolutionKey } from "../dependencies-collection-resolution-key";
 import type { DependencyDescriptorType } from "../dependency-descriptor-type";
 import type { DependencyMetadata } from "../dependency-metadata";
@@ -14,7 +14,7 @@ type MetadataToDependencyType<T_MetadataCollection extends DependencyMetadata<an
     }
 );
 
-export type InjectionResult
+export type ResolutionResult
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKey extends DependencyResolutionKey<AllowedDependencyKey>

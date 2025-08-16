@@ -1,5 +1,5 @@
 import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
-import type { AwaitedInjectedDependencies, AwaitedInjectionResult } from "../../types";
+import type { AwaitedResolvedDependencies, AwaitedResolutionResult } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
@@ -8,8 +8,8 @@ import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { InjectedDependencies } from "../../types/utilities/injected-dependencies";
-import type { InjectionResult } from "../../types/utilities/injection-result";
+import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
+import type { ResolutionResult } from "../../types/utilities/resolution-result";
 import type { DiScope } from "../abstractions";
 import { DependencyNotRegisteredError } from "../errors/dependency-not-registered-error";
 import { UnknownDependencyLifetimeError } from "../errors/unknown-dependency-lifetime-error";
@@ -33,19 +33,19 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     (
         key: T_DependencyMappingKey
     )
-        : Promise<AwaitedInjectionResult<T_RegisteredDependencies, T_DependencyMappingKey>>;
+        : Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>>;
 
     private resolveNonBoundAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
     )
-        : Promise<AwaitedInjectionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>>;
+        : Promise<AwaitedResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>>;
 
     private resolveNonBoundAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
-        : Promise<AwaitedInjectedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
+        : Promise<AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
     
     private async resolveNonBoundAsync(...keys: DependencyResolutionKey<any>[])
     {
@@ -77,19 +77,19 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     (
         key: T_DependencyMappingKey
     )
-        : InjectionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
+        : ResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
 
     private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
     )
-        : InjectionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
+        : ResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
 
     private resolveNonBound<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
-        : InjectedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
+        : ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
     
     private resolveNonBound(...keys: DependencyResolutionKey<any>[])
     {
@@ -322,19 +322,19 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     (
         key: DependencyResolutionKey<T_DependencyMappingKey>
     )
-        : InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>> =>
+        : ResolutionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>> =>
     {
         const descriptorOrCollection = this.resolveDescriptors(key);
 
         if (Array.isArray(descriptorOrCollection))
         {
             return descriptorOrCollection.map((descriptor) => this.resolveByDescriptor(descriptor)) as
-                InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
+                ResolutionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
         }
         else
         {
             return this.resolveByDescriptor(descriptorOrCollection) as 
-                InjectionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
+                ResolutionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>;
         }
     };
 
