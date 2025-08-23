@@ -1,8 +1,8 @@
-import type { DiScope } from "../../scope/abstractions/di-scope";
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
+import type { DiScope } from "./di-scope";
+import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
+import type { DependencyMappingKey } from "../types/dependency-mapping-key";
+import type { RegisteredDependencies } from "../types/registered-dependencies";
+import type { RemoveDependenciesCollection } from "../types/utilities/remove-dependencies-collection";
 import type { DiMappingBuilder } from "./di-mapping-builder";
 
 export type DiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> =

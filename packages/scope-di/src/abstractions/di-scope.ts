@@ -1,9 +1,12 @@
-import { AwaitedResolvedDependencies, AwaitedResolutionResult, DependencyResolutionKey, ResolvedDependencies } from "../../types";
-import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
-import type { DependencyDescriptor } from "../../types/dependency-descriptor";
-import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { ResolutionResult } from "../../types/utilities/resolution-result";
+import type { DependenciesCollectionResolutionKey } from "../types/dependencies-collection-resolution-key";
+import type { DependencyDescriptor } from "../types/dependency-descriptor";
+import type { DependencyMappingKey } from "../types/dependency-mapping-key";
+import type { DependencyResolutionKey } from "../types/dependency-resolution-key";
+import type { RegisteredDependencies } from "../types/registered-dependencies";
+import type { AwaitedResolutionResult } from "../types/utilities/awaited-resolution-result";
+import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
+import type { ResolutionResult } from "../types/utilities/resolution-result";
+import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
 
 export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> = 
 (

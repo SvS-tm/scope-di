@@ -1,15 +1,15 @@
 import type { Constructor, Promised } from "@svs-tm/system";
-import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
-import type { DependencyLifetime } from "../../types/dependency-lifetime";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
-import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
+import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
+import type { DependencyMappingKey } from "../types/dependency-mapping-key";
+import type { DependencyLifetime } from "../types/dependency-lifetime";
+import type { RegisteredDependencies } from "../types/registered-dependencies";
+import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
 import type { DiScopeBuilder } from "./di-scope-builder";
-import type { AddDependency } from "../../types/utilities/add-dependency";
-import type { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
-import type { DependencyFactory } from "../../types/dependency-factory";
-import type { AwaitedResolvedDependencies } from "../../types/utilities/awaited-resolved-dependencies";
-import type { DependencyResolutionKey } from "../../types";
+import type { AddDependency } from "../types/utilities/add-dependency";
+import type { DependencyDescriptorType } from "../types/dependency-descriptor-type";
+import type { DependencyFactory } from "../types/dependency-factory";
+import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
+import type { DependencyResolutionKey } from "../types";
 
 export type DiDependentMappingBuilder
 <

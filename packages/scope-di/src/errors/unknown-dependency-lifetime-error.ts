@@ -1,4 +1,5 @@
-import type { AllowedDependencyKey, DependencyLifetime } from "../../types";
+import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
+import type { DependencyLifetime } from "../types/dependency-lifetime";
 
 export class UnknownDependencyLifetimeError extends Error
 {

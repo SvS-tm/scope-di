@@ -11,7 +11,7 @@ export type UseDiScopeOptions<T_RegisteredDependencies extends RegisteredDepende
 
 export const useDiScope = <T_RegisteredDependencies extends RegisteredDependencies>({ rootScope, createNewScope } : UseDiScopeOptions<T_RegisteredDependencies>) =>
 {
-    const parentScope = useContextValue(resolutionScopeContext) ?? rootScope;
+    const parentScope = useContextValue(resolutionScopeContext) as DiScope<T_RegisteredDependencies> ?? rootScope;
 
     const [currentScope] = useState(() => createNewScope ? parentScope.createChildScope() : parentScope);
 

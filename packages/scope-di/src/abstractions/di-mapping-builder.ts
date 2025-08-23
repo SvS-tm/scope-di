@@ -1,5 +1,5 @@
 import type { Constructor } from "@svs-tm/system";
-import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies, DependencyResolutionKey } from "../../types";
+import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies, DependencyResolutionKey } from "../types";
 import type { DiDependentMappingBuilder } from "./di-dependent-mapping-builder";
 import type { DiScopeBuilder } from "./di-scope-builder";
 

@@ -1,4 +1,5 @@
-import type { AllowedDependencyKey, DependencyDescriptorType } from "../../types";
+import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
+import type { DependencyDescriptorType } from "../types/dependency-descriptor-type";
 
 export class UnknownDependencyTypeError extends Error
 {

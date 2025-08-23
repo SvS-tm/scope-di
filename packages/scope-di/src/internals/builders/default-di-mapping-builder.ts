@@ -6,9 +6,9 @@ import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AddDependency } from "../../types/utilities/add-dependency";
-import type { DiMappingBuilder, DiScopeBuilder } from "../abstractions";
+import type { DiMappingBuilder, DiScopeBuilder } from "../../abstractions";
 import { DefaultDiDependentMappingBuilder } from "./default-di-dependent-mapping-builder";
-import type { DefaultDiScopeBuilder } from "./default-di-scope-builder";
+import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 
 export class DefaultDiMappingBuilder
 <

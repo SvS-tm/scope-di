@@ -10,10 +10,11 @@ import type { DependencyResolutionKey } from "../../types/dependency-resolution-
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import type { ResolutionResult } from "../../types/utilities/resolution-result";
-import type { DiScope } from "../abstractions";
-import { DependencyNotRegisteredError } from "../errors/dependency-not-registered-error";
-import { UnknownDependencyLifetimeError } from "../errors/unknown-dependency-lifetime-error";
-import { UnknownDependencyTypeError } from "../errors/unknown-dependency-type-error";
+import type { DiScope } from "../../abstractions/di-scope";
+import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
+import { DependencyNotRegisteredError } from "../../errors/dependency-not-registered-error";
+import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
+
 
 export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>

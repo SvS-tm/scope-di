@@ -1,6 +1,6 @@
 import type { Constructor, Delegate, Promised } from "@svs-tm/system";
-import type { DiDependentMappingBuilder } from "../abstractions/di-dependent-mapping-builder";
-import type { DiScopeBuilder } from "../abstractions/di-scope-builder";
+import type { DiDependentMappingBuilder } from "../../abstractions/di-dependent-mapping-builder";
+import type { DiScopeBuilder } from "../../abstractions/di-scope-builder";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import type { DependencyFactory } from "../../types/dependency-factory";
@@ -10,8 +10,8 @@ import type { RegisteredDependencies } from "../../types/registered-dependencies
 import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { AwaitedResolvedDependencies } from "../../types/utilities/awaited-resolved-dependencies";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
-import type { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
+import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 
 export class DefaultDiDependentMappingBuilder
 <

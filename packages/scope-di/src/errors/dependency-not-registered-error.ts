@@ -1,4 +1,4 @@
-import type { AllowedDependencyKey } from "../../types";
+import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
 
 export class DependencyNotRegisteredError extends Error
 {
