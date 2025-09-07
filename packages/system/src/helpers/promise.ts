@@ -55,7 +55,7 @@ export type TrackedPromise<T_Result> =
 
 export const isTrackedPromise = (value: unknown): value is TrackedPromise<unknown> =>
 {
-    return value instanceof Promise && trackedPromiseStatus in value;
+    return !!value && Object.prototype.hasOwnProperty.call(value, trackedPromiseStatus);
 };
 
 /**

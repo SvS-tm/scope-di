@@ -1,11 +1,25 @@
-import { type AwaitedResolutionResult, type AwaitedResolvedDependencies, type DependenciesCollectionResolutionKey, type DependencyMappingKey, type DependencyResolutionKey, type DiScope, type RegisteredDependencies, type ResolutionResult, type ResolvedDependencies } from "@svs-tm/scope-di";
+import type 
+{
+    AwaitedResolutionResult,
+    AwaitedResolvedDependencies,
+    DependenciesCollectionResolutionKey,
+    DependencyMappingKey,
+    DependencyResolutionKey,
+    DiScope,
+    RegisteredDependencies,
+    ResolutionResult,
+    ResolvedDependencies
+} from "@svs-tm/scope-di";
+import { createDiScopeComponent } from "../internals/components/di-scope";
 import { suspendedAwait } from "../internals/helpers/promise";
 import { useDiScope } from "../internals/hooks/use-di-scope";
+import type { ReactDiOptions } from "../types/react-di-options";
 import type { ReactDiTools } from "../types/react-di-tools";
 
 export const configureReactDi = <T_RegisteredDependencies extends RegisteredDependencies>
 (
-    rootScope: DiScope<T_RegisteredDependencies>
+    rootScope: DiScope<T_RegisteredDependencies>,
+    options?: ReactDiOptions
 ) 
     : ReactDiTools<T_RegisteredDependencies> =>
 {
@@ -64,11 +78,17 @@ export const configureReactDi = <T_RegisteredDependencies extends RegisteredDepe
 
         const promise = scope.resolveAsync(...keys);
 
-        return suspendedAwait(promise);
+        /**
+         * @todo investigate how to cast it properly
+         */
+        return suspendedAwait(promise) as any;
     }
+
+    const DiScope = createDiScopeComponent(rootScope, options);
 
     return {
         useDependencies,
-        useDependenciesAsync
+        useDependenciesAsync,
+        DiScope
     };
 };

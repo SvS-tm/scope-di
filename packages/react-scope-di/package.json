@@ -1,59 +1,66 @@
 {
-  "name": "@svs-tm/react-scope-di",
-  "version": "1.0.0",
-  "description": "Scope DI library for React",
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+    "name": "@svs-tm/react-scope-di",
+    "version": "1.0.0",
+    "description": "Scope DI library for React",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+        "test": "jest"
+    },
+    "keywords": [
+        "di",
+        "dependency injection",
+        "scopes",
+        "react"
+    ],
+    "author": "svs-tm",
+    "license": "ISC",
+    "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67",
+    "dependencies": {
+        "@svs-tm/system": "workspace:*",
+        "react-is": "^19.1.1"
+    },
+    "devDependencies": {
+        "@jest/globals": "^30.0.5",
+        "@rollup/plugin-commonjs": "^28.0.6",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-typescript": "^12.1.4",
+        "@svs-tm/scope-di": "workspace:*",
+        "@testing-library/jest-dom": "^6.6.4",
+        "@testing-library/react": "^16.3.0",
+        "@types/jest": "^30.0.0",
+        "@types/node": "^24.1.0",
+        "@types/react": "^19.1.9",
+        "@types/react-is": "^19.0.0",
+        "@types/react18": "npm:@types/react@^18.3.23",
+        "@types/react19": "npm:@types/react@^19.1.9",
+        "jest": "^30.0.5",
+        "jest-environment-jsdom": "^30.0.5",
+        "react": "^19.1.1",
+        "react18": "npm:react@^18.3.1",
+        "react19": "npm:react@^19.1.1",
+        "rimraf": "^6.0.1",
+        "rollup": "^4.46.2",
+        "rollup-plugin-dts": "^6.2.1",
+        "ts-jest": "^29.4.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.2"
+    },
+    "peerDependencies": {
+        "react": ">=18 <20",
+        "@svs-tm/scope-di": ">=1 <2"
+    },
+    "engines": {
+        "node": ">=18"
     }
-  },
-  "scripts": {
-    "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
-    "test": "jest"
-  },
-  "keywords": [
-    "di",
-    "dependency injection",
-    "scopes",
-    "react"
-  ],
-  "author": "svs-tm",
-  "license": "ISC",
-  "packageManager": "pnpm@10.14.0",
-  "dependencies": {
-    "@svs-tm/system": "workspace:*"
-  },
-  "devDependencies": {
-    "@jest/globals": "^30.0.5",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.4",
-    "@svs-tm/scope-di": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.4",
-    "@testing-library/react": "^16.3.0",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.1.0",
-    "@types/react": "^19.1.9",
-    "@types/react18": "npm:@types/react@^18.3.23",
-    "@types/react19": "npm:@types/react@^19.1.9",
-    "jest": "^30.0.5",
-    "jest-environment-jsdom": "^30.0.5",
-    "react": "^19.1.1",
-    "react18": "npm:react@^18.3.1",
-    "react19": "npm:react@^19.1.1",
-    "rimraf": "^6.0.1",
-    "rollup": "^4.46.2",
-    "rollup-plugin-dts": "^6.2.1",
-    "ts-jest": "^29.4.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
-  },
-  "peerDependencies": {
-    "react": "18.x || 19.x"
-  }
 }

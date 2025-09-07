@@ -1,5 +1,5 @@
 import { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
-import { useEffect, useState } from "react";
+import { useDebugValue, useEffect, useState } from "react";
 import { resolutionScopeContext } from "../constants/resolution-scope-context";
 import { useContextValue } from "./use-context-value";
 
@@ -18,10 +18,12 @@ export const useDiScope = <T_RegisteredDependencies extends RegisteredDependenci
     useEffect
     (
         () => createNewScope
-            ? currentScope[Symbol.dispose]
+            ? () => currentScope[Symbol.dispose].call(currentScope)
             : undefined,
         []
     );
+
+    useDebugValue(currentScope);
 
     return currentScope;
 };

@@ -12,7 +12,7 @@ export type ContextProviderProps<T_Value> =
 /**
  * This is HOC for rendering in React's context
  */
-export const ContextProvider = <T_Value extends unknown>({ context, value, children }: ContextProviderProps<T_Value>) =>
+export const DiContextProvider = <T_Value extends unknown>({ context, value, children }: ContextProviderProps<T_Value>) =>
 {
     const Provider = context.Provider === context
         /**

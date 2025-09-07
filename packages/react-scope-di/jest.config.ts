@@ -14,7 +14,9 @@ const config: Config = {
         "<rootDir>/src/tests-setup.ts"
       ],
       moduleNameMapper: {
-        "^react$": "react18"
+        "^react$": "react18",
+        "^react/jsx-runtime$": "react18/jsx-runtime",
+        "^react/jsx-dev-runtime$": "react18/jsx-dev-runtime"
       },
       globals: { 
         "ts-jest": { 
@@ -31,7 +33,9 @@ const config: Config = {
         "<rootDir>/src/tests-setup.ts"
       ],
       moduleNameMapper: {
-        "^react$": "react19"
+        "^react$": "react19",
+        "^react/jsx-runtime$": "react19/jsx-runtime",
+        "^react/jsx-dev-runtime$": "react19/jsx-dev-runtime"
       },
       globals: { 
         "ts-jest": { 
