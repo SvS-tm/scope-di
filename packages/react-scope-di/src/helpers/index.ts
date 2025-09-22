@@ -1,1 +1,1 @@
-export * from "./configure-react-di";
+export * from "./create-react-di-tools";

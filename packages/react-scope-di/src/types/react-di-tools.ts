@@ -5,6 +5,7 @@ import type { DiScopeComponent } from "./di-scope-component";
 import type { ResolutionKeysFunction } from "./resolution-keys-function";
 import type { ResolveHoc } from "./resolve-hoc";
 import type { ResolutionOptionsFunction } from "./resolution-options-function";
+import type { ResolveAsyncHoc } from "./resolve-async-hoc";
 
 export type ReactDiTools<T_RegisteredDependencies extends RegisteredDependencies> = 
 {
@@ -14,4 +15,5 @@ export type ReactDiTools<T_RegisteredDependencies extends RegisteredDependencies
     readonly useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>;
     readonly DiScope: DiScopeComponent;
     readonly resolve: ResolveHoc<T_RegisteredDependencies>;
+    readonly resolveAsync: ResolveAsyncHoc<T_RegisteredDependencies>;
 };

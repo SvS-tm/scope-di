@@ -1,13 +1,13 @@
 import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
 import type { ComponentType } from "react";
-import { UseDependenciesHook } from "../../types";
-import { DiScopeComponent } from "../../types/di-scope-component";
+import type { UseDependenciesAsyncHook } from "../../types";
+import type { DiScopeComponent } from "../../types/di-scope-component";
+import type { ResolvedAsyncComponentRenderer } from "../../types/resolved-async-component-renderer";
 import type { ResolvedComponentOptions } from "../../types/resolved-component-options";
-import type { ResolvedComponentRenderer } from "../../types/resolved-component-renderer";
 import { DiErrorBoundary } from "./di-error-boundary";
 import { DiSuspense } from "./di-suspense";
 
-type DependenciesProviderProps
+type AsyncDependenciesProviderProps
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
@@ -16,11 +16,11 @@ type DependenciesProviderProps
 {
     keys: T_DependencyResolutionKeys,
     props: T_Props,
-    children: ResolvedComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
-    useDependencies: UseDependenciesHook<T_RegisteredDependencies>
+    children: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
+    useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>
 };
 
-const DependenciesProvider = 
+const AsyncDependenciesProvider = 
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
@@ -31,16 +31,16 @@ const DependenciesProvider =
         keys,
         props, 
         children: Renderer,
-        useDependencies
-    }: DependenciesProviderProps<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
+        useDependenciesAsync
+    }: AsyncDependenciesProviderProps<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
 ) =>
 {
-    const dependencies = useDependencies(...keys);
+    const dependencies = useDependenciesAsync(...keys);
     
     return <Renderer props={props} dependencies={dependencies} />;
 };
 
-export const diResolve = 
+export const diResolveAsync = 
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
@@ -49,9 +49,9 @@ export const diResolve =
 (
     keys: T_DependencyResolutionKeys,
     options: ResolvedComponentOptions<T_Props> | undefined,
-    renderer: ResolvedComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
+    renderer: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
     DiScope: DiScopeComponent,
-    useDependencies: UseDependenciesHook<T_RegisteredDependencies>
+    useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>
 ) : ComponentType<T_Props> =>
 {
     return (props: T_Props) =>
@@ -62,9 +62,9 @@ export const diResolve =
                 <DiErrorBoundary fallback={options?.error}>
                     <DiSuspense fallback={options?.pending}>
                         <DiScope error={options?.error} pending={options?.pending}>
-                            <DependenciesProvider keys={keys} props={props} useDependencies={useDependencies}>
+                            <AsyncDependenciesProvider keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
                                 {renderer}
-                            </DependenciesProvider>
+                            </AsyncDependenciesProvider>
                         </DiScope>
                     </DiSuspense>
                 </DiErrorBoundary>
@@ -73,9 +73,9 @@ export const diResolve =
         else
         {
             return (
-                <DependenciesProvider keys={keys} props={props} useDependencies={useDependencies}>
+                <AsyncDependenciesProvider keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
                     {renderer}
-                </DependenciesProvider>
+                </AsyncDependenciesProvider>
             );
         }
     };
