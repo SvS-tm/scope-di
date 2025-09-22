@@ -1,94 +1,47 @@
-import type 
-{
-    AwaitedResolutionResult,
-    AwaitedResolvedDependencies,
-    DependenciesCollectionResolutionKey,
-    DependencyMappingKey,
-    DependencyResolutionKey,
-    DiScope,
-    RegisteredDependencies,
-    ResolutionResult,
-    ResolvedDependencies
-} from "@svs-tm/scope-di";
+import type { DependencyMappingKey, DependencyResolutionKey, DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
+import { diResolve } from "../internals/components/di-resolve";
 import { createDiScopeComponent } from "../internals/components/di-scope";
-import { suspendedAwait } from "../internals/helpers/promise";
 import { useDiScope } from "../internals/hooks/use-di-scope";
-import type { ReactDiOptions } from "../types/react-di-options";
+import { useScopeDependencies } from "../internals/hooks/use-scope-dependencies";
+import { useScopeDependenciesAsync } from "../internals/hooks/use-scope-dependencies-async";
+import type { DiScopeOptions } from "../types/di-scope-options";
 import type { ReactDiTools } from "../types/react-di-tools";
 
 export const configureReactDi = <T_RegisteredDependencies extends RegisteredDependencies>
 (
     rootScope: DiScope<T_RegisteredDependencies>,
-    options?: ReactDiOptions
+    options?: DiScopeOptions
 ) 
     : ReactDiTools<T_RegisteredDependencies> =>
 {
-    function useDependencies<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
-    (
-        key: T_DependencyMappingKey
-    )
-        : ResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
+    const DiScope = createDiScopeComponent(rootScope, options);
 
-    function useDependencies<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
-    (
-        key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
-    )
-        : ResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
-
-    function useDependencies<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
-    (
-        ...keys: T_DependencyResolutionKeys
-    )
-        : ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
-
-    function useDependencies<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
-    (
-        ...keys: T_DependencyResolutionKeys
-    )
+    const useDependencies = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
     {
         const scope = useDiScope({ rootScope });
-
-        return scope.resolve(...keys);
-    }
-
-    function useDependenciesAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
-    (
-        key: T_DependencyMappingKey
-    )
-        : AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
-
-    function useDependenciesAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
-    (
-        key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
-    )
-        : AwaitedResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
-
-    function useDependenciesAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
-    (
-        ...keys: T_DependencyResolutionKeys
-    )
-        : AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
-
-    function useDependenciesAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
-    (
-        ...keys: T_DependencyResolutionKeys
-    )
-    {
-        const scope = useDiScope({ rootScope });
-
-        const promise = scope.resolveAsync(...keys);
 
         /**
-         * @todo investigate how to cast it properly
+         * @todo proper cast
          */
-        return suspendedAwait(promise) as any;
-    }
+        return useScopeDependencies(scope, keys) as any;
+    };
 
-    const DiScope = createDiScopeComponent(rootScope, options);
+    const useDependenciesAsync = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
+    {
+        const scope = useDiScope({ rootScope });
+
+        /**
+         * @todo proper cast
+         */
+        return useScopeDependenciesAsync(scope, keys) as any;
+    };
 
     return {
         useDependencies,
         useDependenciesAsync,
-        DiScope
+        DiScope,
+        resolutionKeys: (...keys) => keys,
+        resolve: (keys, options, renderer) =>
+            diResolve(keys, options, renderer, DiScope, useDependencies)
     };
 };

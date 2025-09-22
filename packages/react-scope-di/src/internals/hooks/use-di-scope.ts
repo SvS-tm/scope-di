@@ -6,7 +6,7 @@ import { useContextValue } from "./use-context-value";
 export type UseDiScopeOptions<T_RegisteredDependencies extends RegisteredDependencies> =
 {
     rootScope: DiScope<T_RegisteredDependencies>;
-    createNewScope?: boolean;
+    createNewScope?: boolean | undefined;
 };
 
 export const useDiScope = <T_RegisteredDependencies extends RegisteredDependencies>({ rootScope, createNewScope } : UseDiScopeOptions<T_RegisteredDependencies>) =>

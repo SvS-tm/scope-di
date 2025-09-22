@@ -1,6 +1,6 @@
 import type { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
 import type { DiScopeComponent } from "../../types/di-scope-component";
-import type { ReactDiOptions } from "../../types/react-di-options";
+import type { DiScopeOptions } from "../../types/di-scope-options";
 import { resolutionScopeContext } from "../constants/resolution-scope-context";
 import { useDiScope } from "../hooks/use-di-scope";
 import { DiContextProvider } from "./di-context-provider";
@@ -10,7 +10,7 @@ import { DiSuspense } from "./di-suspense";
 export const createDiScopeComponent = <T_RegisteredDependencies extends RegisteredDependencies>
 (
     rootScope: DiScope<T_RegisteredDependencies>,
-    options?: ReactDiOptions
+    options?: DiScopeOptions
 ) : DiScopeComponent =>
 {
     return ({ children, error = options?.error, pending = options?.pending }) =>
