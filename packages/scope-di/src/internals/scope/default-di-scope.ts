@@ -1,4 +1,4 @@
-import { isNotSafeReference, isSafeReference } from "@svs-tm/system";
+import { isSafeReference } from "@svs-tm/system";
 import type { AwaitedResolvedDependencies, AwaitedResolutionResult } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
@@ -117,7 +117,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     {
         const descriptors = keys?.map((key) => this.resolveDescriptors(key));
 
-        if (isNotSafeReference(descriptors))
+        if (!isSafeReference(descriptors))
             return null;
 
         const asyncDependencies: Promise<any>[] = [];
@@ -245,7 +245,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             const [mappingKey] = key;
             const descriptors = this.registry.get(mappingKey);
 
-            if (isNotSafeReference(descriptors))
+            if (!isSafeReference(descriptors))
                 throw new DependencyNotRegisteredError(mappingKey);
 
             return descriptors;
@@ -254,7 +254,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         {
             const descriptor = this.registry.get(key)?.[0];
     
-            if (isNotSafeReference(descriptor))
+            if (!isSafeReference(descriptor))
                 throw new DependencyNotRegisteredError(key);
     
             return descriptor;
@@ -368,7 +368,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         {
             if 
             (
-                isNotSafeReference(dependency) 
+                !isSafeReference(dependency) 
                     || 
                 isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose])
             )

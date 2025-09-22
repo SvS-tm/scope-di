@@ -1,4 +1,4 @@
-import { isNotSafeReference } from "../guards";
+import { isSafeReference } from "../guards";
 import { Patch } from "../types/patch";
 
 export const trackedPromiseValue: unique symbol = Symbol("Field where promise result is held");
@@ -150,7 +150,7 @@ export const createControlledTrackedPromise = <T_Result>() =>
         )
     );
 
-    if (isNotSafeReference(actions))
+    if (!isSafeReference(actions))
         throw new Error("Failed to patch promise!");
 
     const [ nativeResolve, nativeReject ] = actions as PromiseActions<T_Result>;

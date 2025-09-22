@@ -6,6 +6,9 @@ import { useScopeDependencies } from "../internals/hooks/use-scope-dependencies"
 import { useScopeDependenciesAsync } from "../internals/hooks/use-scope-dependencies-async";
 import type { DiScopeOptions } from "../types/di-scope-options";
 import type { ReactDiTools } from "../types/react-di-tools";
+import { fallbackDiScopeOptions } from "../internals/helpers/di-scope-options";
+import type { UseDependenciesHook } from "../types/use-dependencies-hook";
+import type { UseDependenciesAsyncHook } from "../types/use-dependencies-async-hook";
 
 export const configureReactDi = <T_RegisteredDependencies extends RegisteredDependencies>
 (
@@ -16,7 +19,7 @@ export const configureReactDi = <T_RegisteredDependencies extends RegisteredDepe
 {
     const DiScope = createDiScopeComponent(rootScope, options);
 
-    const useDependencies = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
+    const useDependencies: UseDependenciesHook<T_RegisteredDependencies> = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
     {
         const scope = useDiScope({ rootScope });
 
@@ -26,7 +29,7 @@ export const configureReactDi = <T_RegisteredDependencies extends RegisteredDepe
         return useScopeDependencies(scope, keys) as any;
     };
 
-    const useDependenciesAsync = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
+    const useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies> = (...keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]) =>
     {
         const scope = useDiScope({ rootScope });
 
@@ -41,7 +44,14 @@ export const configureReactDi = <T_RegisteredDependencies extends RegisteredDepe
         useDependenciesAsync,
         DiScope,
         resolutionKeys: (...keys) => keys,
-        resolve: (keys, options, renderer) =>
-            diResolve(keys, options, renderer, DiScope, useDependencies)
+        resolutionOptions: (options) => options,
+        resolve: (keys, localOptions, renderer) => diResolve
+        (
+            keys, 
+            fallbackDiScopeOptions(localOptions, options), 
+            renderer, 
+            DiScope, 
+            useDependencies
+        )
     };
 };
