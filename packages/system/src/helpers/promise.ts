@@ -1,5 +1,5 @@
 import { isSafeReference } from "../guards";
-import { Patch } from "../types/patch";
+import type { Patch } from "../types/patch";
 
 export const trackedPromiseValue: unique symbol = Symbol("Field where promise result is held");
 export const trackedPromiseStatus: unique symbol = Symbol("Field where promise status is held");
@@ -130,35 +130,45 @@ export type ControlledTrackedPromise<T_Result> =
     }
 );
 
-type InferConstructor<T_Constructor> = T_Constructor extends new (...args: infer T_Args) => infer T_Result
-    ? (...args: T_Args) => T_Result
-    : never;
+type PromiseWithResolvers<T_Result> = ReturnType<typeof Promise.withResolvers<T_Result>>;
+type PromiseRejectAction<T_Result> = PromiseWithResolvers<T_Result>["reject"];
+type PromiseResolveAction<T_Result> = PromiseWithResolvers<T_Result>["resolve"];
 
-type PromiseInitializationFunction<T_Result> = Parameters<InferConstructor<typeof Promise<T_Result>>>[0];
-type PromiseActions<T_Result> = Parameters<PromiseInitializationFunction<T_Result>>;
+const createPromiseWithResolvers = <T_Result>(): PromiseWithResolvers<T_Result> =>
+{
+    const withResolvers: typeof Promise.withResolvers | undefined = Promise.withResolvers as any;
+
+    if (withResolvers)
+        return withResolvers();
+
+    let resolve: PromiseResolveAction<T_Result> | null = null;
+    let reject: PromiseRejectAction<T_Result> | null = null;
+
+    const promise = new Promise<T_Result>
+    (
+        (nativeResolve, nativeReject) => 
+        {
+            resolve = nativeResolve;
+            reject = nativeReject;
+        }
+    );
+
+    if (!isSafeReference(resolve) || !isSafeReference(reject))
+        throw new Error("Failed to patch promise!");
+
+    return { promise, resolve, reject };
+};
 
 export const createControlledTrackedPromise = <T_Result>() =>
 {
-    let actions: PromiseActions<T_Result> | undefined = undefined;
+    const { promise, reject, resolve } = createPromiseWithResolvers<T_Result>();
+    
+    const trackedPromise = trackPromise(promise);
 
-    const promise = trackPromise
-    (
-        new Promise<T_Result>
-        (
-            (nativeResolve, nativeReject) => 
-                void (actions = [nativeResolve, nativeReject])
-        )
-    );
+    const patch = trackedPromise as ControlledTrackedPromise<T_Result>;
 
-    if (!isSafeReference(actions))
-        throw new Error("Failed to patch promise!");
-
-    const [ nativeResolve, nativeReject ] = actions as PromiseActions<T_Result>;
-
-    const patch = promise as ControlledTrackedPromise<T_Result>;
-
-    patch[resolveTrackedPromise] = nativeResolve;
-    patch[rejectTrackedPromise] = nativeReject;
+    patch[resolveTrackedPromise] = resolve;
+    patch[rejectTrackedPromise] = reject;
 
     return patch;
 };

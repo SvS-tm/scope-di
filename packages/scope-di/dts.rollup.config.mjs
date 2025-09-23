@@ -1,5 +1,6 @@
 import { defineConfig } from "rollup";
 import { dts } from "rollup-plugin-dts";
+import pkg from "./package.json" with { type: "json" };
 
 export default defineConfig
 (

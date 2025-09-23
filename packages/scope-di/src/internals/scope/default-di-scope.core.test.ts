@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
+import { DefaultDiScope } from "./default-di-scope";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
-import { DefaultDiScope } from "../../scope/internals/default-di-scope";
 
 describe
 (
