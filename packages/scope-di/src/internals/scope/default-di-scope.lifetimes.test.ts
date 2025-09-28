@@ -1,4 +1,4 @@
-import { describe } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 
 describe
 (
@@ -21,5 +21,6 @@ describe
             Transient
                 • Always returns a new instance, even within the same scope.
          */
+        it("dummy", () => {});
     }
 );

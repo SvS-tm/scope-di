@@ -1,4 +1,4 @@
-import { describe } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 
 describe
 (
@@ -20,5 +20,6 @@ describe
         Collections/sub-deps included: 
             • Disposes everything that was actually resolved within the scope (including collection members and sub-dependencies created in this scope).
          */
+        it("dummy", () => {});
     }
 );

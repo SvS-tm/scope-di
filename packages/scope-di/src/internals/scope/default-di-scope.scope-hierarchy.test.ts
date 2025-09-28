@@ -1,4 +1,4 @@
-import { describe } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 
 describe
 (
@@ -8,5 +8,6 @@ describe
         /*
          • Child scope creation: createChildScope() shares the same registry but has its own cache.
          */
+        it("dummy", () => {});
     }
 );

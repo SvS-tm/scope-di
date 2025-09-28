@@ -1,4 +1,4 @@
-import { describe } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 
 describe
 (
@@ -10,5 +10,6 @@ describe
          • Mixed descriptor types: value/class/factory/async* descriptors all show up as-is with correct fields
          • Shared registry across scopes: a child scope's getDescriptors() matches the parent's (same registry reference)
         */
+       it("dummy", () => {});
     }
 );

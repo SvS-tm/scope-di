@@ -1,4 +1,4 @@
-import { describe } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 
 describe
 (
@@ -11,5 +11,6 @@ describe
          • Unknown descriptor type: a descriptor with an invalid type throws UnknownDependencyTypeError.
          • Unknown lifetime: a descriptor with an invalid lifetime throws UnknownDependencyLifetimeError.
         */
+       it("dummy", () => {});
     }
 );
