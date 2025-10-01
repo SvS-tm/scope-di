@@ -1,4 +1,3 @@
-import type { Promised } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "./allowed-dependency-key";
 import type { DependencyDescriptorType } from "./dependency-descriptor-type";
 import type { DependencyFactory } from "./dependency-factory";
@@ -13,5 +12,5 @@ export type AsyncFactoryDependencyDescriptor<T_Dependency> =
 {
     type: DependencyDescriptorType.FactoryAsync;
     subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
-    factory: DependencyFactory<any[], Promised<T_Dependency>>;
+    factory: DependencyFactory<any[], Promise<T_Dependency>>;
 };
