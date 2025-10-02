@@ -1,0 +1,21 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "ESNext",
+        "target": "ES2022",
+        "moduleResolution": "node",
+        "lib": [
+            // gives TS 5.2+ `using` & symbols
+            "esnext"
+        ], 
+        // allow full type-aware transform
+        "isolatedModules": false, 
+        // don't emit in tests
+        "noEmit": true
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.test.ts"
+    ],
+    "exclude": []
+}
