@@ -10,6 +10,8 @@ const config: Config = {
   extensionsToTreatAsEsm: [".ts"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
