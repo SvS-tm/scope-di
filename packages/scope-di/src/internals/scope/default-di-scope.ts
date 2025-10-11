@@ -30,25 +30,25 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     {
     }
 
-    private resolveNonBoundAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    public resolveAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: T_DependencyMappingKey
     )
         : Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>>;
 
-    private resolveNonBoundAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    public resolveAsync<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
     )
         : Promise<AwaitedResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>>;
 
-    private resolveNonBoundAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    public resolveAsync<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
         : Promise<AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
     
-    private async resolveNonBoundAsync(...keys: DependencyResolutionKey<any>[])
+    public async resolveAsync(...keys: DependencyResolutionKey<any>[])
     {
         const dependencies = await  this.resolveAsyncDependencies(keys);
 
@@ -72,27 +72,25 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             return [];
     }
 
-    public readonly resolveAsync: typeof this.resolveNonBoundAsync = this.resolveNonBoundAsync.bind(this);
-
-    private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    public resolve<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: T_DependencyMappingKey
     )
         : ResolutionResult<T_RegisteredDependencies, T_DependencyMappingKey>;
 
-    private resolveNonBound<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    public resolve<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: DependenciesCollectionResolutionKey<T_DependencyMappingKey>
     )
         : ResolutionResult<T_RegisteredDependencies, DependenciesCollectionResolutionKey<T_DependencyMappingKey>>;
 
-    private resolveNonBound<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    public resolve<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
         : ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
     
-    private resolveNonBound(...keys: DependencyResolutionKey<any>[])
+    public resolve(...keys: DependencyResolutionKey<any>[])
     {
         if (keys.length === 1)
         {
@@ -104,16 +102,16 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             return keys.map((key) => this.resolveSingleDependency(key));
     }
 
-    public readonly resolve: typeof this.resolveNonBound = this.resolveNonBound.bind(this);
+    private isAsyncDependency({ type }: DependencyDescriptor)
+    {
+        return (
+            type === DependencyDescriptorType.ClassAsync 
+                || 
+            type === DependencyDescriptorType.FactoryAsync
+        );
+    }
 
-    private readonly isAsyncDependency = ({ type }: DependencyDescriptor) => 
-    (
-        type === DependencyDescriptorType.ClassAsync 
-            || 
-        type === DependencyDescriptorType.FactoryAsync
-    );
-
-    private readonly resolveAsyncDependencies = async (keys?: DependencyResolutionKey<AllowedDependencyKey>[]) =>
+    private async resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
     {
         const descriptors = keys?.map((key) => this.resolveDescriptors(key));
 
@@ -175,7 +173,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return results;
     };
 
-    private readonly instantiate = (descriptor: DependencyDescriptor) =>
+    private instantiate(descriptor: DependencyDescriptor)
     {
         switch (descriptor.type)
         {
@@ -238,7 +236,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    private readonly resolveDescriptors = (key: DependencyResolutionKey<AllowedDependencyKey>) =>
+    private resolveDescriptors(key: DependencyResolutionKey<AllowedDependencyKey>)
     {
         if (Array.isArray(key))
         {
@@ -261,7 +259,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    private readonly resolveFromCurrentScope = (descriptor: DependencyDescriptor) =>
+    private resolveFromCurrentScope(descriptor: DependencyDescriptor)
     {
         if (this.resolvedDependencies.has(descriptor))
             return this.resolvedDependencies.get(descriptor);
@@ -273,13 +271,13 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return dependency;
     };
 
-    private readonly getHierarchy = function* (this: DefaultDiScope<T_RegisteredDependencies>)
+    private *getHierarchy()
     {
         for (let current = this.parent; isSafeReference(current); current = current.parent)
             yield current;
     };
 
-    private readonly resolveFromScopeHierarchy = (descriptor: DependencyDescriptor) =>
+    private resolveFromScopeHierarchy(descriptor: DependencyDescriptor)
     {
         const hierarchyScope = [...this.getHierarchy()]
             .findLast(({ resolvedDependencies }) => resolvedDependencies.has(descriptor));
@@ -290,7 +288,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return this.resolveFromCurrentScope(descriptor);
     }
 
-    private readonly resolveByDescriptor = (descriptor: DependencyDescriptor): unknown =>
+    private resolveByDescriptor(descriptor: DependencyDescriptor): unknown
     {
         switch (descriptor.lifetime)
         {
@@ -316,14 +314,14 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    private readonly resolveSingleDependency = 
+    private resolveSingleDependency
     <
         T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>
     >
     (
         key: DependencyResolutionKey<T_DependencyMappingKey>
     )
-        : ResolutionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>> =>
+        : ResolutionResult<T_RegisteredDependencies, DependencyResolutionKey<T_DependencyMappingKey>>
     {
         const descriptorOrCollection = this.resolveDescriptors(key);
 
@@ -339,30 +337,29 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    public readonly getDescriptors = (): readonly Readonly<DependencyDescriptor>[] => 
+    public getDescriptors(): readonly Readonly<DependencyDescriptor>[]
     {
         return [...this.registry.values().flatMap((descriptors) => descriptors)];
     };
 
-    public readonly createChildScope = (): DiScope<T_RegisteredDependencies> => 
+    public createChildScope(): DiScope<T_RegisteredDependencies>
     {
         return new DefaultDiScope(this.registry, this.root ?? this, this);
     };
 
-    private readonly disposeAsyncDependencies = async (dependencies: unknown[]) =>
+    private async disposeAsyncDependencies(dependencies: unknown[])
     {
-        await Promise.all
+        const promises = dependencies.map
         (
-            dependencies.map
-            (
-                (dependency) => isSafeReference(dependency)
-                    ? (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.() 
-                    : undefined
-            )
+            (dependency) => isSafeReference(dependency)
+                ? (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.() 
+                : undefined
         );
+
+        await Promise.all(promises);
     };
 
-    private readonly disposeSyncDependencies = (dependencies: unknown[]) =>
+    private disposeSyncDependencies(dependencies: unknown[])
     {
         for (const dependency of dependencies)
         {
@@ -378,7 +375,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     };
 
-    public readonly [Symbol.dispose] = () => 
+    public [Symbol.dispose]() 
     {
         const dependencies = [...this.resolvedDependencies.values()];
 
@@ -387,7 +384,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         this.disposeSyncDependencies(dependencies);
     };
 
-    public readonly [Symbol.asyncDispose] = async () => 
+    public async [Symbol.asyncDispose]()
     {
         const dependencies = [...this.resolvedDependencies.values()];
 
