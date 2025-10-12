@@ -1,49 +1,50 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  clearMocks: true,
-  collectCoverage: true,
-  coverageProvider: "v8",
-  projects: [
-    {
-      displayName: "react-18",
-      coverageDirectory: "coverage-react-18",
-      testEnvironment: "jsdom",
-      preset: "ts-jest",
-      setupFilesAfterEnv: [
-        "<rootDir>/src/tests-setup.ts"
-      ],
-      moduleNameMapper: {
-        "^react$": "react18",
-        "^react/jsx-runtime$": "react18/jsx-runtime",
-        "^react/jsx-dev-runtime$": "react18/jsx-dev-runtime"
-      },
-      globals: { 
-        "ts-jest": { 
-          tsconfig: "<rootDir>/tsconfig.react18.json" 
-        } 
-      }
-    },
-    {
-      displayName: "react-19",
-      coverageDirectory: "coverage-react-19",
-      testEnvironment: "jsdom",
-      preset: "ts-jest",
-      setupFilesAfterEnv: [
-        "<rootDir>/src/tests-setup.ts"
-      ],
-      moduleNameMapper: {
-        "^react$": "react19",
-        "^react/jsx-runtime$": "react19/jsx-runtime",
-        "^react/jsx-dev-runtime$": "react19/jsx-dev-runtime"
-      },
-      globals: { 
-        "ts-jest": { 
-          tsconfig: "<rootDir>/tsconfig.react19.json" 
-        } 
-      }
-    },
-  ] 
+    clearMocks: true,
+    resetMocks: true,
+    restoreMocks: true,
+    collectCoverage: true,
+    coverageProvider: "v8",
+    projects: 
+    [
+        {
+            displayName: "react-18",
+            testEnvironment: "jsdom",
+            preset: "ts-jest",
+            coverageDirectory: "coverage-react-18",
+            setupFilesAfterEnv: [
+                "<rootDir>/src/tests-setup.ts"
+            ],
+            moduleNameMapper: {
+                "^react$": "react18",
+                "^react/(.*)$": "react18/$1",
+                "^react-dom$": "react-dom18",
+                "^react-dom/(.*)$": "react-dom18/$1"
+            },
+            transform: {
+                "^.+\\.tsx?$": ["ts-jest", { useESM: true, tsconfig: "<rootDir>/tsconfig.react18.json" }]
+            }
+        },
+        {
+            displayName: "react-19",
+            coverageDirectory: "coverage-react-19",
+            testEnvironment: "jsdom",
+            preset: "ts-jest",
+            setupFilesAfterEnv: [
+                "<rootDir>/src/tests-setup.ts"
+            ],
+            moduleNameMapper: {
+                "^react$": "react19",
+                "^react/(.*)$": "react19/$1",
+                "^react-dom$": "react-dom19",
+                "^react-dom/(.*)$": "react-dom19/$1"
+            },
+            transform: {
+                "^.+\\.tsx?$": ["ts-jest", { useESM: true, tsconfig: "<rootDir>/tsconfig.react19.json" }]
+            }
+        },
+    ]
 };
 
 export default config;

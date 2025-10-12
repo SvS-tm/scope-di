@@ -54,7 +54,9 @@
         "rollup-plugin-dts": "^6.2.1",
         "ts-jest": "^29.4.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.2"
+        "typescript": "^5.9.2",
+        "react-dom18": "npm:react-dom@^18.3.1",
+        "react-dom19": "npm:react-dom@^19.1.1"
     },
     "peerDependencies": {
         "react": ">=18 <20",
