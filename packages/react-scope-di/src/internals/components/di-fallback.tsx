@@ -1,5 +1,5 @@
-import { createElement, isValidElement, type ReactNode } from "react";
-import { isValidElementType } from "react-is";
+import { createElement, type ReactNode } from "react";
+import { isElement, isValidElementType } from "react-is";
 import type { UiFallback } from "../../types";
 
 export type DiFallbackProps<T_Props extends object> = 
@@ -10,10 +10,12 @@ export type DiFallbackProps<T_Props extends object> =
 
 export const DiFallback = <T_Props extends object>({ element, props }: DiFallbackProps<T_Props>) =>
 {
-    if (isValidElement(element))
+    if (isElement(element))
         return element;
 
-    if (isValidElementType(element))
+    const type = typeof element;
+
+    if ((type === "object" || type === "function") && isValidElementType(element))
         return createElement(element, props);
 
     return element as ReactNode;

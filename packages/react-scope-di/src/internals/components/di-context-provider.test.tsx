@@ -1,5 +1,4 @@
-import { describe } from "@jest/globals";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { createContext } from "react";
 import { useContextValue } from "../hooks/use-context-value";
 import { DiContextProvider } from "./di-context-provider";
@@ -25,10 +24,17 @@ describe
                     return <span data-testid={id}>{value}</span>;
                 };
 
-                render(
-                    <DiContextProvider context={context} value={value}>
-                        <Component />
-                    </DiContextProvider>
+                act
+                (
+                    () =>
+                    {
+                        render
+                        (
+                            <DiContextProvider context={context} value={value}>
+                                <Component />
+                            </DiContextProvider>
+                        );
+                    }
                 );
 
                 const element = screen.getByTestId(id);

@@ -1,8 +1,9 @@
 import { Component, ErrorInfo, PropsWithChildren } from "react";
 import { ResolutionErrorFallback } from "../../types";
 import { DiFallback } from "./di-fallback";
+import { Delegate } from "@svs-tm/system";
 
-export type DiErrorBoundaryProps = PropsWithChildren<{ fallback: ResolutionErrorFallback; }>;
+export type DiErrorBoundaryProps = PropsWithChildren<{ onError?: Delegate<[error: unknown, errorInfo: ErrorInfo]>; fallback: ResolutionErrorFallback; }>;
 
 type DiErrorBoundaryState = 
 (
@@ -27,7 +28,7 @@ export class DiErrorBoundary extends Component<DiErrorBoundaryProps, DiErrorBoun
 
     public override componentDidCatch(error: unknown, errorInfo: ErrorInfo) 
     {
-        console.error("Error:", error, errorInfo);
+        this.props.onError?.(error, errorInfo);
     }
 
     public override render()
