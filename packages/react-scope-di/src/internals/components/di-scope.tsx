@@ -11,7 +11,8 @@ export const createDiScopeComponent = <T_RegisteredDependencies extends Register
 (
     rootScope: DiScope<T_RegisteredDependencies>,
     options?: DiScopeOptions
-) : DiScopeComponent =>
+)
+    : DiScopeComponent =>
 {
     return ({ children, error = options?.error, pending = options?.pending }) =>
     {

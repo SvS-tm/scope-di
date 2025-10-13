@@ -18,7 +18,7 @@ export const useDiScope = <T_RegisteredDependencies extends RegisteredDependenci
     useEffect
     (
         () => createNewScope
-            ? () => currentScope[Symbol.dispose].call(currentScope)
+            ? () => currentScope[Symbol.dispose]()
             : undefined,
         []
     );
