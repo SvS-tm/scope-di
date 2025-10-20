@@ -44,9 +44,12 @@
         "@types/react-is": "^19.0.0",
         "@types/react18": "npm:@types/react@^18.3.23",
         "@types/react19": "npm:@types/react@^19.1.9",
+        "core-js": "^3.46.0",
         "jest": "^30.0.5",
         "jest-environment-jsdom": "^30.0.5",
         "react": "^19.1.1",
+        "react-dom18": "npm:react-dom@^18.3.1",
+        "react-dom19": "npm:react-dom@^19.1.1",
         "react18": "npm:react@^18.3.1",
         "react19": "npm:react@^19.1.1",
         "rimraf": "^6.0.1",
@@ -54,13 +57,11 @@
         "rollup-plugin-dts": "^6.2.1",
         "ts-jest": "^29.4.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.2",
-        "react-dom18": "npm:react-dom@^18.3.1",
-        "react-dom19": "npm:react-dom@^19.1.1"
+        "typescript": "^5.9.2"
     },
     "peerDependencies": {
-        "react": ">=18 <20",
-        "@svs-tm/scope-di": ">=1 <2"
+        "@svs-tm/scope-di": ">=1 <2",
+        "react": ">=18 <20"
     },
     "engines": {
         "node": ">=18"

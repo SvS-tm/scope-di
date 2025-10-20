@@ -1,3 +1,3 @@
 import { FallbackOptions } from "./fallback-options";
 
-export type DiScopeOptions = FallbackOptions;
+export type DiResolutionOptions = FallbackOptions;

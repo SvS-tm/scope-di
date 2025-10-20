@@ -5,7 +5,8 @@
             "node",
             "@types/jest",
             "@types/react19",
-            "@types/react-dom19"
+            "@types/react-dom19",
+            "@testing-library/jest-dom"
         ]
     }
 }

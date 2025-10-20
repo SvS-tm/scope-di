@@ -1,7 +1,6 @@
 import { FC, PropsWithChildren } from "react";
-import { FallbackOptions } from "./fallback-options";
 
-export type DiScopeComponentProps = FallbackOptions;
+export type DiScopeComponentProps = {};
 
 export type DiScopeComponent = FC<PropsWithChildren<DiScopeComponentProps>>;
 

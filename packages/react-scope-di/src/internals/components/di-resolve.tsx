@@ -14,10 +14,11 @@ type DependenciesProviderProps
     T_Props extends {}
 > =
 {
-    keys: T_DependencyResolutionKeys,
-    props: T_Props,
-    children: ResolvedComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
-    useDependencies: UseDependenciesHook<T_RegisteredDependencies>
+    keys: T_DependencyResolutionKeys;
+    props: T_Props;
+    options: ResolvedComponentOptions<T_Props> | undefined;
+    children: ResolvedComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>;
+    useDependencies: UseDependenciesHook<T_RegisteredDependencies>;
 };
 
 const DependenciesProvider = 
@@ -30,6 +31,7 @@ const DependenciesProvider =
     {
         keys,
         props, 
+        options,
         children: Renderer,
         useDependencies
     }: DependenciesProviderProps<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
@@ -37,7 +39,13 @@ const DependenciesProvider =
 {
     const dependencies = useDependencies(...keys);
     
-    return <Renderer props={props} dependencies={dependencies} />;
+    return (
+        <DiErrorBoundary fallback={options?.error}>
+            <DiSuspense fallback={options?.pending}>
+                <Renderer props={props} dependencies={dependencies} />
+            </DiSuspense>
+        </DiErrorBoundary>
+    );
 };
 
 export const diResolve = 
@@ -59,21 +67,17 @@ export const diResolve =
         if (options?.createNewScope)
         {
             return (
-                <DiErrorBoundary fallback={options?.error}>
-                    <DiSuspense fallback={options?.pending}>
-                        <DiScope error={options?.error} pending={options?.pending}>
-                            <DependenciesProvider keys={keys} props={props} useDependencies={useDependencies}>
-                                {renderer}
-                            </DependenciesProvider>
-                        </DiScope>
-                    </DiSuspense>
-                </DiErrorBoundary>
+                <DiScope>
+                    <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
+                        {renderer}
+                    </DependenciesProvider>
+                </DiScope>
             );
         }
         else
         {
             return (
-                <DependenciesProvider keys={keys} props={props} useDependencies={useDependencies}>
+                <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
                     {renderer}
                 </DependenciesProvider>
             );

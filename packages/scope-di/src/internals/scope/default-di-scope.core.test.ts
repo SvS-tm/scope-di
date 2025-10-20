@@ -31,7 +31,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors);
 
-                const resolved = scope.resolve(key as never);
+                const [resolved] = scope.resolve(key as never);
 
                 expect(resolved).toBe(value);
             }
@@ -61,7 +61,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors);
 
-                const resolved = scope.resolve(key as never);
+                const [resolved] = scope.resolve(key as never);
 
                 expect(resolved).toBeInstanceOf(Test);
             }
@@ -91,7 +91,7 @@ describe
                 
                 const scope = new DefaultDiScope(descriptors);
 
-                const resolved = scope.resolve(key as never);
+                const [resolved] = scope.resolve(key as never);
 
                 expect(resolved).toBe(value);
             }
@@ -121,11 +121,11 @@ describe
                 
                 const scope = new DefaultDiScope(new Map(descriptors));
 
-                const resolved = scope.resolve(key as never) as Promise<unknown>;
+                const [resolved] = scope.resolve(key as never);
 
                 expect(resolved).toBeInstanceOf(Promise);
 
-                const instance = await resolved;
+                const instance = await (resolved as Promise<unknown>);
 
                 expect(instance).toBeInstanceOf(Test);
             }
@@ -155,11 +155,11 @@ describe
                 
                 const scope = new DefaultDiScope(new Map(descriptors));
 
-                const resolved = scope.resolve(key as never) as Promise<any>;
+                const [resolved] = scope.resolve(key as never);
 
                 expect(resolved).toBeInstanceOf(Promise);
 
-                const instance = await resolved;
+                const instance = await (resolved as Promise<unknown>);
 
                 expect(instance).toBe(value);
             }

@@ -1,8 +1,8 @@
-import { DiScopeOptions } from "./di-scope-options";
+import { DiResolutionOptions } from "./di-resolution-options";
 
 export type ResolvedComponentOptionsParameters = 
 (
-    DiScopeOptions
+    DiResolutionOptions
         &
     {
         createNewScope?: boolean;

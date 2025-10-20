@@ -2,7 +2,7 @@ import { Suspense, type SuspenseProps } from "react";
 import type { ResolutionPendingFallback } from "../../types";
 import { DiFallback } from "./di-fallback";
 
-export type DiSuspenseProps = 
+export type DiSuspenseProps =
 (
     Omit<SuspenseProps, "fallback">
         &

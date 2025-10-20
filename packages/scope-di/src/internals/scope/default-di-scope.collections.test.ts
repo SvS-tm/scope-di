@@ -57,7 +57,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors) as DiScope<any>;
                 
-                const resolved = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
+                const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
                 expect(resolved).toHaveLength(3);
                 expect(resolved[0]).toBe(dependency3);
@@ -97,7 +97,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors) as DiScope<any>;
                 
-                const resolved = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
+                const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
                 expect(resolved).toStrictEqual([dependency1, dependency1]);
             }
@@ -148,7 +148,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors) as DiScope<any>;
                 
-                const resolved = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
+                const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
                 expect(resolved).toHaveLength(3);
                 expect(resolved[0]).toBeInstanceOf(Promise);
@@ -202,7 +202,7 @@ describe
 
                 const scope = new DefaultDiScope(descriptors) as DiScope<any>;
                 
-                const resolved = await scope.resolveAsync([key] as DependenciesCollectionResolutionKey<never>);
+                const [resolved] = await scope.resolveAsync([key] as DependenciesCollectionResolutionKey<never>);
 
                 expect(resolved).toHaveLength(3);
                 expect(resolved[0]).toBe(dependency3);
