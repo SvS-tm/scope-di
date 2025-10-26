@@ -25,7 +25,7 @@ describe
                     }
                 }
 
-                using disposeSpy = jest
+                const disposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.dispose);
 
                 const key = "Value";
@@ -85,7 +85,7 @@ describe
                     };
                 }
 
-                using asyncDisposeSpy = jest
+                const asyncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.asyncDispose);
 
                 const key = "Value";
@@ -131,7 +131,7 @@ describe
                     };
                 }
 
-                using disposeSpy = jest
+                const disposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.dispose);
 
                 const key = "Value";
@@ -175,7 +175,7 @@ describe
                     };
                 }
 
-                using asyncDisposeSpy = jest
+                const asyncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.asyncDispose);
 
                 const key = "Value";
@@ -240,10 +240,10 @@ describe
                     }
                 }
 
-                using asyncDisposeSpy = jest
+                const asyncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.asyncDispose);
 
-                using syncDisposeSpy = jest
+                const syncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.dispose);
 
                 const key = "Value";
@@ -295,10 +295,10 @@ describe
                     }
                 }
 
-                using asyncDisposeSpy = jest
+                const asyncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.asyncDispose);
 
-                using syncDisposeSpy = jest
+                const syncDisposeSpy = jest
                     .spyOn(Dependency1.prototype, Symbol.dispose);
 
                 const key = "Value";
@@ -386,16 +386,16 @@ describe
                     }
                 }
 
-                using mainSyncDisposeSpy = jest
+                const mainSyncDisposeSpy = jest
                     .spyOn(MainDependency.prototype, Symbol.dispose);
 
-                using subDependency1SyncDisposeSpy = jest
+                const subDependency1SyncDisposeSpy = jest
                     .spyOn(SubDependency1.prototype, Symbol.dispose);
 
-                using subDependency2SyncDisposeSpy = jest
+                const subDependency2SyncDisposeSpy = jest
                     .spyOn(SubDependency2.prototype, Symbol.dispose);
 
-                using subDependency3SyncDisposeSpy = jest
+                const subDependency3SyncDisposeSpy = jest
                     .spyOn(SubDependency3.prototype, Symbol.dispose);
 
                 const mainKey = "Main";

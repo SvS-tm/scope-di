@@ -2,6 +2,12 @@ import type { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
 import { useState } from "react";
 import type { UseDependenciesAsyncHook } from "../../types";
 import { useDiScope } from "./use-di-scope";
+import { asyncResolutionResultMarker } from "../constants/is-async-resolution-result";
+
+const marker = 
+{ 
+    [asyncResolutionResultMarker]: true 
+} as const;
 
 export const createUseDependenciesAsyncHook = 
 <
@@ -15,7 +21,7 @@ export const createUseDependenciesAsyncHook =
     return (...keys) =>
     {
         const scope = useDiScope({ rootScope });
-        const [dependencies] = useState(() => scope.resolveAsync(...keys));
+        const [dependencies] = useState(() => Object.assign(scope.resolveAsync(...keys), marker));
 
         return dependencies;
     };

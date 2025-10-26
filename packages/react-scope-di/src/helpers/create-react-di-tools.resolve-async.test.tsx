@@ -1,3 +1,5 @@
+import { describe, it } from "@jest/globals";
+
 /*
 Pending → resolved
 
@@ -14,7 +16,7 @@ Errors
 
     - Rejected dep: triggers ErrorBoundary and renders error fallback with reason.
 */
- describe
+describe
 (
     "dummy", 
     () => 

@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { DiFallback } from "./di-fallback";
+import { describe, expect, it } from "@jest/globals";
 
 describe
 (

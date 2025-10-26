@@ -3,7 +3,6 @@
     "compilerOptions": {
         "types": [
             "node",
-            "@types/jest",
             "@types/react18",
             "@types/react-dom18",
             "@testing-library/jest-dom"

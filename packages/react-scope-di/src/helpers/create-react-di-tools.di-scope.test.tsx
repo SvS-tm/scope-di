@@ -1,27 +1,7 @@
+import { describe, expect, it, jest } from "@jest/globals";
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
 import { render, screen } from "@testing-library/react";
 import { createReactDiTools } from "./create-react-di-tools";
-
-/*
-Context & scope creation
-
-    + Provides scope via context: a child that resolves a simple value key can access the scope.
-    + Creates a child scope: on mount, instances with Scoped lifetime are unique per <DiScope>; not the root instance.
-    + Stable across re-renders: re-rendering the same <DiScope> does not create another child scope.
-
-Nesting & lifetimes
-
-    + Singletons: same instance across all <DiScope> mounts that share the same root scope.
-    + Scoped: a child <DiScope> doesn’t leak scoped instances into siblings.
-    + ScopedInherited: instance first resolved in an ancestor is reused along that branch; different across other branches.
-    + Transient: created new instance on every resolution
-
-Disposal
-
-    - Sync disposal: [Symbol.dispose] is called once for resolved deps when the <DiScope> unmounts.
-    - Async disposal: [Symbol.asyncDispose] is awaited/called once on unmount.
-    - Root vs child: unmounting a child scope does not dispose root-singleton instances.
- */
 
 describe
 (
@@ -291,7 +271,7 @@ describe
 
         it
         (
-            "",
+            "Transient: created new instance on every resolution",
             () =>
             {
                 const key = "Key";
@@ -384,6 +364,62 @@ describe
 
                 expect(element).not.toBeInTheDocument();
                 expect(disposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "Sync disposal: [Symbol.dispose] is called once for created child scope only, and root scope is untouched",
+            () =>
+            {
+                const key = "Key";
+
+                const scope = configureRootScope()
+                    .map(key)
+                    .asFactory(() => ({ value: 1 }), DependencyLifetime.Singleton)
+                    .build();
+
+                const rootScopeDisposeSpy = jest
+                    .spyOn(scope, Symbol.dispose);
+
+                const scopePrototype = Object.getPrototypeOf(scope) as typeof scope;
+
+                const disposeSpy = jest
+                    .spyOn(scopePrototype, Symbol.dispose);
+
+                const { DiScope, useDependencies } = createReactDiTools(scope);
+
+                const Consumer = () =>
+                {
+                    const [dependency] = useDependencies(key);
+
+                    return <span data-testid={key}>{dependency.value}</span>;
+                };
+
+                const { rerender } = render
+                (
+                    <DiScope>
+                        <DiScope>
+                            <Consumer />
+                        </DiScope>
+                    </DiScope>
+                );
+
+                const element = screen.queryByTestId(key);
+
+                expect(element).toBeInTheDocument();
+                expect(element).toHaveTextContent("1");
+
+                rerender
+                (
+                    <DiScope>
+                        <></>
+                    </DiScope>
+                );
+
+                expect(element).not.toBeInTheDocument();
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
+                expect(rootScopeDisposeSpy).not.toHaveBeenCalled();
             }
         );
     }

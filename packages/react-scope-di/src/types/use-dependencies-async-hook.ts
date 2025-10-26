@@ -1,4 +1,5 @@
-import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
+import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
+import type { AsyncResolutionResult } from "./async-resolution-result";
 
 export type UseDependenciesAsyncHook<T_RegisteredDependencies extends RegisteredDependencies> =
 {
@@ -6,5 +7,5 @@ export type UseDependenciesAsyncHook<T_RegisteredDependencies extends Registered
     (
         ...keys: T_DependencyResolutionKeys
     )
-        : Promise<AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
+        : AsyncResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKeys>;
 };

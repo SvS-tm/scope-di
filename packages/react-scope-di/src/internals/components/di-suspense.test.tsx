@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { DiSuspense } from "./di-suspense";
 import { JSX } from "react";
+import { describe, expect, it } from "@jest/globals";
 
 describe
 (

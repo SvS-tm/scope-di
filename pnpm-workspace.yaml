@@ -1,5 +1,7 @@
+packages:
+  - packages/*
+
 onlyBuiltDependencies:
+  - core-js
   - esbuild
   - unrs-resolver
-packages:
-  - 'packages/*'

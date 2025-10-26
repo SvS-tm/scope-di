@@ -5,17 +5,18 @@
         "target": "ES2022",
         "moduleResolution": "node",
         "lib": [
-            // gives TS 5.2+ `using` & symbols
             "esnext",
             "DOM"
         ], 
         // allow full type-aware transform
         "isolatedModules": false, 
-        // don't emit in tests
         "noEmit": true
     },
     "include": [
-        "src/**/*.test.ts"
+        "src/**/*.test.ts",
+        "src/tests-setup.after-env.ts",
+        "src/tests-setup.ts",
+        "src/tests-extensions.d.ts"
     ],
     "exclude": [
         ".rollup.cache",

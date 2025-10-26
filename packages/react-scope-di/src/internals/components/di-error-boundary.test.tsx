@@ -1,6 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import { DiErrorBoundary } from "./di-error-boundary";
 import { JSX } from "react";
+import { describe, expect, it, jest } from "@jest/globals";
+import { Delegate } from "@svs-tm/system";
 
 describe
 (
@@ -45,7 +47,7 @@ describe
                     throw error;
                 };
 
-                const onError = jest.fn<void, [error: unknown, errorInfo: React.ErrorInfo]>();
+                const onError = jest.fn<Delegate<[error: unknown, errorInfo: React.ErrorInfo]>>();
 
                 act
                 (

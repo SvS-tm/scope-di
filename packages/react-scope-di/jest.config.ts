@@ -1,19 +1,21 @@
 import type { Config } from "jest";
 
 const config: Config = {
-    clearMocks: true,
-    resetMocks: true,
-    restoreMocks: true,
     collectCoverage: true,
     coverageProvider: "v8",
     projects: 
     [
         {
             displayName: "react-18",
+            clearMocks: true,
+            resetMocks: true,
+            restoreMocks: true,
+            injectGlobals: false,
             coverageDirectory: "coverage-react-18",
             roots: ["<rootDir>/src"],
             setupFiles: ["<rootDir>/src/tests-setup.ts"],
             setupFilesAfterEnv: ["<rootDir>/src/tests-setup.after-env.ts"],
+            testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
             preset: "ts-jest",
             moduleNameMapper: 
@@ -37,10 +39,15 @@ const config: Config = {
         },
         {
             displayName: "react-19",
+            clearMocks: true,
+            resetMocks: true,
+            restoreMocks: true,
+            injectGlobals: false,
             coverageDirectory: "coverage-react-19",
             roots: ["<rootDir>/src"],
             setupFiles: ["<rootDir>/src/tests-setup.ts"],
             setupFilesAfterEnv: ["<rootDir>/src/tests-setup.after-env.ts"],
+            testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
             preset: "ts-jest",
             moduleNameMapper: 
