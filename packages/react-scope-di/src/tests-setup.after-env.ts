@@ -1,7 +1,8 @@
-import { expect } from '@jest/globals';
+import { beforeEach, expect } from '@jest/globals';
 import matchers from '@testing-library/jest-dom/matchers';
 import type { FunctionLike, Mock } from 'jest-mock';
 import type { MatcherContext } from 'expect';
+import { cleanup } from '@testing-library/react';
 
 function isJestMock(value: any): value is Mock<FunctionLike>
 {
@@ -15,7 +16,7 @@ expect.extend
     {
         toHaveBeenCalledWithContext(this: MatcherContext, received: unknown, expected: unknown) 
         {
-            if (!isJestMock(received)) 
+            if (!isJestMock(received))
             {
                 return {
                     pass: false,
@@ -45,3 +46,5 @@ expect.extend
         }
     }
 );
+
+beforeEach(cleanup);

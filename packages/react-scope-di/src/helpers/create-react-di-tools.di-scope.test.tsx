@@ -5,7 +5,7 @@ import { createReactDiTools } from "./create-react-di-tools";
 
 describe
 (
-    "DiScope: Context & scope creation",
+    "DiScope: scopes lifetimes",
     () =>
     {
         it
@@ -139,7 +139,7 @@ describe
 
 describe
 (
-    "DiScope: Nesting & lifetimes",
+    "DiScope: dependencies liftimes",
     () =>
     {
         it
@@ -319,7 +319,7 @@ describe
 
 describe
 (
-    "DiScope: Disposal",
+    "DiScope: disposal",
     () =>
     {
         it
@@ -369,7 +369,7 @@ describe
 
         it
         (
-            "Sync disposal: [Symbol.dispose] is called once for created child scope only, and root scope is untouched",
+            "Sync disposal: [Symbol.dispose] is called once for created child scope only, root scope is untouched",
             () =>
             {
                 const key = "Key";
