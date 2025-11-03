@@ -150,6 +150,56 @@ describe
                 expect(errorSpan).toBeInTheDocument();
                 expect(errorSpan).toHaveTextContent(errorSpanContent);
             }
-        )
+        );
+
+        it
+        (
+            "Creates new scope if 'createNewScope' option is true",
+            () =>
+            {
+                let counter = 0;
+                const key1 = "Key1";
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactory(() => ({ index: ++counter }), DependencyLifetime.Scoped)
+                    .build();
+
+                const [rootDependency1] = scope.resolve(key1);
+
+                const scopePrototype = Object.getPrototypeOf(scope) as typeof scope;
+
+                const createChildScopeSpy = jest
+                    .spyOn(scopePrototype, "createChildScope");
+
+                const depedency1Spy = jest.fn();
+
+                const { resolve, resolutionKeys, resolutionOptions } = createReactDiTools(scope);
+
+                const Consumer = resolve
+                (
+                    resolutionKeys("Key1"), 
+                    resolutionOptions({ createNewScope: true }),
+                    ({ dependencies: [dependency1] }) =>
+                    {
+                        depedency1Spy(dependency1);
+
+                        return (
+                            <span data-testid={key1}>{dependency1.index}</span>
+                        );
+                    }
+                );
+
+                render(<Consumer />);
+
+                expect(createChildScopeSpy).toHaveBeenCalledTimes(1);
+                expect(depedency1Spy).not.toHaveBeenCalledWith(rootDependency1);
+
+                const dependency1 = screen.queryByTestId(key1);
+
+                expect(dependency1).toBeInTheDocument();
+                expect(dependency1).toHaveTextContent(String(rootDependency1.index + 1));
+            }
+        );
     }
 );

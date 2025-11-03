@@ -1,8 +1,6 @@
-import { DiResolutionOptions } from "./di-resolution-options";
-
-export type ResolvedComponentOptionsParameters = 
+export type ResolvedComponentOptionsParameters<T_ResolutionOptions> = 
 (
-    DiResolutionOptions
+    T_ResolutionOptions
         &
     {
         createNewScope?: boolean;

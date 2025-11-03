@@ -1,3 +1,6 @@
-import { FallbackOptions } from "./fallback-options";
+import { ResolutionErrorFallback } from "./resolution-error-fallback";
 
-export type DiResolutionOptions = FallbackOptions;
+export type DiResolutionOptions = 
+{ 
+    error?: ResolutionErrorFallback; 
+};

@@ -1,7 +1,8 @@
 import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
-import { ResolvedComponentOptions } from "./resolved-component-options";
-import { ResolvedComponentRenderer } from "./resolved-component-renderer";
-import { ComponentType } from "react";
+import type { ComponentType } from "react";
+import type { DiResolutionOptions } from "./di-resolution-options";
+import type { ResolvedComponentOptions } from "./resolved-component-options";
+import type { ResolvedComponentRenderer } from "./resolved-component-renderer";
 
 export type ResolveHoc<T_RegisteredDependencies extends RegisteredDependencies> = 
 <
@@ -10,7 +11,7 @@ export type ResolveHoc<T_RegisteredDependencies extends RegisteredDependencies> 
 >
 (
     keys: T_DependencyResolutionKeys,
-    options: ResolvedComponentOptions<T_Props> | undefined,
+    options: ResolvedComponentOptions<T_Props, DiResolutionOptions> | undefined,
     renderer: ResolvedComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
 )
     => ComponentType<T_Props>;

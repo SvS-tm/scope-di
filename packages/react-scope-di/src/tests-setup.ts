@@ -4,7 +4,8 @@ import "core-js/actual/symbol/async-dispose";
 const { error } = console;
 
 const filteredMessagePatterns = [
-    /.*React will try to recreate this component tree from scratch using the error boundary you provided.*/
+    /.*React will try to recreate this component tree from scratch using the error boundary you provided.*/,
+    /.*Consider adding an error boundary to your tree to customize error handling behavior.*/
 ];
 
 console.error = (...args) =>

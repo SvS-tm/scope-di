@@ -1,5 +1,6 @@
 import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
 import type { ComponentType } from "react";
+import type { DiAsyncResolutionOptions } from "../../types/di-async-resolution-options";
 import type { DiScopeComponent } from "../../types/di-scope-component";
 import type { ResolvedAsyncComponentRenderer } from "../../types/resolved-async-component-renderer";
 import type { ResolvedComponentOptions } from "../../types/resolved-component-options";
@@ -20,7 +21,7 @@ type AsyncDependenciesAwaiterProps
     dependencies: Promise<AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>;
 };
 
-const AsyncDependenciesAwaiter =
+function AsyncDependenciesAwaiter
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
@@ -33,7 +34,7 @@ const AsyncDependenciesAwaiter =
         props
     } 
         : AsyncDependenciesAwaiterProps<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
-) =>
+)
 {
     const awaitedDependencies = suspendedAwait(dependencies);
 
@@ -49,12 +50,12 @@ type AsyncDependenciesProviderProps
 {
     keys: T_DependencyResolutionKeys;
     props: T_Props;
-    options: ResolvedComponentOptions<T_Props> | undefined;
+    options: ResolvedComponentOptions<T_Props, DiAsyncResolutionOptions> | undefined;
     children: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>;
     useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>;
 };
 
-const AsyncDependenciesProvider = 
+function AsyncDependenciesProvider
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
@@ -69,7 +70,7 @@ const AsyncDependenciesProvider =
         useDependenciesAsync
     }
         : AsyncDependenciesProviderProps<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
-) =>
+)
 {
     const dependencies = useDependenciesAsync(...keys);
     
@@ -90,7 +91,7 @@ export const diResolveAsync =
 >
 (
     keys: T_DependencyResolutionKeys,
-    options: ResolvedComponentOptions<T_Props> | undefined,
+    options: ResolvedComponentOptions<T_Props, DiAsyncResolutionOptions> | undefined,
     renderer: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
     DiScope: DiScopeComponent,
     useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>

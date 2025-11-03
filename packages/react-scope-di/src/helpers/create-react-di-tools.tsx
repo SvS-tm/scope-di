@@ -5,8 +5,10 @@ import { createResolveHoc } from "../internals/components/resolve";
 import { createResolveAsyncHoc } from "../internals/components/resolve-async";
 import { createUseDependenciesAsyncHook } from "../internals/hooks/use-dependencies-async";
 import { createUseDependenciesHook } from "../internals/hooks/use-scope-dependencies";
+import type { ResolutionKeysFunction } from "../types";
 import type { DiResolutionOptions } from "../types/di-resolution-options";
 import type { ReactDiTools } from "../types/react-di-tools";
+import type { ResolutionOptionsFunction } from "../types/resolution-options-function";
 
 export const createReactDiTools = <T_RegisteredDependencies extends RegisteredDependencies>
 (
@@ -20,14 +22,17 @@ export const createReactDiTools = <T_RegisteredDependencies extends RegisteredDe
     const useDependenciesAsync = createUseDependenciesAsyncHook(rootScope);
     const resolve = createResolveHoc(options, DiScope, useDependencies);
     const resolveAsync = createResolveAsyncHoc(options, DiScope, useDependenciesAsync);
+    const resolutionOptionsFunction: ResolutionOptionsFunction = (options) => options;
+    const resolutionKeysFunction: ResolutionKeysFunction<T_RegisteredDependencies> = (...keys) => keys;
 
     return {
         useDependencies,
         useDependenciesAsync,
         DiScope,
         DiAwait,
-        resolutionKeys: (...keys) => keys,
-        resolutionOptions: (options) => options,
+        resolutionKeys: resolutionKeysFunction,
+        resolutionOptions: resolutionOptionsFunction,
+        asyncResolutionOptions: resolutionOptionsFunction,
         resolve,
         resolveAsync
     };

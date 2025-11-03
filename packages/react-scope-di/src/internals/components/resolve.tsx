@@ -3,7 +3,7 @@ import type { UseDependenciesHook } from "../../types";
 import type { DiResolutionOptions } from "../../types/di-resolution-options";
 import type { DiScopeComponent } from "../../types/di-scope-component";
 import type { ResolveHoc } from "../../types/resolve-hoc";
-import { fallbackDiScopeOptions } from "../helpers/di-scope-options";
+import { compose } from "../helpers/compose";
 import { diResolve } from "./di-resolve";
 
 export const createResolveHoc = 
@@ -22,7 +22,7 @@ export const createResolveHoc =
         return diResolve
         (
             keys, 
-            fallbackDiScopeOptions(localOptions, options), 
+            compose(localOptions, options), 
             renderer, 
             DiScope, 
             useDependencies

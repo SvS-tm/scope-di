@@ -5,9 +5,9 @@ import { ResolvedComponentOptionsParameters } from "./resolved-component-options
  */
 declare const resolvedComponentPropsMarker: unique symbol;
 
-export type ResolvedComponentOptions<T_Props> =
+export type ResolvedComponentOptions<T_Props, T_ResolutionOptions> =
 (
-    ResolvedComponentOptionsParameters
+    ResolvedComponentOptionsParameters<T_ResolutionOptions>
         &
     {
         [resolvedComponentPropsMarker]?: T_Props;

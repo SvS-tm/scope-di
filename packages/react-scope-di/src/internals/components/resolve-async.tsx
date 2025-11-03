@@ -3,8 +3,8 @@ import type { DiResolutionOptions } from "../../types/di-resolution-options";
 import type { DiScopeComponent } from "../../types/di-scope-component";
 import type { ResolveAsyncHoc } from "../../types/resolve-async-hoc";
 import type { UseDependenciesAsyncHook } from "../../types/use-dependencies-async-hook";
-import { fallbackDiScopeOptions } from "../helpers/di-scope-options";
 import { diResolveAsync } from "./di-resolve-async";
+import { compose } from "../helpers/compose";
 
 export const createResolveAsyncHoc = 
 <
@@ -22,7 +22,7 @@ export const createResolveAsyncHoc =
         return diResolveAsync
         (
             keys, 
-            fallbackDiScopeOptions(localOptions, options), 
+            compose(localOptions, options), 
             renderer, 
             DiScope, 
             useDependenciesAsync

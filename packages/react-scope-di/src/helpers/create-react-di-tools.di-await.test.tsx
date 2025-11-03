@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { DiAwait } from "../internals/components/di-await";
 import { describe, expect, it } from "@jest/globals";
 import { asyncResolutionResultMarker } from "../internals/constants/is-async-resolution-result";
+import { NotExpectedResultTypeError } from "../errors/not-expected-result-type-error";
 
 describe
 (
@@ -46,6 +47,32 @@ describe
 
                 expect(screen.queryByTestId(childId)).toBeInTheDocument();
                 expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+            }
+        );
+
+        it
+        (
+            "Throws NotExpectedResultTypeError on unknown result type",
+            () =>
+            {
+                const promise = Promise.resolve([]);
+
+                const childId = "child";
+
+                expect
+                (
+                    () => render
+                    (
+                        <DiAwait result={promise as any}>
+                        {
+                            () => (
+                                <span data-testid={childId}>Loaded!</span>
+                            )
+                        }
+                        </DiAwait>
+                    )
+                )
+                    .toThrow(NotExpectedResultTypeError);
             }
         );
     }

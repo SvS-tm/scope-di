@@ -13,7 +13,7 @@ export type DiSuspenseProps =
 
 const empty = {};
 
-export const DiSuspense = ({ fallback, ...rest }: DiSuspenseProps) =>
+export function DiSuspense({ fallback, ...rest }: DiSuspenseProps)
 {
     return (
         <Suspense 

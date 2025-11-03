@@ -1,7 +1,8 @@
 import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
-import { ComponentType } from "react";
-import { ResolvedAsyncComponentRenderer } from "./resolved-async-component-renderer";
-import { ResolvedComponentOptions } from "./resolved-component-options";
+import type { ComponentType } from "react";
+import type { DiAsyncResolutionOptions } from "./di-async-resolution-options";
+import type { ResolvedAsyncComponentRenderer } from "./resolved-async-component-renderer";
+import type { ResolvedComponentOptions } from "./resolved-component-options";
 
 export type ResolveAsyncHoc<T_RegisteredDependencies extends RegisteredDependencies> = 
 <
@@ -10,7 +11,7 @@ export type ResolveAsyncHoc<T_RegisteredDependencies extends RegisteredDependenc
 >
 (
     keys: T_DependencyResolutionKeys,
-    options: ResolvedComponentOptions<T_Props> | undefined,
+    options: ResolvedComponentOptions<T_Props, DiAsyncResolutionOptions> | undefined,
     renderer: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>
 )
     => ComponentType<T_Props>;

@@ -8,7 +8,7 @@ export type DiFallbackProps<T_Props extends object> =
     props: T_Props;
 };
 
-export const DiFallback = <T_Props extends object>({ element, props }: DiFallbackProps<T_Props>) =>
+export function DiFallback<T_Props extends object>({ element, props }: DiFallbackProps<T_Props>)
 {
     if (isElement(element))
         return element;
