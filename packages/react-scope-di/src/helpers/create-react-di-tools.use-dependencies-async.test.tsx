@@ -1,28 +1,69 @@
-import { describe, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
+import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
+import { act, renderHook } from "@testing-library/react";
+import { createReactDiTools } from "./create-react-di-tools";
 
-/*
-Suspense / pending
-
-    - Suspends on async: when any requested dep is async, shows pending fallback, then renders resolved UI.
-    - No flicker after resolve: once resolved, re-renders should not flash the pending fallback again.
-
-Mixed graphs
-
-    - Mixed sync/async keys: call suspends; after resolve, values are returned in the same key order.
-
-Collections with async
-
-    - Whole collection awaits: if any member is async, the collection result suspends; final array contains awaited items in reverse registration order.
-
-Error propagation
-
-    - Rejected dep: error fallback renders with the rejection reason.
-*/
 describe
 (
-    "dummy", 
+    "useDependenciesAsync", 
     () => 
     {
-        it("dummy", () => {});
+        it
+        (
+            "Returns stable promise after re-render", 
+            () => 
+            {
+                const key1 = "Key1";
+                const originalDependency1 = {};
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactoryAsync(async () => originalDependency1, DependencyLifetime.Singleton)
+                    .build();
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                const { result, rerender } = renderHook(() => useDependenciesAsync(key1));
+                
+                const promise1 = result.current;
+
+                rerender();
+
+                const promise2 = result.current;
+
+                expect(promise1).toBe(promise2);
+            }
+        );
+
+        it
+        (
+            "Mixed sync/async keys: after resolve, values are returned in the reverse key order and awaited", 
+            async () => 
+            {
+                const key1 = "Key1";
+                const originalDependency1 = {};
+                const originalDependency2 = {};
+                const originalDependency3 = {};
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactoryAsync(async () => originalDependency1, DependencyLifetime.Singleton)
+                    .map(key1)
+                        .asValue(originalDependency2)
+                    .map(key1)
+                        .asFactoryAsync(async () => originalDependency3, DependencyLifetime.Singleton)
+                    .build();
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                const { result: { current: promise } } = renderHook(() => useDependenciesAsync([key1]));
+                
+                const [[dependency1, dependency2, dependency3]] = await act(async () => await promise);
+
+                expect(dependency1).toBe(originalDependency3);
+                expect(dependency2).toBe(originalDependency2);
+                expect(dependency3).toBe(originalDependency1);
+            }
+        );
     }
 );
