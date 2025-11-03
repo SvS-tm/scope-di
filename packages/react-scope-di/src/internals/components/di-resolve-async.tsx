@@ -74,13 +74,11 @@ const AsyncDependenciesProvider =
     const dependencies = useDependenciesAsync(...keys);
     
     return (
-        <DiErrorBoundary fallback={options?.error}>
-            <DiSuspense fallback={options?.pending}>
-                <AsyncDependenciesAwaiter dependencies={dependencies} props={props}>
-                    {children}
-                </AsyncDependenciesAwaiter>
-            </DiSuspense>
-        </DiErrorBoundary>
+        <DiSuspense fallback={options?.pending}>
+            <AsyncDependenciesAwaiter dependencies={dependencies} props={props}>
+                {children}
+            </AsyncDependenciesAwaiter>
+        </DiSuspense>
     );
 };
 
@@ -104,18 +102,22 @@ export const diResolveAsync =
         {
             return (
                 <DiScope>
-                    <AsyncDependenciesProvider options={options} keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
-                        {renderer}
-                    </AsyncDependenciesProvider>
+                    <DiErrorBoundary fallback={options?.error}>
+                        <AsyncDependenciesProvider options={options} keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
+                            {renderer}
+                        </AsyncDependenciesProvider>
+                    </DiErrorBoundary>
                 </DiScope>
             );
         }
         else
         {
             return (
-                <AsyncDependenciesProvider options={options} keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
-                    {renderer}
-                </AsyncDependenciesProvider>
+                <DiErrorBoundary fallback={options?.error}>
+                    <AsyncDependenciesProvider options={options} keys={keys} props={props} useDependenciesAsync={useDependenciesAsync}>
+                        {renderer}
+                    </AsyncDependenciesProvider>
+                </DiErrorBoundary>
             );
         }
     };

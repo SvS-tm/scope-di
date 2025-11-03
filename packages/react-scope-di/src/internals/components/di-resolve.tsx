@@ -40,11 +40,9 @@ const DependenciesProvider =
     const dependencies = useDependencies(...keys);
     
     return (
-        <DiErrorBoundary fallback={options?.error}>
-            <DiSuspense fallback={options?.pending}>
-                <Renderer props={props} dependencies={dependencies} />
-            </DiSuspense>
-        </DiErrorBoundary>
+        <DiSuspense fallback={options?.pending}>
+            <Renderer props={props} dependencies={dependencies} />
+        </DiSuspense>
     );
 };
 
@@ -68,18 +66,22 @@ export const diResolve =
         {
             return (
                 <DiScope>
-                    <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
-                        {renderer}
-                    </DependenciesProvider>
+                    <DiErrorBoundary fallback={options?.error}>
+                        <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
+                            {renderer}
+                        </DependenciesProvider>
+                    </DiErrorBoundary>
                 </DiScope>
             );
         }
         else
         {
             return (
-                <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
-                    {renderer}
-                </DependenciesProvider>
+                <DiErrorBoundary fallback={options?.error}>
+                    <DependenciesProvider options={options} keys={keys} props={props} useDependencies={useDependencies}>
+                        {renderer}
+                    </DependenciesProvider>
+                </DiErrorBoundary>
             );
         }
     };
