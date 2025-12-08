@@ -221,19 +221,13 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return dependency;
     }
 
-    private *getHierarchy()
-    {
-        for (let current = this.parent; isSafeReference(current); current = current.parent)
-            yield current;
-    }
-
     private resolveFromScopeHierarchy(descriptor: DependencyDescriptor)
     {
-        const hierarchyScope = [...this.getHierarchy()]
-            .findLast(({ resolvedDependencies }) => resolvedDependencies.has(descriptor));
-
-        if (isSafeReference(hierarchyScope))
-            return hierarchyScope.resolvedDependencies.get(descriptor);
+        for (let current = this.parent; isSafeReference(current); current = current.parent)
+        {
+            if (current.resolvedDependencies.has(descriptor))
+                return current.resolvedDependencies.get(descriptor);
+        }
 
         return this.resolveFromCurrentScope(descriptor);
     }

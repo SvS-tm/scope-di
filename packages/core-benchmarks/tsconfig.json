@@ -1,18 +1,13 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
+    "compilerOptions": { 
+        "module": "ESNext", 
+        "target": "ES2022",
+        "moduleResolution": "Bundler",
+        "types": [
+            "node",
+            "bun-types"
+        ],
         "composite": true,
-        "moduleResolution": "bundler",
-        "jsx": "react-jsx",
-        "lib": [
-            "esnext",
-            "DOM"
-        ], 
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "declarationDir": "dist/.types",
-        "outDir": "dist",
         "rootDir": "src",
         "strict": true,
         "noImplicitAny": true,
@@ -28,22 +23,24 @@
         "skipLibCheck": true,
         "exactOptionalPropertyTypes": true,
         "useDefineForClassFields": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "paths": {
+            "@bench-helpers/*": ["./src/bench-helpers/*"]
+        }   
     },
     "include": [
         "src/**/*"
     ],
     "exclude": [
         "dist",
-        "node_modules",
-        "**/*.test.ts"
+        "node_modules"
     ],
     "references": [
-        {
-            "path": "../system"
+        { 
+            "path": "../scope-di" 
         },
-        {
-            "path": "../scope-di"
+        { 
+            "path": "../system" 
         }
-    ]
+    ],
 }

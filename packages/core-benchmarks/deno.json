@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@svs-tm/system": "./node_modules/@svs-tm/system/dist/index.mjs",
+    "@svs-tm/scope-di": "./node_modules/@svs-tm/scope-di/dist/index.mjs",
+    "mitata": "./node_modules/mitata/src/main.mjs",
+    "@bench/": "./bench/bench-helpers/"
+  }
+}

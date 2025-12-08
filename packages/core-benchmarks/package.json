@@ -1,0 +1,34 @@
+{
+  "name": "@svs-tm/core-benchmarks",
+  "type": "module",
+  "description": "Scope DI core benchmarks",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "bench:tsx": "tsx --expose-gc src/main.ts",
+    "bench:deno": "deno run --allow-sys=cpus --import-map=deno.json --v8-flags=--expose-gc src/main.ts",
+    "bench:bun": "bun --expose-gc src/main.ts"
+  },
+  "author": "svs-tm",
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
+  "dependencies": {
+    "@svs-tm/scope-di": "workspace:*",
+    "@svs-tm/system": "workspace:*",
+    "inversify": "^7.10.6",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "bun-types": "^1.3.2",
+    "mitata": "^1.0.34",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "bun": ">=1.3.2",
+    "deno": ">=2.5.6"
+  }
+}
