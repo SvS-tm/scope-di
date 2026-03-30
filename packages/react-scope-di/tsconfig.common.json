@@ -2,7 +2,6 @@
     "compilerOptions": {
         "target": "ESNext",
         "module": "ESNext",
-        "composite": true,
         "moduleResolution": "bundler",
         "jsx": "react-jsx",
         "lib": [
@@ -13,7 +12,6 @@
         "emitDeclarationOnly": true,
         "declarationDir": "dist/.types",
         "outDir": "dist",
-        "rootDir": "src",
         "strict": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,

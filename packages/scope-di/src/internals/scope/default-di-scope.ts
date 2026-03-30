@@ -178,9 +178,15 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                         return TrackedPromise.track(resolveAsync());
                     }
 
+                    /**
+                     * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
+                     */
                     return TrackedPromise.resolved(new descriptor.constructor(...promise[TrackedPromise.value]));
                 }
 
+                /**
+                 * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
+                 */
                 return TrackedPromise.resolved(new descriptor.constructor());
             }
             case DependencyDescriptorType.Factory:
@@ -214,10 +220,18 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                         return TrackedPromise.track(resolveAsync());
                     }
 
-                    return TrackedPromise.resolved(descriptor.factory(...promise[TrackedPromise.value]));
+                    /**
+                     * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
+                     * So lets just track it
+                     */
+                    return TrackedPromise.track(descriptor.factory(...promise[TrackedPromise.value]));
                 }
 
-                return TrackedPromise.resolved(descriptor.factory());
+                /**
+                 * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
+                 * So lets just track it
+                 */
+                return TrackedPromise.track(descriptor.factory());
             }
             default:
             {

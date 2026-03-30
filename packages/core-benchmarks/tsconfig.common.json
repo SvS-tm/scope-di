@@ -7,8 +7,6 @@
             "node",
             "bun-types"
         ],
-        "composite": true,
-        "rootDir": "src",
         "strict": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,

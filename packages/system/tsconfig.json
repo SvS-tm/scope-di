@@ -1,14 +1,12 @@
 {
     "compilerOptions": {
         "importHelpers": true,
-        "composite": true,
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
         "declaration": true,
         "emitDeclarationOnly": true,
         "outDir": "dist",
-        "rootDir": "src",
         "declarationDir": "dist/.types",
         "strict": true,
         "noImplicitAny": true,
