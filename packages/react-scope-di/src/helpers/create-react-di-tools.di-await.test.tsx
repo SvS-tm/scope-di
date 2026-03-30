@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { Suspense } from "react";
 import { DiAwait } from "../internals/components/di-await";
 import { describe, expect, it } from "@jest/globals";
-import { asyncResolutionResultMarker } from "../internals/constants/is-async-resolution-result";
+import { asyncResolutionResultMarker } from "../internals/constants/async-resolution-result-marker";
 import { NotExpectedResultTypeError } from "../errors/not-expected-result-type-error";
 
 describe

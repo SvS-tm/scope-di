@@ -1,5 +1,5 @@
 import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
-import { asyncResolutionResultMarker } from "../internals/constants/is-async-resolution-result";
+import { asyncResolutionResultMarker } from "../internals/constants/async-resolution-result-marker";
 
 export type AsyncResolutionResult
 <

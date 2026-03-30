@@ -16,9 +16,17 @@ export default defineConfig
             plugins: [
                 nodeResolve({ browser: true }),
                 commonjs(),
-                typescript({ outputToFilesystem: true })
+                typescript
+                (
+                    {
+                        tsconfig: "tsconfig.build.json",
+                        noEmitOnError: true, 
+                        outputToFilesystem: true 
+                    }
+                )
             ],
-            external: [
+            external: 
+            [
                 ...Object.keys(pkg.peerDependencies ?? {}),
                 // Required for React 17+ JSX transform
                 "react/jsx-runtime",

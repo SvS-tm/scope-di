@@ -3,13 +3,11 @@ import { useDebugValue, useEffect, useState } from "react";
 import { resolutionScopeContext } from "../constants/resolution-scope-context";
 import { useContextValue } from "./use-context-value";
 
-export type UseDiScopeOptions<T_RegisteredDependencies extends RegisteredDependencies> =
-{
-    rootScope: DiScope<T_RegisteredDependencies>;
-    createNewScope?: boolean | undefined;
-};
-
-export const useDiScope = <T_RegisteredDependencies extends RegisteredDependencies>({ rootScope, createNewScope } : UseDiScopeOptions<T_RegisteredDependencies>) =>
+export const useDiScope = <T_RegisteredDependencies extends RegisteredDependencies>
+(
+    rootScope: DiScope<T_RegisteredDependencies>,
+    createNewScope?: boolean
+) =>
 {
     const parentScope = useContextValue(resolutionScopeContext) as DiScope<T_RegisteredDependencies> ?? rootScope;
 

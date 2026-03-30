@@ -1,0 +1,38 @@
+{
+    "compilerOptions": { 
+        "module": "ESNext", 
+        "target": "ES2022",
+        "moduleResolution": "Bundler",
+        "types": [
+            "node",
+            "bun-types"
+        ],
+        "composite": true,
+        "rootDir": "src",
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "exactOptionalPropertyTypes": true,
+        "useDefineForClassFields": true,
+        "resolveJsonModule": true,
+        "paths": {
+            "@bench-helpers/*": ["./src/bench-helpers/*"]
+        }   
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "dist",
+        "node_modules"
+    ]
+}

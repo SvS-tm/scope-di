@@ -1,41 +1,10 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "composite": true,
-        "moduleResolution": "bundler",
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "declarationDir": "dist/.types",
-        "outDir": "dist",
-        "rootDir": "src",
-        "strict": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitThis": true,
-        "alwaysStrict": true,
-        "strictNullChecks": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true,
-        "useDefineForClassFields": true,
-        "resolveJsonModule": true
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "dist",
-        "node_modules",
-        "**/*.test.ts"
-    ],
-    "references": [
-        {
-            "path": "../system"
-        }
-    ]
+  "extends": "./tsconfig.common.json",
+  "compilerOptions": {
+    "paths": {
+      "@svs-tm/system": [
+        "../system/src"
+      ]
+    }
+  }
 }

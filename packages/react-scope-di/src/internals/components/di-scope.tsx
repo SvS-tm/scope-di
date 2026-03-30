@@ -12,7 +12,7 @@ export const createDiScopeComponent = <T_RegisteredDependencies extends Register
 {
     return ({ children }) =>
     {
-        const scope = useDiScope({ rootScope, createNewScope: true });
+        const scope = useDiScope(rootScope, true);
 
         return (
             <DiContextProvider context={resolutionScopeContext} value={scope}>

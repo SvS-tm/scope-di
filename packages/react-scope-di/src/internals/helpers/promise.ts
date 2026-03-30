@@ -1,4 +1,4 @@
-import { TrackedPromiseStatus, isSafeReference, trackPromise, trackedPromiseStatus, trackedPromiseValue } from "@svs-tm/system";
+import { TrackedPromise, TrackedPromiseStatus, isSafeReference } from "@svs-tm/system";
 import React, { type Suspense } from "react";
 
 /**
@@ -22,15 +22,15 @@ export const suspendedAwait = <T_Result>(promise: Promise<T_Result>): T_Result =
      * @note otherwise - we fallback to our own internal implementation
      * (legacy throw promise approach)
      */
-    const trackedPromise = trackPromise(promise);
+    const trackedPromise = TrackedPromise.track(promise);
 
-    switch (trackedPromise[trackedPromiseStatus])
+    switch (trackedPromise[TrackedPromise.status])
     {
         case TrackedPromiseStatus.Pending:
             throw trackedPromise;
         case TrackedPromiseStatus.Error:
-            throw trackedPromise[trackedPromiseValue];
+            throw trackedPromise[TrackedPromise.value];
         case TrackedPromiseStatus.Success:
-            return trackedPromise[trackedPromiseValue];
+            return trackedPromise[TrackedPromise.value];
     }
 };

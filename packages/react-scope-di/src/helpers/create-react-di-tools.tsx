@@ -4,7 +4,7 @@ import { createDiScopeComponent } from "../internals/components/di-scope";
 import { createResolveHoc } from "../internals/components/resolve";
 import { createResolveAsyncHoc } from "../internals/components/resolve-async";
 import { createUseDependenciesAsyncHook } from "../internals/hooks/use-dependencies-async";
-import { createUseDependenciesHook } from "../internals/hooks/use-scope-dependencies";
+import { createUseDependenciesHook } from "../internals/hooks/use-dependencies";
 import type { ResolutionKeysFunction } from "../types";
 import type { DiResolutionOptions } from "../types/di-resolution-options";
 import type { ReactDiTools } from "../types/react-di-tools";

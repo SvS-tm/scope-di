@@ -14,7 +14,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+    "build": "tsc --project tsconfig.build.json && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
     "test": "jest"
   },
   "keywords": [

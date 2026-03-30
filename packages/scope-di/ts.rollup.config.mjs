@@ -9,16 +9,26 @@ export default defineConfig
     [
         {
             input: "src/index.ts",
-            output: [
+            output: 
+            [
                 { file: "dist/index.mjs", format: "esm", sourcemap: true },
                 { file: "dist/index.cjs", format: "cjs", sourcemap: true }
             ],
-            plugins: [
+            plugins: 
+            [
                 nodeResolve(),
                 commonjs(),
-                typescript({ outputToFilesystem: true })
+                typescript
+                (
+                    { 
+                        tsconfig: "tsconfig.build.json",
+                        noEmitOnError: true, 
+                        outputToFilesystem: true 
+                    }
+                )
             ],
-            external: [
+            external: 
+            [
                 ...Object.keys(pkg.peerDependencies ?? {}),
                 "@svs-tm/system"
             ]

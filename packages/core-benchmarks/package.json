@@ -5,9 +5,9 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "bench:tsx": "tsx --expose-gc src/main.ts",
+    "bench:tsx": "tsx --tsconfig ./tsconfig.build.json --expose-gc src/main.ts",
     "bench:deno": "deno run --allow-sys=cpus --import-map=deno.json --v8-flags=--expose-gc src/main.ts",
-    "bench:bun": "bun --expose-gc src/main.ts"
+    "bench:bun": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts"
   },
   "author": "svs-tm",
   "license": "ISC",

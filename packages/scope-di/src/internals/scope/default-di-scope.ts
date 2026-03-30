@@ -1,4 +1,4 @@
-import { isSafeReference } from "@svs-tm/system";
+import { isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import type { DiScope } from "../../abstractions/di-scope";
 import { DependencyNotRegisteredError } from "../../errors/dependency-not-registered-error";
 import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
@@ -28,7 +28,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     {
     }
 
-    public async resolveAsync
+    public resolveAsync
     <
         T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
@@ -36,9 +36,17 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         ...keys: T_DependencyResolutionKeys
     )
     {
-        const dependencies = await this.resolveAsyncDependencies(keys);
+        const promise = this.resolveAsyncDependencies(keys);
 
-        return (dependencies ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
+        if (isSafeReference(promise))
+        {
+            if (promise[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                return TrackedPromise.resolved((promise[TrackedPromise.value] ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
+            else
+                return promise.then((result) => (result ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
+        }
+
+        return TrackedPromise.resolved([] as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
     }
 
     public resolve
@@ -61,7 +69,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         );
     }
 
-    private async resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
+    private resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
     {
         const descriptors = keys?.map((key) => this.resolveDescriptors(key));
 
@@ -70,7 +78,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
         const asyncDependencies: Promise<any>[] = [];
 
-        const results: (unknown | unknown[])[] = Array.from({ length: descriptors.length });
+        const results: (unknown | unknown[])[] = new Array(descriptors.length);
 
         for (let index = 0; index < results.length; ++index)
         {
@@ -78,7 +86,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
             if (Array.isArray(descriptorOrCollection))
             {
-                const collection = Array.from({ length: descriptorOrCollection.length });
+                const collection = new Array(descriptorOrCollection.length);
 
                 for (let index = 0; index < descriptorOrCollection.length; ++index)
                 {
@@ -88,10 +96,20 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                     
                     if (this.isAsyncDependency(descriptor))
                     {
-                        const awaitAndSetDependency = async () => 
-                            void (collection[index] = await result);
-
-                        asyncDependencies.push(awaitAndSetDependency());
+                        /**
+                         * @note in case it was tracked promise and it was already resolved - we'll go with sync path
+                         */
+                        if (TrackedPromise.isTracked(result) && result[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                        {
+                            collection[index] = result[TrackedPromise.value];
+                        }
+                        else
+                        {
+                            const awaitAndSetDependency = async () => 
+                                void (collection[index] = await result);
+    
+                            asyncDependencies.push(awaitAndSetDependency());
+                        }
                     }
                     else
                         collection[index] = result;
@@ -118,9 +136,9 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
 
         if (asyncDependencies.length > 0)
-            await Promise.all(asyncDependencies);
+            return TrackedPromise.track(Promise.all(asyncDependencies).then(() => results));
 
-        return results;
+        return TrackedPromise.resolved(results);
     }
 
     private instantiate(descriptor: DependencyDescriptor)
@@ -142,16 +160,28 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             case DependencyDescriptorType.ClassAsync:
             {
-                const resolveAsync = async () =>
+                const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+
+                if (isSafeReference(promise))
                 {
-                    const dependencies = await this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+                    if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
+                    {
+                        const resolveAsync = async () =>
+                        {
+                            const dependencies = await promise;
+    
+                            return isSafeReference(dependencies)
+                                ? await new descriptor.constructor(...dependencies)
+                                : await new descriptor.constructor();
+                        };
+    
+                        return TrackedPromise.track(resolveAsync());
+                    }
 
-                    return isSafeReference(dependencies) 
-                        ? await new descriptor.constructor(...dependencies)
-                        : await new descriptor.constructor();
-                };
+                    return TrackedPromise.resolved(new descriptor.constructor(...promise[TrackedPromise.value]));
+                }
 
-                return resolveAsync();
+                return TrackedPromise.resolved(new descriptor.constructor());
             }
             case DependencyDescriptorType.Factory:
             {
@@ -166,16 +196,28 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             case DependencyDescriptorType.FactoryAsync:
             {
-                const resolveAsync = async () =>
+                const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+
+                if (isSafeReference(promise))
                 {
-                    const dependencies = await this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+                    if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
+                    {
+                        const resolveAsync = async () =>
+                        {
+                            const dependencies = await promise;
+    
+                            return isSafeReference(dependencies)
+                                ? await descriptor.factory(...dependencies)
+                                : await descriptor.factory();
+                        };
+    
+                        return TrackedPromise.track(resolveAsync());
+                    }
 
-                    return isSafeReference(dependencies) 
-                        ? await descriptor.factory(...dependencies)
-                        : await descriptor.factory();
-                };
+                    return TrackedPromise.resolved(descriptor.factory(...promise[TrackedPromise.value]));
+                }
 
-                return resolveAsync();
+                return TrackedPromise.resolved(descriptor.factory());
             }
             default:
             {

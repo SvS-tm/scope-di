@@ -8,8 +8,9 @@ export default defineConfig
         {
             input: "dist/.types/index.d.ts",
             output: { file: "dist/index.d.ts", format: "es" },
-            plugins: [dts()],
-            external: [
+            plugins: [dts({ tsconfig: "tsconfig.build.json" })],
+            external: 
+            [
                 ...Object.keys(pkg.peerDependencies ?? {}),
                 // Required for React 17+ JSX transform
                 "react/jsx-runtime",
