@@ -1,4 +1,4 @@
-import { isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
+import { Enumerable, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import type { DiScope } from "../../abstractions/di-scope";
 import { DependencyNotRegisteredError } from "../../errors/dependency-not-registered-error";
 import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
@@ -13,6 +13,14 @@ import type { DependencyResolutionKey } from "../../types/dependency-resolution-
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { ResolutionResult } from "../../types/utilities/resolution-result";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
+import { DependencyResolutionTraceResult } from "../../types/internals/dependency-resolution-trace-result";
+import { AsyncDependencyDescriptor } from "../../types/async-dependency-descriptor";
+
+type ScheduleResolutionResult = 
+{ 
+    isReady: boolean; 
+    value: unknown; 
+};
 
 export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
@@ -26,6 +34,115 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         private readonly parent?: DefaultDiScope<T_RegisteredDependencies>
     )
     {
+    }
+
+    private findResolvedDependency(descriptor: DependencyDescriptor): unknown | null
+    {
+        switch(descriptor.lifetime)
+        {
+            case DependencyLifetime.Transient:
+                return null;
+            case DependencyLifetime.Singleton:
+                return (this.root ?? this).resolvedDependencies.get(descriptor) ?? null;
+            case DependencyLifetime.Scoped:
+                return this.resolvedDependencies.get(descriptor) ?? null;
+            case DependencyLifetime.ScopedInherited:
+            {
+                return (
+                    this.resolvedDependencies.has(descriptor)
+                        ? this.resolvedDependencies.get(descriptor)
+                        : this.parent?.findResolvedDependency(descriptor)
+                ) 
+                    ?? null;
+            }
+        }
+    }
+
+    private traceDescriptorResolution(descriptor: DependencyDescriptor): DependencyResolutionTraceResult
+    {
+        if (this.isAsyncDependency(descriptor))
+        {
+            const resolvedValue = this.findResolvedDependency(descriptor);
+
+            if (isSafeReference(resolvedValue))
+            {
+                if (resolvedValue instanceof Promise)
+                {
+                    const trackedPromise = TrackedPromise.track(resolvedValue);
+
+                    switch (trackedPromise[TrackedPromise.status])
+                    {
+                        case TrackedPromiseStatus.Success:
+                            return DependencyResolutionTraceResult.AsyncSettled;
+                        default:
+                            /**
+                             * @note If Promise is in pendig or error state, we'll mark it as async
+                             * (so we won't polute everything with errors when its not needed)
+                             */
+                            return DependencyResolutionTraceResult.Async;
+                    }
+                }
+                /**
+                 * @note It could be PromiseLike? I guess no, but anyway lets guard here
+                 */
+                else
+                    return DependencyResolutionTraceResult.Async;
+            }
+            /**
+             * @note in case it is class async, and we don't have any cached promise
+             * we'll need to traverse dependencies tree recursively, as it might be that 
+             * all dependencies are AsyncSettled or Sync, then this one will be considered as
+             * AsyncSettled as well 
+             * (as constructors itself can't have async logic)
+             */
+            else if (descriptor.type === DependencyDescriptorType.ClassAsync)
+            {
+                const dependenciesKeys = descriptor.subDependenciesKeys;
+
+                if (!isSafeReference(dependenciesKeys))
+                    return DependencyResolutionTraceResult.Sync;
+
+                return this.traceResolution(...dependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);   
+            }
+            /**
+             * @note If it is Async dependency and it wasn't found in cache, 
+             * then we'll need to recurse in subDependencies
+             */
+            else
+            {
+                return DependencyResolutionTraceResult.Async;
+            }
+        }
+        /**
+         * @note If it is not an async dependency, then its Sync by default
+         */
+        else
+            return DependencyResolutionTraceResult.Sync;
+    }
+
+    public traceResolution<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    (
+        ...keys: T_DependencyResolutionKeys
+    )
+        : DependencyResolutionTraceResult
+    {
+        return Enumerable
+            .fromFactory(() => this.resolveDescriptorsFlat(...keys))
+            .aggregate<DependencyResolutionTraceResult>
+            (
+                DependencyResolutionTraceResult.Sync,
+                (aggregated, descriptor) =>
+                {
+                    const result = this.traceDescriptorResolution(descriptor);
+
+                    if (result === DependencyResolutionTraceResult.Async)
+                        return Enumerable.terminateAggregation(result);
+                    else if (result > aggregated)
+                        return result;
+                    else
+                        return aggregated;
+                }
+            );
     }
 
     public resolveAsync
@@ -60,13 +177,35 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return keys.map((key) => this.resolveSingleDependency(key)) as ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
     }
 
-    private isAsyncDependency({ type }: DependencyDescriptor)
+    private isAsyncDependency(descriptor: DependencyDescriptor): descriptor is AsyncDependencyDescriptor
     {
         return (
-            type === DependencyDescriptorType.ClassAsync 
+            descriptor.type === DependencyDescriptorType.ClassAsync 
                 || 
-            type === DependencyDescriptorType.FactoryAsync
+            descriptor.type === DependencyDescriptorType.FactoryAsync
         );
+    }
+
+    private scheduleResolution(descriptor: DependencyDescriptor) : ScheduleResolutionResult
+    {
+        const result = this.resolveByDescriptor(descriptor);
+                
+        if (this.isAsyncDependency(descriptor))
+        {
+            /**
+             * @note in case it was tracked promise and it was already resolved - we'll go with sync path
+             */
+            if (TrackedPromise.isTracked(result) && result[TrackedPromise.status] === TrackedPromiseStatus.Success)
+            {
+                return { isReady: true, value: result[TrackedPromise.value] };
+            }
+            else
+            {
+                return { isReady: false, value: result };
+            }
+        }
+        else
+            return { isReady: true, value: result };
     }
 
     private resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
@@ -92,45 +231,37 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 {
                     const descriptor = descriptorOrCollection[index];
 
-                    const result = this.resolveByDescriptor(descriptor);
-                    
-                    if (this.isAsyncDependency(descriptor))
+                    const { isReady, value } = this.scheduleResolution(descriptor);
+
+                    if (isReady)
                     {
-                        /**
-                         * @note in case it was tracked promise and it was already resolved - we'll go with sync path
-                         */
-                        if (TrackedPromise.isTracked(result) && result[TrackedPromise.status] === TrackedPromiseStatus.Success)
-                        {
-                            collection[index] = result[TrackedPromise.value];
-                        }
-                        else
-                        {
-                            const awaitAndSetDependency = async () => 
-                                void (collection[index] = await result);
-    
-                            asyncDependencies.push(awaitAndSetDependency());
-                        }
+                        collection[index] = value;
                     }
                     else
-                        collection[index] = result;
+                    {
+                        const awaitAndSetDependency = async () => 
+                            void (collection[index] = await value);
+
+                        asyncDependencies.push(awaitAndSetDependency());
+                    }
                 }
 
                 results[index] = collection;
             }
             else
             {
-                const result = this.resolveByDescriptor(descriptorOrCollection);
+                const { isReady, value } = this.scheduleResolution(descriptorOrCollection);
 
-                if (this.isAsyncDependency(descriptorOrCollection))
+                if (isReady)
                 {
-                    const awaitAndSetDependency = async () => 
-                        void (results[index] = await result);
-
-                    asyncDependencies.push(awaitAndSetDependency());
+                    results[index] = value;
                 }
                 else
                 {
-                    results[index] = result;
+                    const awaitAndSetDependency = async () => 
+                        void (results[index] = await value);
+
+                    asyncDependencies.push(awaitAndSetDependency());
                 }
             }
         }
@@ -262,6 +393,22 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 throw new DependencyNotRegisteredError(key);
     
             return descriptor;
+        }
+    }
+
+    private *resolveDescriptorsFlat(...keys: DependencyResolutionKey<AllowedDependencyKey>[])
+    {
+        if (!isSafeReference(keys) || !keys.length)
+            return;
+
+        for (const key of keys)
+        {
+            const descriptorOrCollection = this.resolveDescriptors(key);
+
+            if (Array.isArray(descriptorOrCollection))
+                yield *descriptorOrCollection;
+            else
+                yield descriptorOrCollection;
         }
     }
 

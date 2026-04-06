@@ -1,10 +1,8 @@
 import type { AllowedDependencyKey } from "./allowed-dependency-key";
-import type { ValueDependencyDescriptor } from "./value-dependency-descriptor";
+import type { AsyncDependencyDescriptor } from "./async-dependency-descriptor";
 import type { ClassDependencyDescriptor } from "./class-dependency-descriptor";
 import type { FactoryDependencyDescriptor } from "./factory-dependency-descriptor";
-import type { AsyncClassDependencyDescriptor } from "./async-class-dependency-descriptor";
-import type { AsyncFactoryDependencyDescriptor } from "./async-factory-dependency-descriptor";
-import type { CommonDependencyDescriptorData } from "./common-dependency-descriptor-data";
+import type { ValueDependencyDescriptor } from "./value-dependency-descriptor";
 
 export type DependencyDescriptor
 <
@@ -12,17 +10,11 @@ export type DependencyDescriptor
     T_Dependency = unknown
 > =
 (
-    CommonDependencyDescriptorData<T_DependencyMappingKey>
-        &
-    (
-        ValueDependencyDescriptor<T_Dependency>
-            | 
-        ClassDependencyDescriptor<T_Dependency>
-            | 
-        FactoryDependencyDescriptor<T_Dependency>
-            | 
-        AsyncClassDependencyDescriptor<T_Dependency>
-            | 
-        AsyncFactoryDependencyDescriptor<T_Dependency>
-    )
+    ValueDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
+        | 
+    ClassDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
+        | 
+    FactoryDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
+        | 
+    AsyncDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
 );
