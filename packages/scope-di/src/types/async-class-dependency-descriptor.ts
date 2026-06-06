@@ -18,8 +18,8 @@ export type AsyncClassDependencyDescriptor
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &
     {
-        type: DependencyDescriptorType.ClassAsync;
-        subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
-        constructor: Constructor<any[], Promised<T_Dependency>>;
+        readonly type: DependencyDescriptorType.ClassAsync;
+        readonly subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
+        readonly constructor: Constructor<any[], Promised<T_Dependency>>;
     }
 );

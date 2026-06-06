@@ -18,8 +18,8 @@ export type FactoryDependencyDescriptor
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &
     {
-        type: DependencyDescriptorType.Factory;
-        subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
-        factory: DependencyFactory<any[], T_Dependency>;
+        readonly type: DependencyDescriptorType.Factory;
+        readonly subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
+        readonly factory: DependencyFactory<any[], T_Dependency>;
     }
 );
