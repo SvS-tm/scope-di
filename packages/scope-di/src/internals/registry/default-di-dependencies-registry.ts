@@ -2,7 +2,7 @@ import { isSafeReference } from "@svs-tm/system";
 import { DiDependenciesRegistry } from "../../abstractions/di-dependencies-registry";
 import { DependencyNotRegisteredError } from "../../errors";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../../types";
-import { isAsyncDescriptor } from "../../helpers";
+import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
 
 export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
 {

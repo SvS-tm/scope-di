@@ -6,22 +6,23 @@ import type { RemoveDependenciesCollection } from "../../types/utilities/remove-
 import type { DiScopeBuilder } from "../../abstractions";
 import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
 import { DefaultDiScope } from "../scope/default-di-scope";
+import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 
 export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScopeBuilder<T_RegisteredDependencies>
 {
-    private readonly registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+    private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
 
     /**
      * @internal This is internal method, its not safe to use it.
      */
     public readonly register = (descriptor: DependencyDescriptor) =>
     {
-        const descriptors = this.registry.get(descriptor.key) ?? [];
+        const descriptors = this.descriptors.get(descriptor.key) ?? [];
 
         descriptors.unshift(descriptor);
 
-        this.registry.set(descriptor.key, descriptors);
+        this.descriptors.set(descriptor.key, descriptors);
     };
 
     public readonly map = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) =>
@@ -34,18 +35,18 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
         key: T_DependencyMappingKey
     ) => 
     {
-        this.registry.delete(key);
+        this.descriptors.delete(key);
 
         return this as unknown as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
     };
 
     public readonly hasMapping = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) => 
     {
-        return this.registry.has(key);
+        return this.descriptors.has(key);
     };
 
     public readonly build = () => 
     {
-        return new DefaultDiScope<T_RegisteredDependencies>(new Map(this.registry));
+        return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(this.descriptors));
     };
 }

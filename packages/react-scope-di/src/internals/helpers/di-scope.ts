@@ -1,5 +1,4 @@
-import { DependencyDescriptor, DependencyDescriptorType, DependencyMappingKey, DependencyResolutionKey, DiScope, isAsyncDescriptor } from "@svs-tm/scope-di";
-import { RegisteredDependencies } from "../../../../scope-di/dist";
+import { DependencyDescriptor, DependencyDescriptorType, DependencyMappingKey, DependencyResolutionKey, DiScope, isAsyncDescriptor, RegisteredDependencies } from "@svs-tm/scope-di";
 import { Enumerable, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 
 export enum DependenciesResolutionTraceResult
