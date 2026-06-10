@@ -1,7 +1,7 @@
 export namespace ChancyValue
 {
     const failureMarker = Symbol("ChancyValue.failure");
-    const valueMarker = Symbol("ChancyValue.value");
+    declare const valueMarker: unique symbol;
 
     export type Failure = { readonly [failureMarker]: true; };
     export type Success<T_Value> = { readonly [valueMarker]: T_Value };

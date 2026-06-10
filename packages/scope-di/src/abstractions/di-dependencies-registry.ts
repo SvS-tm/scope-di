@@ -7,4 +7,6 @@ export type DiDependenciesRegistry =
     resolveDescriptorsByKey(key: DependencyResolutionKey<AllowedDependencyKey>): DependencyDescriptor | readonly DependencyDescriptor[];
     
     resolveDescriptorsByKeys(...keys: DependencyResolutionKey<string>[]): Generator<DependencyDescriptor, void, unknown>;
+
+    isAsyncKey(key: DependencyResolutionKey<AllowedDependencyKey>): boolean;
 };

@@ -1,10 +1,11 @@
-import type { DependencyDescriptor } from "../types/dependency-descriptor";
+import { ChancyValue } from "@svs-tm/system";
 import type { DependencyMappingKey } from "../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../types/dependency-resolution-key";
 import type { RegisteredDependencies } from "../types/registered-dependencies";
 import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
 import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
 import { DiDependenciesRegistry } from "./di-dependencies-registry";
+import { DependencyDescriptor } from "../types";
 
 export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> = 
 (
@@ -14,6 +15,8 @@ export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> =
         &
     {
         readonly registry: DiDependenciesRegistry;
+
+        findResolvedDependencyByDescriptor(descriptor: DependencyDescriptor): ChancyValue<unknown>;
 
         resolve<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
         (

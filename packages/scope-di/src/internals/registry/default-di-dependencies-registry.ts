@@ -2,6 +2,7 @@ import { isSafeReference } from "@svs-tm/system";
 import { DiDependenciesRegistry } from "../../abstractions/di-dependencies-registry";
 import { DependencyNotRegisteredError } from "../../errors";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../../types";
+import { isAsyncDescriptor } from "../../helpers";
 
 export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
 {
@@ -54,5 +55,15 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
             else
                 yield descriptorOrCollection;
         }
+    }
+
+    public isAsyncKey(key: DependencyResolutionKey<AllowedDependencyKey>)
+    {
+        const descriptorOrCollection = this.resolveDescriptorsByKey(key);
+
+        if (Array.isArray(descriptorOrCollection))
+            return descriptorOrCollection.some((descriptor) => isAsyncDescriptor(descriptor));
+        else
+            return isAsyncDescriptor(descriptorOrCollection);
     }
 }

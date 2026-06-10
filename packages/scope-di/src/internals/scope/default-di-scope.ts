@@ -1,4 +1,4 @@
-import { type ChancyValue, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
+import { ChancyValue, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import type { DiScope } from "../../abstractions/di-scope";
 import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
 import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
@@ -28,94 +28,6 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     )
     {
     }
-
-//
-    //private traceDescriptorResolution(descriptor: DependencyDescriptor): DependencyResolutionTraceResult
-    //{
-    //    if (this.isAsyncDependency(descriptor))
-    //    {
-    //        const resolvedValue = this.findResolvedDependency(descriptor);
-//
-    //        if (isSafeReference(resolvedValue))
-    //        {
-    //            if (resolvedValue instanceof Promise)
-    //            {
-    //                const trackedPromise = TrackedPromise.track(resolvedValue);
-//
-    //                switch (trackedPromise[TrackedPromise.status])
-    //                {
-    //                    case TrackedPromiseStatus.Success:
-    //                        return DependencyResolutionTraceResult.AsyncSettled;
-    //                    default:
-    //                        /**
-    //                         * @note If Promise is in pendig or error state, we'll mark it as async
-    //                         * (so we won't polute everything with errors when its not needed)
-    //                         */
-    //                        return DependencyResolutionTraceResult.Async;
-    //                }
-    //            }
-    //            /**
-    //             * @note It could be PromiseLike? I guess no, but anyway lets guard here
-    //             */
-    //            else
-    //                return DependencyResolutionTraceResult.Async;
-    //        }
-    //        /**
-    //         * @note in case it is class async, and we don't have any cached promise
-    //         * we'll need to traverse dependencies tree recursively, as it might be that 
-    //         * all dependencies are AsyncSettled or Sync, then this one will be considered as
-    //         * AsyncSettled as well 
-    //         * (as constructors itself can't have async logic)
-    //         */
-    //        else if (descriptor.type === DependencyDescriptorType.ClassAsync)
-    //        {
-    //            const dependenciesKeys = descriptor.subDependenciesKeys;
-//
-    //            if (!isSafeReference(dependenciesKeys))
-    //                return DependencyResolutionTraceResult.Sync;
-//
-    //            return this.traceResolution(...dependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);   
-    //        }
-    //        /**
-    //         * @note It is async factory, which is Async for us in all cases,
-    //         * because besides dependencies resolution there can be some async work in there
-    //         */
-    //        else
-    //        {
-    //            return DependencyResolutionTraceResult.Async;
-    //        }
-    //    }
-    //    /**
-    //     * @note If it is not an async dependency, then its Sync by default
-    //     */
-    //    else
-    //        return DependencyResolutionTraceResult.Sync;
-    //}
-//
-    //public traceResolution<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
-    //(
-    //    ...keys: T_DependencyResolutionKeys
-    //)
-    //    : DependencyResolutionTraceResult
-    //{
-    //    return Enumerable
-    //        .fromFactory(() => this.registry.resolveDescriptorsByKeys(...keys))
-    //        .aggregate<DependencyResolutionTraceResult>
-    //        (
-    //            DependencyResolutionTraceResult.Sync,
-    //            (aggregated, descriptor) =>
-    //            {
-    //                const result = this.traceDescriptorResolution(descriptor);
-//
-    //                if (result === DependencyResolutionTraceResult.Async)
-    //                    return Enumerable.terminateAggregation(result);
-    //                else if (result > aggregated)
-    //                    return result;
-    //                else
-    //                    return aggregated;
-    //            }
-    //        );
-    //}
 
     public resolveAsync
     <
