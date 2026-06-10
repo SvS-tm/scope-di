@@ -15,8 +15,8 @@ export type ValueDependencyDescriptor
     CommonDependencyDescriptorData<T_DependencyMappingKey> 
         &
     {
-        type: DependencyDescriptorType.Value;
-        value: T_Dependency;
-        lifetime: DependencyLifetime.Singleton;
+        readonly type: DependencyDescriptorType.Value;
+        readonly value: T_Dependency;
+        readonly lifetime: DependencyLifetime.Singleton;
     }
 );

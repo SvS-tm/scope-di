@@ -18,8 +18,8 @@ export type AsyncFactoryDependencyDescriptor
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &
     {
-        type: DependencyDescriptorType.FactoryAsync;
-        subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
-        factory: DependencyFactory<any[], Promise<T_Dependency>>;
+        readonly type: DependencyDescriptorType.FactoryAsync;
+        readonly subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
+        readonly factory: DependencyFactory<any[], Promise<T_Dependency>>;
     }
 );

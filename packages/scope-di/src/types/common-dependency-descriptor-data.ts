@@ -6,6 +6,6 @@ export type CommonDependencyDescriptorData
     T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey
 > = 
 {
-    key: T_DependencyMappingKey;
-    lifetime: DependencyLifetime;
+    readonly key: T_DependencyMappingKey;
+    readonly lifetime: DependencyLifetime;
 };

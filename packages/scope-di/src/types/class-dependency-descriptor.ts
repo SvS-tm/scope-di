@@ -18,8 +18,8 @@ export type ClassDependencyDescriptor
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &
     {
-        type: DependencyDescriptorType.Class;
-        subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
-        constructor: Constructor<any[], T_Dependency>;
+        readonly type: DependencyDescriptorType.Class;
+        readonly subDependenciesKeys?: DependencyResolutionKey<AllowedDependencyKey>[];
+        readonly constructor: Constructor<any[], T_Dependency>;
     }
 );

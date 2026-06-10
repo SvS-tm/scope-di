@@ -1,4 +1,4 @@
-export type ConstEnumValues
+export type ConstStringEnumValues
 <
     TEnum extends Record<string, string>,
     TKeys extends keyof TEnum = keyof TEnum
@@ -9,9 +9,9 @@ export type ConstEnumValues
         : never
 );
 
-export type ConstEnum
+export type ConstStringEnum
 <
     TEnum extends Record<string, string>,
     TKeys extends keyof TEnum = keyof TEnum
 > =
-    ConstEnumValues<TEnum, TKeys> | TEnum[TKeys];
+    ConstStringEnumValues<TEnum, TKeys> | TEnum[TKeys];

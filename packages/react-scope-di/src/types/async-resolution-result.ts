@@ -11,6 +11,6 @@ export type AsyncResolutionResult
     Promise<AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>>
         &
     {
-        [asyncResolutionResultMarker]: true;
+        readonly [asyncResolutionResultMarker]: true;
     }
 );

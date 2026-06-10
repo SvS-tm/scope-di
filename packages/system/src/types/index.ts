@@ -7,4 +7,7 @@ export * from "./promised";
 export * from "./tuple-keys";
 export * from "./is-never";
 export * from "./patch";
-export * from "./const-enum";
+export * from "./const-string-enum";
+export * from "./chancy-value";
+export * from "./is";
+export * from "./is-unknown";
