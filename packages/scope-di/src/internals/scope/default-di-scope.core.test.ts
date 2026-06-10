@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
-import { DefaultDiScope } from "./default-di-scope";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -29,7 +29,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
 
                 const [resolved] = scope.resolve(key as never);
 
@@ -59,7 +59,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
 
                 const [resolved] = scope.resolve(key as never);
 
@@ -89,7 +89,7 @@ describe
                         ]
                     );
                 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
 
                 const [resolved] = scope.resolve(key as never);
 
@@ -119,7 +119,7 @@ describe
                         ]
                     );
                 
-                const scope = new DefaultDiScope(new Map(descriptors));
+                const scope = createDefaultDiScope(new Map(descriptors));
 
                 const [resolved] = scope.resolve(key as never);
 
@@ -153,7 +153,7 @@ describe
                         ]
                     );
                 
-                const scope = new DefaultDiScope(new Map(descriptors));
+                const scope = createDefaultDiScope(new Map(descriptors));
 
                 const [resolved] = scope.resolve(key as never);
 

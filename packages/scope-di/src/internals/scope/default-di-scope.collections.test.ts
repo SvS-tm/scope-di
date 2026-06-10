@@ -5,7 +5,7 @@ import type { DependenciesCollectionResolutionKey } from "../../types/dependenci
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
-import { DefaultDiScope } from "./default-di-scope";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -55,7 +55,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors) as DiScope<any>;
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
                 
                 const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
@@ -95,7 +95,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors) as DiScope<any>;
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
                 
                 const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
@@ -146,7 +146,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors) as DiScope<any>;
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
                 
                 const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
 
@@ -200,7 +200,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors) as DiScope<any>;
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
                 
                 const [resolved] = await scope.resolveAsync([key] as DependenciesCollectionResolutionKey<never>);
 

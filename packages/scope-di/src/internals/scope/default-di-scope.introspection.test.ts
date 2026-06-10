@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@jest/globals";
-import { DefaultDiScope } from "./default-di-scope";
 import { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptorType, DependencyLifetime } from "../../types";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -14,9 +14,9 @@ describe
             "Empty registry: returns an empty array when no keys/descriptors are present", 
             () => 
             {
-                const scope = new DefaultDiScope(new Map());
+                const scope = createDefaultDiScope();
 
-                const descriptors = scope.getDescriptors();
+                const descriptors = scope.registry.getDescriptors();
 
                 expect(descriptors).not.toBeFalsy();
                 expect(descriptors).toHaveLength(0);
@@ -71,9 +71,9 @@ describe
                     .set("4", [expectedDescriptors[3]])
                     .set("5", [expectedDescriptors[4]]);
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
-                const descriptors = scope.getDescriptors();
+                const descriptors = scope.registry.getDescriptors();
 
                 expect(descriptors).toStrictEqual(expectedDescriptors);
             }
@@ -127,13 +127,13 @@ describe
                     .set("4", [expectedDescriptors[3]])
                     .set("5", [expectedDescriptors[4]]);
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
-                const parentDescriptors = scope.getDescriptors();
+                const parentDescriptors = scope.registry.getDescriptors();
                 
                 const childScope = scope.createChildScope();
 
-                const childDescriptors = childScope.getDescriptors();
+                const childDescriptors = childScope.registry.getDescriptors();
 
                 expect(parentDescriptors).toStrictEqual(childDescriptors);
             }

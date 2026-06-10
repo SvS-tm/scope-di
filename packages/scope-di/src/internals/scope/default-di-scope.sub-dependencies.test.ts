@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
-import { DefaultDiScope } from "./default-di-scope";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -106,7 +106,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
                         
                 const [promise] = scope.resolve(parentKey as never);
 
@@ -219,7 +219,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
         
                 const [parent] = scope.resolve(parentKey as never) as [Parent];
 

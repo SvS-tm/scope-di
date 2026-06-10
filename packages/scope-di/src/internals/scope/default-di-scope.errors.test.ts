@@ -5,8 +5,8 @@ import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
-import { DefaultDiScope } from "./default-di-scope";
 import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -21,7 +21,7 @@ describe
             "Unregistered single key: resolve() of unregistered key throws DependencyNotRegisteredError", 
             () => 
             {
-                const scope = new DefaultDiScope(new Map());
+                const scope = createDefaultDiScope();
 
                 expect(() => scope.resolve("key" as never)).toThrow(DependencyNotRegisteredError);
             }
@@ -32,7 +32,7 @@ describe
             "Unregistered collection key: resolve() of unregistered collection key throws DependencyNotRegisteredError", 
             () => 
             {
-                const scope = new DefaultDiScope(new Map());
+                const scope = createDefaultDiScope();
 
                 expect(() => scope.resolve(["key"] as never)).toThrow(DependencyNotRegisteredError);
             }
@@ -61,7 +61,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
 
                 expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyTypeError);
             }
@@ -90,7 +90,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(descriptors);
+                const scope = createDefaultDiScope(descriptors);
 
                 expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyLifetimeError);
             }

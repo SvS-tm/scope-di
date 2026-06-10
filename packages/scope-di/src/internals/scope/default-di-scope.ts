@@ -170,7 +170,8 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 return descriptor.value;
             case DependencyDescriptorType.Class:
             {
-                const dependencies = this.resolve(...descriptor.subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
+                const subDependenciesKeys = descriptor.subDependenciesKeys ?? [];
+                const dependencies = this.resolve(...subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
 
                 return isSafeReference(dependencies)
                     ? new descriptor.constructor(...dependencies)
@@ -209,7 +210,8 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             case DependencyDescriptorType.Factory:
             {
-                const dependencies = this.resolve(...descriptor.subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
+                const subDependenciesKeys = descriptor.subDependenciesKeys ?? [];
+                const dependencies = this.resolve(...subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
 
                 return isSafeReference(dependencies) 
                     ? descriptor.factory(...dependencies)

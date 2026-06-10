@@ -4,6 +4,7 @@ import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import { DefaultDiScope } from "./default-di-scope";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -45,7 +46,7 @@ describe
                     );
 
                 {
-                    using scope = new DefaultDiScope(descriptors);
+                    using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -105,7 +106,7 @@ describe
                     );
 
                 {
-                    using scope = new DefaultDiScope(descriptors);
+                    using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -151,7 +152,7 @@ describe
                     );
 
                 {
-                    await using scope = new DefaultDiScope(descriptors);
+                    await using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -162,7 +163,7 @@ describe
 
         it
         (
-            "Implemented only async dispose ([Symbol.dispose]) called upon async disposal of scope",
+            "Implemented only async dispose ([Symbol.asyncDispose]) called upon async disposal of scope",
             async () => 
             {
                 class Dependency1 implements AsyncDisposable
@@ -195,7 +196,7 @@ describe
                     );
 
                 {
-                    await using scope = new DefaultDiScope(descriptors);
+                    await using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -263,7 +264,7 @@ describe
                     );
 
                 {
-                    using scope = new DefaultDiScope(descriptors);
+                    using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -318,7 +319,7 @@ describe
                     );
 
                 {
-                    await using scope = new DefaultDiScope(descriptors);
+                    await using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(key as never);
                 }
@@ -459,7 +460,7 @@ describe
                     );
 
                 {
-                    using scope = new DefaultDiScope(descriptors);
+                    using scope = createDefaultDiScope(descriptors);
     
                     scope.resolve(mainKey as never);
                 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType, DependencyLifetime } from "../../types";
-import { DefaultDiScope } from "./default-di-scope";
+import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe
 (
@@ -31,7 +31,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
                 const [dependency1] = scope.resolve(key as never);
@@ -62,7 +62,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
 
@@ -96,7 +96,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
                 const [dependency1] = scope.resolve(key as never);
@@ -107,7 +107,7 @@ describe
 
         it
         (
-            "Singleton: Resolving in a child scope gives a different instance", 
+            "Scoped: Resolving in a child scope gives a different instance", 
             () => 
             {
                 class Dependency {}
@@ -127,7 +127,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
 
@@ -161,7 +161,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
                 
@@ -196,7 +196,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const scope1 = scope.createChildScope();
                 const scope2 = scope1.createChildScope();
@@ -210,7 +210,7 @@ describe
 
         it
         (
-            "ScopedInherited: Always returns a new instance, even within the same scope", 
+            "Transient: Always returns a new instance, even within the same scope", 
             () => 
             {
                 class Dependency {}
@@ -230,7 +230,7 @@ describe
                         ]
                     );
 
-                const scope = new DefaultDiScope(registry);
+                const scope = createDefaultDiScope(registry);
 
                 const [dependency] = scope.resolve(key as never);
                 const [dependency1] = scope.resolve(key as never);
