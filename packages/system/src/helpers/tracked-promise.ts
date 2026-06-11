@@ -66,13 +66,21 @@ export type ControlledTrackedPromise<T_Result> =
 type PromiseWithResolvers<T_Result> = ReturnType<typeof Promise.withResolvers<T_Result>>;
 type PromiseRejectAction<T_Result> = PromiseWithResolvers<T_Result>["reject"];
 type PromiseResolveAction<T_Result> = PromiseWithResolvers<T_Result>["resolve"];
+type PromiseConstructorWithOptionalResolvers = 
+(
+    Omit<PromiseConstructor, "withResolvers">
+        &
+    {
+        withResolvers?: typeof Promise.withResolvers;
+    }
+);
 
 const createPromiseWithResolvers = <T_Result>(): PromiseWithResolvers<T_Result> =>
 {
-    const withResolvers: typeof Promise.withResolvers | undefined = Promise.withResolvers as any;
-
-    if (withResolvers)
-        return withResolvers();
+    const promiseConstructor = Promise as PromiseConstructorWithOptionalResolvers;
+    
+    if (isSafeReference(promiseConstructor.withResolvers))
+        return promiseConstructor.withResolvers();
 
     let resolve: PromiseResolveAction<T_Result> | null = null;
     let reject: PromiseRejectAction<T_Result> | null = null;

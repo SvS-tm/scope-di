@@ -471,5 +471,292 @@ describe
                 expect(subDependency3SyncDisposeSpy).toHaveBeenCalledTimes(1);
             }
         );
+
+        it
+        (
+            "Transient sync disposable dependencies are all disposed upon scope disposal",
+            () =>
+            {
+                class Dependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const key = "Transient";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                {
+                    using scope = createDefaultDiScope(descriptors);
+
+                    const [dependency1] = scope.resolve(key as never);
+                    const [dependency2] = scope.resolve(key as never);
+
+                    expect(dependency1).not.toBe(dependency2);
+                }
+
+                expect(disposeSpy).toHaveBeenCalledTimes(2);
+            }
+        );
+
+        it
+        (
+            "Transient async disposable dependencies are all async disposed upon scope disposal",
+            async () =>
+            {
+                let asyncDisposalPromise = Promise.resolve();
+
+                const disposeAsyncDependencies = DefaultDiScope.prototype["disposeAsyncDependencies"];
+
+                jest
+                    .spyOn(DefaultDiScope.prototype, "disposeAsyncDependencies" as any)
+                    .mockImplementation
+                    (
+                        function (this: DefaultDiScope, ...args)
+                        {
+                            asyncDisposalPromise = disposeAsyncDependencies.apply(this, args as any);
+
+                            return asyncDisposalPromise;
+                        }
+                    );
+
+                class Dependency implements AsyncDisposable
+                {
+                    public async [Symbol.asyncDispose]()
+                    {
+                    }
+                }
+
+                const asyncDisposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.asyncDispose);
+
+                const key = "Transient";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                {
+                    using scope = createDefaultDiScope(descriptors);
+
+                    const [dependency1] = scope.resolve(key as never);
+                    const [dependency2] = scope.resolve(key as never);
+
+                    expect(dependency1).not.toBe(dependency2);
+                }
+
+                await asyncDisposalPromise;
+
+                expect(asyncDisposeSpy).toHaveBeenCalledTimes(2);
+            }
+        );
+
+        it
+        (
+            "Transient dependencies with both dispose methods use async disposal and skip sync disposal",
+            async () =>
+            {
+                let asyncDisposalPromise = Promise.resolve();
+
+                const disposeAsyncDependencies = DefaultDiScope.prototype["disposeAsyncDependencies"];
+
+                jest
+                    .spyOn(DefaultDiScope.prototype, "disposeAsyncDependencies" as any)
+                    .mockImplementation
+                    (
+                        function (this: DefaultDiScope, ...args)
+                        {
+                            asyncDisposalPromise = disposeAsyncDependencies.apply(this, args as any);
+
+                            return asyncDisposalPromise;
+                        }
+                    );
+
+                class Dependency implements Disposable, AsyncDisposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+
+                    public async [Symbol.asyncDispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const asyncDisposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.asyncDispose);
+
+                const key = "Transient";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                {
+                    using scope = createDefaultDiScope(descriptors);
+
+                    const [dependency1] = scope.resolve(key as never);
+                    const [dependency2] = scope.resolve(key as never);
+
+                    expect(dependency1).not.toBe(dependency2);
+                }
+
+                await asyncDisposalPromise;
+
+                expect(asyncDisposeSpy).toHaveBeenCalledTimes(2);
+                expect(disposeSpy).not.toHaveBeenCalled();
+            }
+        );
+
+        it
+        (
+            "Async factory resolved async disposable dependency is async disposed upon async scope disposal",
+            async () =>
+            {
+                class Dependency implements AsyncDisposable
+                {
+                    public async [Symbol.asyncDispose]()
+                    {
+                    }
+                }
+
+                const asyncDisposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.asyncDispose);
+
+                const key = "AsyncFactory";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory: async () => new Dependency()
+                            }
+                        ]
+                    );
+
+                {
+                    await using scope = createDefaultDiScope(descriptors);
+
+                    await scope.resolveAsync(key as never);
+                }
+
+                expect(asyncDisposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "Async factory resolved sync disposable dependency is disposed upon async scope disposal",
+            async () =>
+            {
+                class Dependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const key = "AsyncFactory";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory: async () => new Dependency()
+                            }
+                        ]
+                    );
+
+                {
+                    await using scope = createDefaultDiScope(descriptors);
+
+                    await scope.resolveAsync(key as never);
+                }
+
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "Rejected async dependency causes async scope disposal to reject",
+            async () =>
+            {
+                const key = "AsyncFactory";
+                const error = new Error("Failed");
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory: async () => { throw error; }
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope[Symbol.asyncDispose]()).rejects.toBe(error);
+            }
+        );
     }
 );

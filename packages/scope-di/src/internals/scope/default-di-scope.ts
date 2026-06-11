@@ -18,7 +18,7 @@ import type { DefaultDiDependenciesRegistry } from "../registry/default-di-depen
 export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
 {
-    private readonly resolvedDependencies = new Map<DependencyDescriptor, unknown>();
+    private readonly resolvedDependencies = new Map<DependencyDescriptor, unknown | unknown[]>();
 
     public constructor
     (
@@ -313,7 +313,24 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
         const dependency = this.instantiate(descriptor);
 
-        this.resolvedDependencies.set(descriptor, dependency);
+        /**
+         * @note special case for Transient, we need to track all values as well,
+         * as they might be disposable.
+         */
+        if (descriptor.lifetime === DependencyLifetime.Transient)
+        {
+            const dependencies = this.resolvedDependencies.get(descriptor);
+
+            if (Array.isArray(dependencies))
+                dependencies.push(dependency);
+            else
+                this.resolvedDependencies.set(descriptor, [dependency]);
+        }
+        /**
+         * @note for other cases - caching as single dependency resolved by descriptor
+         */
+        else
+            this.resolvedDependencies.set(descriptor, dependency);
 
         return dependency;
     }
@@ -323,37 +340,86 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return new DefaultDiScope(this.registry, this.root ?? this, this);
     }
 
-    private async disposeAsyncDependencies(dependencies: unknown[])
+    private async disposeAsyncDependencies(dependencies: [DependencyDescriptor, unknown][])
     {
-        const promises = dependencies.map
-        (
-            (dependency) => isSafeReference(dependency)
-                ? (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.() 
-                : undefined
-        );
+        function* generatePromises()
+        {
+            for (const [descriptor, dependencyOrCollection] of dependencies)
+            {
+                if (!isSafeReference(dependencyOrCollection))
+                    continue;
+
+                async function disposeAsync(dependency: unknown)
+                {
+                    if (!isAsyncDescriptor(descriptor))
+                    {
+                        await (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.();
+                        
+                        return;
+                    }
+
+                    dependency = await dependency;
+
+                    if (isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]))
+                        await (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.();
+                    else
+                        (dependency as Partial<Disposable>)[Symbol.dispose]?.();
+                }
+
+                if (descriptor.lifetime === DependencyLifetime.Transient)
+                {
+                    /**
+                     * @note transient dependencies are stored as well, but already as collection.
+                     */
+                    for (const dependency of dependencyOrCollection as unknown[])
+                    {
+                        yield disposeAsync(dependency);
+                    }
+                }
+                else
+                    yield disposeAsync(dependencyOrCollection);
+            }
+        }
+
+        const promises = [...generatePromises()];
 
         await Promise.all(promises);
     }
 
-    private disposeSyncDependencies(dependencies: unknown[])
+    private disposeSyncDependencies(dependencies: [DependencyDescriptor, unknown][])
     {
-        for (const dependency of dependencies)
+        for (const [descriptor, dependencyOrCollection] of dependencies)
         {
-            if 
-            (
-                !isSafeReference(dependency) 
-                    || 
-                isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose])
-            )
+            if (!isSafeReference(dependencyOrCollection) || isAsyncDescriptor(descriptor))
                 continue;
 
-            (dependency as Partial<Disposable>)[Symbol.dispose]?.();
+            if (descriptor.lifetime === DependencyLifetime.Transient)
+            {
+                /**
+                 * @note transient dependencies are stored as well, but already as collection.
+                 */
+                for (const dependency of dependencyOrCollection as unknown[])
+                {
+                    /**
+                     * @note if dependency has asyncDispose method - then skip sync disposal, 
+                     * as async has more priority and will be executed via async branch
+                     */
+                    if (!isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]))
+                        (dependency as Partial<Disposable>)[Symbol.dispose]?.();
+                }
+            }
+            /**
+             * @note if dependency has asyncDispose method - then skip sync disposal, 
+             * as async has more priority and will be executed via async branch
+             */
+            else if (!isSafeReference((dependencyOrCollection as Partial<AsyncDisposable>)[Symbol.asyncDispose]))
+                (dependencyOrCollection as Partial<Disposable>)[Symbol.dispose]?.();
         }
     }
 
     public [Symbol.dispose]() 
     {
-        const dependencies = [...this.resolvedDependencies.values()];
+        const dependencies = [...this.resolvedDependencies.entries()];
 
         this.disposeAsyncDependencies(dependencies);
         
@@ -362,7 +428,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public async [Symbol.asyncDispose]()
     {
-        const dependencies = [...this.resolvedDependencies.values()];
+        const dependencies = [...this.resolvedDependencies.entries()];
 
         const asyncDependenciesDisposal = this.disposeAsyncDependencies(dependencies);
 
