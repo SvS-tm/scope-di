@@ -867,7 +867,7 @@ describe
 
         it
         (
-            "Rejected async dependency causes async scope disposal to reject",
+            "Rejected async dependency is removed from disposal tracking",
             async () =>
             {
                 const key = "AsyncFactory";
@@ -890,7 +890,36 @@ describe
                 const scope = createDefaultDiScope(descriptors);
 
                 await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
-                await expect(scope[Symbol.asyncDispose]()).rejects.toBe(error);
+                await expect(scope[Symbol.asyncDispose]()).resolves.toBeUndefined();
+            }
+        );
+
+        it
+        (
+            "Rejected transient async dependency is removed from disposal tracking",
+            async () =>
+            {
+                const key = "AsyncFactory";
+                const error = new Error("Failed");
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Transient,
+                                factory: async () => { throw error; }
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope[Symbol.asyncDispose]()).resolves.toBeUndefined();
             }
         );
     }

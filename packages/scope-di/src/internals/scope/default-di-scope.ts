@@ -312,6 +312,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             return ChancyValue.get(lookupResult);
 
         const dependency = this.instantiate(descriptor);
+
         const owner = descriptor.lifetime === DependencyLifetime.Singleton
             ? this.root ?? this
             : this;
@@ -335,6 +336,33 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         else
             owner.resolvedDependencies.set(descriptor, dependency);
 
+        if (isAsyncDescriptor(descriptor) && dependency instanceof Promise)
+        {
+            dependency.catch
+            (
+                () =>
+                {
+                    const cachedDependency = owner.resolvedDependencies.get(descriptor);
+
+                    if (descriptor.lifetime === DependencyLifetime.Transient)
+                    {
+                        if (!Array.isArray(cachedDependency))
+                            return;
+
+                        const index = cachedDependency.indexOf(dependency);
+
+                        if (index >= 0)
+                            cachedDependency.splice(index, 1);
+
+                        if (cachedDependency.length === 0)
+                            owner.resolvedDependencies.delete(descriptor);
+                    }
+                    else if (cachedDependency === dependency)
+                        owner.resolvedDependencies.delete(descriptor);
+                }
+            );
+        }
+
         return dependency;
     }
 
@@ -357,7 +385,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                     if (!isAsyncDescriptor(descriptor))
                     {
                         await (dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]?.();
-                        
+
                         return;
                     }
 

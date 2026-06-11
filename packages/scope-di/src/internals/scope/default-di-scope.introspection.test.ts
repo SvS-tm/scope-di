@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+import { ChancyValue } from "@svs-tm/system";
 import { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptorType, DependencyLifetime } from "../../types";
@@ -137,6 +138,143 @@ describe
 
                 expect(parentDescriptors).toStrictEqual(childDescriptors);
             }
-        )
+        );
+
+        it
+        (
+            "findResolvedDependencyByDescriptor returns success for cached falsy values",
+            () =>
+            {
+                const cases: { descriptor: DependencyDescriptor; value: unknown; }[] =
+                [
+                    {
+                        descriptor:
+                        {
+                            key: "undefined",
+                            type: DependencyDescriptorType.Value,
+                            lifetime: DependencyLifetime.Singleton,
+                            value: undefined
+                        },
+                        value: undefined
+                    },
+                    {
+                        descriptor:
+                        {
+                            key: "null",
+                            type: DependencyDescriptorType.Value,
+                            lifetime: DependencyLifetime.Singleton,
+                            value: null
+                        },
+                        value: null
+                    },
+                    {
+                        descriptor:
+                        {
+                            key: "false",
+                            type: DependencyDescriptorType.Value,
+                            lifetime: DependencyLifetime.Singleton,
+                            value: false
+                        },
+                        value: false
+                    },
+                    {
+                        descriptor:
+                        {
+                            key: "zero",
+                            type: DependencyDescriptorType.Value,
+                            lifetime: DependencyLifetime.Singleton,
+                            value: 0
+                        },
+                        value: 0
+                    },
+                    {
+                        descriptor:
+                        {
+                            key: "empty-string",
+                            type: DependencyDescriptorType.Value,
+                            lifetime: DependencyLifetime.Singleton,
+                            value: ""
+                        },
+                        value: ""
+                    }
+                ];
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+
+                for (const { descriptor } of cases)
+                {
+                    registry.set(descriptor.key, [descriptor]);
+                }
+
+                const scope = createDefaultDiScope(registry);
+
+                scope.resolve(...cases.map(({ descriptor }) => descriptor.key) as never[]);
+
+                for (const { descriptor, value } of cases)
+                {
+                    const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+
+                    if (!ChancyValue.isSuccess(lookupResult))
+                        throw new Error(`Expected ${String(descriptor.key)} to be resolved`);
+
+                    expect(ChancyValue.get(lookupResult)).toBe(value);
+                }
+            }
+        );
+
+        it
+        (
+            "findResolvedDependencyByDescriptor returns failure for an unresolved falsy value descriptor",
+            () =>
+            {
+                const key = "undefined";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: undefined
+                };
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set(key, [descriptor]);
+
+                const scope = createDefaultDiScope(registry);
+                const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+
+                expect(ChancyValue.isSuccess(lookupResult)).toBe(false);
+            }
+        );
+
+        it
+        (
+            "findResolvedDependencyByDescriptor finds cached falsy scoped inherited values in ancestors",
+            () =>
+            {
+                const key = "undefined";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Factory,
+                    lifetime: DependencyLifetime.ScopedInherited,
+                    factory: () => undefined
+                };
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set(key, [descriptor]);
+
+                const scope = createDefaultDiScope(registry);
+                const childScope = scope.createChildScope();
+
+                scope.resolve(key as never);
+
+                const lookupResult = childScope.findResolvedDependencyByDescriptor(descriptor);
+
+                if (!ChancyValue.isSuccess(lookupResult))
+                    throw new Error("Expected scoped inherited value to be resolved from ancestor");
+
+                expect(ChancyValue.get(lookupResult)).toBeUndefined();
+            }
+        );
     }
 );

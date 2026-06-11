@@ -96,12 +96,15 @@ describe
 
         it
         (
-            "resolveAsync caches a rejected singleton async dependency",
+            "resolveAsync retries a rejected singleton async dependency",
             async () =>
             {
                 const key = "key";
                 const error = new Error("Factory failed");
-                const factory = jest.fn<() => Promise<object>>().mockRejectedValue(error);
+                const value = {};
+                const factory = jest.fn<() => Promise<object>>()
+                    .mockRejectedValueOnce(error)
+                    .mockResolvedValue(value);
 
                 const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
                     .set
@@ -120,9 +123,57 @@ describe
                 const scope = createDefaultDiScope(descriptors);
 
                 await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
-                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                
+                const [dependency] = await scope.resolveAsync(key as never);
+
+                expect(dependency).toBe(value);
+                expect(factory).toHaveBeenCalledTimes(2);
+            }
+        );
+
+        it
+        (
+            "resolveAsync shares the same pending singleton rejection between parallel requests before retrying",
+            async () =>
+            {
+                const key = "key";
+                const error = new Error("Factory failed");
+                const pendingDependency = TrackedPromise.controlled<object>();
+                const value = {};
+                const factory = jest.fn<() => Promise<object>>()
+                    .mockReturnValueOnce(pendingDependency)
+                    .mockResolvedValue(value);
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const dependency1 = scope.resolveAsync(key as never);
+                const dependency2 = scope.resolveAsync(key as never);
 
                 expect(factory).toHaveBeenCalledTimes(1);
+
+                pendingDependency[TrackedPromise.reject](error);
+
+                await expect(dependency1).rejects.toBe(error);
+                await expect(dependency2).rejects.toBe(error);
+
+                const [dependency] = await scope.resolveAsync(key as never);
+
+                expect(dependency).toBe(value);
+                expect(factory).toHaveBeenCalledTimes(2);
             }
         );
 
