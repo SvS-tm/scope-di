@@ -96,6 +96,38 @@ describe
 
         it
         (
+            "resolveAsync caches a rejected singleton async dependency",
+            async () =>
+            {
+                const key = "key";
+                const error = new Error("Factory failed");
+                const factory = jest.fn<() => Promise<object>>().mockRejectedValue(error);
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+
+                expect(factory).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
             "resolveAsync rejects when an async parent dependency waits on a rejected sub-dependency",
             async () =>
             {
@@ -174,6 +206,169 @@ describe
                 expect(dependency1).toBe(value);
                 expect(dependency2).toBe(value);
                 expect(factory).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "resolveAsync resolves async class descriptors without sub-dependencies",
+            async () =>
+            {
+                const key = "key";
+
+                class Dependency {}
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.ClassAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [dependency] = await scope.resolveAsync(key as never);
+
+                expect(dependency).toBeInstanceOf(Dependency);
+            }
+        );
+
+        it
+        (
+            "resolveAsync resolves async factory descriptors without sub-dependencies",
+            async () =>
+            {
+                const key = "key";
+                const value = {};
+                const factory = jest.fn<() => Promise<object>>().mockResolvedValue(value);
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [dependency] = await scope.resolveAsync(key as never);
+
+                expect(dependency).toBe(value);
+                expect(factory).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "resolveAsync passes settled async sub-dependencies to async class descriptors",
+            async () =>
+            {
+                const childKey = "child";
+                const parentKey = "parent";
+
+                class Child {}
+
+                class Parent
+                {
+                    public constructor(public readonly child: Child)
+                    {
+                    }
+                }
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        childKey,
+                        [
+                            {
+                                key: childKey,
+                                type: DependencyDescriptorType.ClassAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                constructor: Child
+                            }
+                        ]
+                    )
+                    .set
+                    (
+                        parentKey,
+                        [
+                            {
+                                key: parentKey,
+                                type: DependencyDescriptorType.ClassAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                subDependenciesKeys: [childKey],
+                                constructor: Parent
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [child] = await scope.resolveAsync(childKey as never);
+                const [parent] = await scope.resolveAsync(parentKey as never);
+
+                expect(parent).toBeInstanceOf(Parent);
+                expect((parent as Parent).child).toBe(child);
+            }
+        );
+
+        it
+        (
+            "resolveAsync passes settled async sub-dependencies to async factory descriptors",
+            async () =>
+            {
+                const childKey = "child";
+                const parentKey = "parent";
+                const factory = jest.fn<(child: object) => Promise<object>>(async (child) => ({ child }));
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        childKey,
+                        [
+                            {
+                                key: childKey,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory: async () => ({})
+                            }
+                        ]
+                    )
+                    .set
+                    (
+                        parentKey,
+                        [
+                            {
+                                key: parentKey,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Singleton,
+                                subDependenciesKeys: [childKey],
+                                factory
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [child] = await scope.resolveAsync(childKey as never);
+                const [parent] = await scope.resolveAsync(parentKey as never);
+
+                expect(parent).toStrictEqual({ child });
+                expect(factory).toHaveBeenCalledWith(child);
             }
         );
 

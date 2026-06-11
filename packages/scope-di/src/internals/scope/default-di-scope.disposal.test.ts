@@ -474,6 +474,141 @@ describe
 
         it
         (
+            "Child scope disposal does not dispose root singleton dependencies",
+            () =>
+            {
+                class Dependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const key = "Singleton";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Singleton,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                using scope = createDefaultDiScope(descriptors);
+                const [rootDependency] = scope.resolve(key as never);
+
+                {
+                    using childScope = scope.createChildScope();
+                    const [childDependency] = childScope.resolve(key as never);
+
+                    expect(childDependency).toBe(rootDependency);
+                }
+
+                expect(disposeSpy).not.toHaveBeenCalled();
+            }
+        );
+
+        it
+        (
+            "Child scope disposal disposes scoped dependencies owned by that child",
+            () =>
+            {
+                class Dependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const key = "Scoped";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Scoped,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                {
+                    using childScope = scope.createChildScope();
+
+                    childScope.resolve(key as never);
+                }
+
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
+            "Root scope disposal disposes a singleton first resolved from a child scope",
+            () =>
+            {
+                class Dependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const disposeSpy = jest
+                    .spyOn(Dependency.prototype, Symbol.dispose);
+
+                const key = "Singleton";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Singleton,
+                                constructor: Dependency
+                            }
+                        ]
+                    );
+
+                {
+                    using scope = createDefaultDiScope(descriptors);
+
+                    {
+                        using childScope = scope.createChildScope();
+
+                        childScope.resolve(key as never);
+                    }
+
+                    expect(disposeSpy).not.toHaveBeenCalled();
+                }
+
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
             "Transient sync disposable dependencies are all disposed upon scope disposal",
             () =>
             {

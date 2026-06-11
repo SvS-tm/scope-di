@@ -76,6 +76,40 @@ describe
 
         it
         (
+            "Singleton: First resolution from a child scope is cached in the root scope", 
+            () => 
+            {
+                class Dependency {}
+                const key = "Key";
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        key,
+                        [
+                            {
+                                key,
+                                type: DependencyDescriptorType.Class,
+                                constructor: Dependency,
+                                lifetime: DependencyLifetime.Singleton
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(registry);
+                const childScope = scope.createChildScope();
+
+                const [childDependency] = childScope.resolve(key as never);
+                const [rootDependency] = scope.resolve(key as never);
+                const [childDependency1] = childScope.resolve(key as never);
+
+                expect(childDependency).toBe(rootDependency);
+                expect(childDependency1).toBe(childDependency);
+            }
+        );
+
+        it
+        (
             "Scoped: Resolving twice in the same scope returns the same instance", 
             () => 
             {

@@ -312,6 +312,9 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             return ChancyValue.get(lookupResult);
 
         const dependency = this.instantiate(descriptor);
+        const owner = descriptor.lifetime === DependencyLifetime.Singleton
+            ? this.root ?? this
+            : this;
 
         /**
          * @note special case for Transient, we need to track all values as well,
@@ -319,18 +322,18 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
          */
         if (descriptor.lifetime === DependencyLifetime.Transient)
         {
-            const dependencies = this.resolvedDependencies.get(descriptor);
+            const dependencies = owner.resolvedDependencies.get(descriptor);
 
             if (Array.isArray(dependencies))
                 dependencies.push(dependency);
             else
-                this.resolvedDependencies.set(descriptor, [dependency]);
+                owner.resolvedDependencies.set(descriptor, [dependency]);
         }
         /**
          * @note for other cases - caching as single dependency resolved by descriptor
          */
         else
-            this.resolvedDependencies.set(descriptor, dependency);
+            owner.resolvedDependencies.set(descriptor, dependency);
 
         return dependency;
     }
