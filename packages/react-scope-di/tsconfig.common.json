@@ -34,6 +34,9 @@
     "exclude": [
         "dist",
         "node_modules",
-        "**/*.test.ts"
+        "**/*.runtime.test.ts",
+        "**/*.runtime.test.tsx",
+        "**/*.compiletime.test.ts",
+        "**/*.compiletime.test.tsx"
     ]
 }

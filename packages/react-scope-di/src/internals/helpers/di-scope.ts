@@ -1,5 +1,5 @@
 import { DependencyDescriptor, DependencyDescriptorType, DependencyMappingKey, DependencyResolutionKey, DiScope, isAsyncDescriptor, RegisteredDependencies } from "@svs-tm/scope-di";
-import { Enumerable, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
+import { ChancyValue, Enumerable, isSafeReference, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 
 export enum DependenciesResolutionTraceResult
 {
@@ -17,10 +17,12 @@ function traceDependencyResolutionByDescriptor<T_RegisteredDependencies extends 
 {
     if (isAsyncDescriptor(descriptor))
     {
-        const resolvedValue = scope.findResolvedDependencyByDescriptor(descriptor);
+        const result = scope.findResolvedDependencyByDescriptor(descriptor);
         
-        if (isSafeReference(resolvedValue))
+        if (ChancyValue.isSuccess(result))
         {
+            const resolvedValue = ChancyValue.get(result);
+            
             if (resolvedValue instanceof Promise)
             {
                 const trackedPromise = TrackedPromise.track(resolvedValue);

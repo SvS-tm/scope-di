@@ -13,7 +13,8 @@
         "noEmit": true
     },
     "include": [
-        "src/**/*.test.ts",
+        "src/**/*.runtime.test.ts",
+        "src/**/*.runtime.test.tsx",
         "src/tests-setup.after-env.ts",
         "src/tests-setup.ts",
         "src/tests-extensions.d.ts"

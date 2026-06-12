@@ -4,7 +4,6 @@
         "types": [
             "node",
             "@types/react19",
-            "@types/react-dom19",
             "@testing-library/jest-dom"
         ]
     }

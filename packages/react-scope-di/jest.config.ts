@@ -6,7 +6,7 @@ const config: Config = {
     projects: 
     [
         {
-            displayName: "react-18",
+            displayName: "react-18-runtime",
             clearMocks: true,
             resetMocks: true,
             restoreMocks: true,
@@ -15,6 +15,7 @@ const config: Config = {
             roots: ["<rootDir>/src"],
             setupFiles: ["<rootDir>/src/tests-setup.ts"],
             setupFilesAfterEnv: ["<rootDir>/src/tests-setup.after-env.ts"],
+            testMatch: ["<rootDir>/src/**/*.runtime.test.ts?(x)"],
             testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
             preset: "ts-jest",
@@ -38,7 +39,12 @@ const config: Config = {
             }
         },
         {
-            displayName: "react-19",
+            displayName: "react-18-compiletime",
+            runner: "jest-runner-tsd",
+            testMatch: ["<rootDir>/src/**/*.compiletime.test.ts?(x)"]
+        },
+        {
+            displayName: "react-19-runtime",
             clearMocks: true,
             resetMocks: true,
             restoreMocks: true,
@@ -47,6 +53,7 @@ const config: Config = {
             roots: ["<rootDir>/src"],
             setupFiles: ["<rootDir>/src/tests-setup.ts"],
             setupFilesAfterEnv: ["<rootDir>/src/tests-setup.after-env.ts"],
+            testMatch: ["<rootDir>/src/**/*.runtime.test.ts?(x)"],
             testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
             preset: "ts-jest",
@@ -68,6 +75,11 @@ const config: Config = {
                     }
                 ]
             }
+        },
+        {
+            displayName: "react-19-compiletime",
+            runner: "jest-runner-tsd",
+            testMatch: ["<rootDir>/src/**/*.compiletime.test.ts?(x)"]
         }
     ]
 };

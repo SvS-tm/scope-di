@@ -48,6 +48,7 @@
         "jest": "^30.0.5",
         "jest-environment-jsdom": "^30.0.5",
         "jest-mock": "^30.2.0",
+        "jest-runner-tsd": "^6.0.0",
         "react": "^19.1.1",
         "react-dom18": "npm:react-dom@^18.3.1",
         "react-dom19": "npm:react-dom@^19.1.1",
@@ -58,6 +59,7 @@
         "rollup-plugin-dts": "^6.2.1",
         "ts-jest": "^29.4.1",
         "ts-node": "^10.9.2",
+        "tsd-lite": "^0.9.0",
         "typescript": "^5.9.2"
     },
     "peerDependencies": {
