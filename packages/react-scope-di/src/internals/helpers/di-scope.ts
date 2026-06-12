@@ -58,13 +58,17 @@ function traceDependencyResolutionByDescriptor<T_RegisteredDependencies extends 
             const dependenciesKeys = descriptor.subDependenciesKeys;
             
             if (!isSafeReference(dependenciesKeys))
-                return DependenciesResolutionTraceResult.Sync;
+                return DependenciesResolutionTraceResult.AsyncSettled;
 
-            return traceDependenciesResolution
+            const result = traceDependenciesResolution
             (
                 scope, 
                 ...dependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
-            );   
+            );
+
+            return result === DependenciesResolutionTraceResult.Async
+                ? DependenciesResolutionTraceResult.Async
+                : DependenciesResolutionTraceResult.AsyncSettled;
         }
         /**
          * @note It is async factory, which is Async for us in all cases,

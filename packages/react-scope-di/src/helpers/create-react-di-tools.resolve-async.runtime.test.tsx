@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
 import { throwError } from "@svs-tm/system";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { createReactDiTools } from "./create-react-di-tools";
 
 describe
@@ -23,6 +23,7 @@ describe
 
                 const originalProp1 = { value: "prop1" };
                 const originalProp2 = { value: "prop2" };
+                const consumerId = "consumer";
 
                 const scope = configureRootScope()
                     .map(key1)
@@ -51,50 +52,14 @@ describe
                     {
                         rendererSpy(prop1, prop2, dependency1, dependency2, dependency3);
 
-                        return (
-                            <ol>
-                                <li data-testid={prop1.value}>{prop1.value}</li>
-                                <li data-testid={prop2.value}>{prop2.value}</li>
-                                <li data-testid={dependency1.value}>{dependency1.value}</li>
-                                <li data-testid={dependency2.value}>{dependency2.value}</li>
-                                <li data-testid={dependency3.value}>{dependency3.value}</li>
-                            </ol>
-                        );
+                        return <span data-testid={consumerId}>Resolved</span>;
                     }
                 );
 
                 await act(async () => render(<Consumer prop1={originalProp1} prop2={originalProp2} />));
 
                 expect(rendererSpy).toHaveBeenCalledWith(originalProp1, originalProp2, originalDependency1, originalDependency2, originalDependency3);
-                
-                const list = screen.getByRole("list");
-
-                expect(list).toBeInTheDocument();
-
-                const prop1 = within(list).queryByTestId(originalProp1.value);
-
-                expect(prop1).toBeInTheDocument();
-                expect(prop1).toHaveTextContent(originalProp1.value);
-
-                const prop2 = within(list).queryByTestId(originalProp2.value);
-
-                expect(prop2).toBeInTheDocument();
-                expect(prop2).toHaveTextContent(originalProp2.value);
-
-                const dependency1 = within(list).queryByTestId(originalDependency1.value);
-
-                expect(dependency1).toBeInTheDocument();
-                expect(dependency1).toHaveTextContent(originalDependency1.value);
-
-                const dependency2 = within(list).queryByTestId(originalDependency2.value);
-
-                expect(dependency2).toBeInTheDocument();
-                expect(dependency2).toHaveTextContent(originalDependency2.value);
-
-                const dependency3 = within(list).queryByTestId(originalDependency3.value);
-
-                expect(dependency3).toBeInTheDocument();
-                expect(dependency3).toHaveTextContent(originalDependency3.value);
+                expect(screen.getByTestId(consumerId)).toBeInTheDocument();
             }
         );
 
@@ -220,6 +185,78 @@ describe
 
                 expect(dependency1).toBeInTheDocument();
                 expect(dependency1).toHaveTextContent(originalDependency1.value);
+            }
+        );
+
+        it
+        (
+            "Error boundary captures rejected async dependency errors",
+            async () =>
+            {
+                const key1 = "Key1";
+                const error = new Error("Dependency rejected");
+                const loaderText = "Loading...";
+                const errorSpanId = "error-span";
+                const errorSpanContent = "Error!";
+
+                const { promise, reject } = Promise.withResolvers<{ value: string; }>();
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactoryAsync(() => promise, DependencyLifetime.Singleton)
+                    .build();
+
+                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+
+                const errorSpy = jest.fn();
+                const resolutionSpy = jest.fn();
+
+                const Consumer = resolveAsync
+                (
+                    resolutionKeys("Key1"),
+                    asyncResolutionOptions
+                    (
+                        {
+                            pending: <span role="progressbar">{loaderText}</span>,
+                            error: ({ error }) =>
+                            {
+                                errorSpy(error);
+
+                                return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
+                            }
+                        }
+                    ),
+                    ({ dependencies: [dependency1] }) =>
+                    {
+                        resolutionSpy(dependency1);
+
+                        return <span data-testid={dependency1.value}>{dependency1.value}</span>;
+                    }
+                );
+
+                await act(async () => render(<Consumer />));
+
+                expect(screen.queryByRole("progressbar")).toBeInTheDocument();
+                expect(resolutionSpy).not.toHaveBeenCalled();
+
+                await act
+                (
+                    async () =>
+                    {
+                        reject(error);
+
+                        await promise.catch(() => undefined);
+                    }
+                );
+
+                expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+                expect(errorSpy).toHaveBeenCalledWith(error);
+                expect(resolutionSpy).not.toHaveBeenCalled();
+
+                const errorSpan = screen.getByTestId(errorSpanId);
+
+                expect(errorSpan).toBeInTheDocument();
+                expect(errorSpan).toHaveTextContent(errorSpanContent);
             }
         );
 

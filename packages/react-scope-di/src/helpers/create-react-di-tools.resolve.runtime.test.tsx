@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { createReactDiTools } from "./create-react-di-tools";
 import { throwError } from "@svs-tm/system";
 
@@ -23,6 +23,7 @@ describe
 
                 const originalProp1 = { value: "prop1" };
                 const originalProp2 = { value: "prop2" };
+                const consumerId = "consumer";
 
                 const scope = configureRootScope()
                     .map(key1)
@@ -51,50 +52,14 @@ describe
                     {
                         rendererSpy(prop1, prop2, dependency1, dependency2, dependency3);
 
-                        return (
-                            <ol>
-                                <li data-testid={prop1.value}>{prop1.value}</li>
-                                <li data-testid={prop2.value}>{prop2.value}</li>
-                                <li data-testid={dependency1.value}>{dependency1.value}</li>
-                                <li data-testid={dependency2.value}>{dependency2.value}</li>
-                                <li data-testid={dependency3.value}>{dependency3.value}</li>
-                            </ol>
-                        );
+                        return <span data-testid={consumerId}>Resolved</span>;
                     }
                 );
 
                 render(<Consumer prop1={originalProp1} prop2={originalProp2} />);
 
                 expect(rendererSpy).toHaveBeenCalledWith(originalProp1, originalProp2, originalDependency1, originalDependency2, originalDependency3);
-                
-                const list = screen.getByRole("list");
-
-                expect(list).toBeInTheDocument();
-
-                const prop1 = within(list).queryByTestId(originalProp1.value);
-
-                expect(prop1).toBeInTheDocument();
-                expect(prop1).toHaveTextContent(originalProp1.value);
-
-                const prop2 = within(list).queryByTestId(originalProp2.value);
-
-                expect(prop2).toBeInTheDocument();
-                expect(prop2).toHaveTextContent(originalProp2.value);
-
-                const dependency1 = within(list).queryByTestId(originalDependency1.value);
-
-                expect(dependency1).toBeInTheDocument();
-                expect(dependency1).toHaveTextContent(originalDependency1.value);
-
-                const dependency2 = within(list).queryByTestId(originalDependency2.value);
-
-                expect(dependency2).toBeInTheDocument();
-                expect(dependency2).toHaveTextContent(originalDependency2.value);
-
-                const dependency3 = within(list).queryByTestId(originalDependency3.value);
-
-                expect(dependency3).toBeInTheDocument();
-                expect(dependency3).toHaveTextContent(originalDependency3.value);
+                expect(screen.getByTestId(consumerId)).toBeInTheDocument();
             }
         );
 
