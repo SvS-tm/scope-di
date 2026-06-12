@@ -1,4 +1,3 @@
-export * from "./chancy-value";
 export * from "./const-string-enum";
 export * from "./constructor";
 export * from "./delegate";
