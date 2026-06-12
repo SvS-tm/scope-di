@@ -1,13 +1,28 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  clearMocks: true,
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  preset: "ts-jest",
-  setupFiles: [
-    "./src/tests-setup.ts"
+  projects: [
+    {
+      displayName: "runtime",
+      clearMocks: true,
+      preset: "ts-jest",
+      testMatch: [
+        "<rootDir>/src/**/*.runtime.test.ts"
+      ],
+      setupFiles: [
+        "<rootDir>/src/tests-setup.ts"
+      ]
+    },
+    {
+      displayName: "compiletime",
+      runner: "jest-runner-tsd",
+      testMatch: [
+        "<rootDir>/src/**/*.compiletime.test.ts"
+      ]
+    }
   ]
 };
 
