@@ -9,7 +9,7 @@ export type DiMappingBuilder
     T_DependencyMappingKey extends AllowedDependencyKey 
 > =
 {
-    asValue<T_Abstraction>
+    asValue<const T_Abstraction>
     (
         value: T_Abstraction
     )
@@ -36,7 +36,7 @@ export type DiMappingBuilder
             >
         >;
     
-    asFactory<T_Abstraction>
+    asFactory<const T_Abstraction>
     (
         factory: DependencyFactory<[], T_Abstraction>,
         lifetime: DependencyLifetime
@@ -64,7 +64,7 @@ export type DiMappingBuilder
             >
         >;  
         
-    asFactoryAsync<T_Abstraction>
+    asFactoryAsync<const T_Abstraction>
     (
         factory: DependencyFactory<[], Promise<T_Abstraction>>,
         lifetime: DependencyLifetime

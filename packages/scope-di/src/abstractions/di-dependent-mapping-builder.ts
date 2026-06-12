@@ -37,7 +37,7 @@ export type DiDependentMappingBuilder
             >
         >;
 
-    factory<T_Abstraction>
+    factory<const T_Abstraction>
     (
         factory: DependencyFactory<
             ResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>, 
@@ -71,7 +71,7 @@ export type DiDependentMappingBuilder
             >
         >;  
         
-    factoryAsync<T_Abstraction>
+    factoryAsync<const T_Abstraction>
     (
         factory: DependencyFactory<
             AwaitedResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,

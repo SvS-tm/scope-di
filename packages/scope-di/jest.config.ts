@@ -2,27 +2,45 @@ import type { Config } from "jest";
 
 const config: Config = 
 {
-    preset: "ts-jest/presets/default-esm",
-    testEnvironment: "node",
-    transform: {
-        "^.+\\.tsx?$": 
-        [
-            "ts-jest", 
-            { 
-                useESM: true, 
-                tsconfig: "<rootDir>/tsconfig.jest.json" 
-            }
-        ]
-    },
-    extensionsToTreatAsEsm: [".ts"],
-    moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
-    clearMocks: true,
-    resetMocks: true,
-    restoreMocks: true,
     collectCoverage: true,
     coverageDirectory: "coverage",
     coverageProvider: "v8",
-    setupFiles: ["<rootDir>/src/tests-setup.ts"]
+    projects:
+    [
+        {
+            displayName: "runtime",
+            preset: "ts-jest/presets/default-esm",
+            testEnvironment: "node",
+            testMatch:
+            [
+                "<rootDir>/src/**/*.runtime.test.ts"
+            ],
+            transform: {
+                "^.+\\.tsx?$": 
+                [
+                    "ts-jest", 
+                    { 
+                        useESM: true, 
+                        tsconfig: "<rootDir>/tsconfig.jest.json" 
+                    }
+                ]
+            },
+            extensionsToTreatAsEsm: [".ts"],
+            moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
+            clearMocks: true,
+            resetMocks: true,
+            restoreMocks: true,
+            setupFiles: ["<rootDir>/src/tests-setup.ts"]
+        },
+        {
+            displayName: "compiletime",
+            runner: "jest-runner-tsd",
+            testMatch:
+            [
+                "<rootDir>/src/**/*.compiletime.test.ts"
+            ]
+        }
+    ]
 };
 
 export default config;

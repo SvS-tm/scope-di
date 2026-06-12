@@ -51,7 +51,7 @@ export class DefaultDiMappingBuilder
         >;
     };
 
-    public readonly asFactoryAsync = <T_Abstraction>
+    public readonly asFactoryAsync = <const T_Abstraction>
     (
         factory: DependencyFactory<[], Promise<T_Abstraction>>, 
         lifetime: DependencyLifetime
@@ -77,7 +77,7 @@ export class DefaultDiMappingBuilder
         >;
     };
 
-    public readonly asValue = <T_Abstraction>(value: T_Abstraction) =>
+    public readonly asValue = <const T_Abstraction>(value: T_Abstraction) =>
     {
         this.diScopeBuilder.register
         (
@@ -125,7 +125,7 @@ export class DefaultDiMappingBuilder
         >;
     };
 
-    public readonly asFactory = <T_Abstraction>
+    public readonly asFactory = <const T_Abstraction>
     (
         factory: Delegate<[], T_Abstraction>, 
         lifetime: DependencyLifetime

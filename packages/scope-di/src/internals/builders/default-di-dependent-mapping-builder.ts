@@ -59,7 +59,7 @@ export class DefaultDiDependentMappingBuilder
             >
         >;
     }
-    public readonly factory = <T_Abstraction>
+    public readonly factory = <const T_Abstraction>
     (
         factory: Delegate<
             ResolvedDependencies<T_RegisteredDependencies, T_Keys>, 
@@ -119,7 +119,7 @@ export class DefaultDiDependentMappingBuilder
         >;
     };
 
-    public readonly factoryAsync = <T_Abstraction>
+    public readonly factoryAsync = <const T_Abstraction>
     (
         factory: DependencyFactory<
             AwaitedResolvedDependencies<T_RegisteredDependencies, T_Keys>,
