@@ -1,15 +1,15 @@
-import type { Constructor, Promised } from "@svs-tm/system";
+import type { Constructor } from "@svs-tm/system";
+import type { DependencyResolutionKey } from "../types";
 import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
-import type { DependencyMappingKey } from "../types/dependency-mapping-key";
-import type { DependencyLifetime } from "../types/dependency-lifetime";
-import type { RegisteredDependencies } from "../types/registered-dependencies";
-import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
-import type { DiScopeBuilder } from "./di-scope-builder";
-import type { AddDependency } from "../types/utilities/add-dependency";
 import type { DependencyDescriptorType } from "../types/dependency-descriptor-type";
 import type { DependencyFactory } from "../types/dependency-factory";
+import type { DependencyLifetime } from "../types/dependency-lifetime";
+import type { DependencyMappingKey } from "../types/dependency-mapping-key";
+import type { RegisteredDependencies } from "../types/registered-dependencies";
+import type { AddDependency } from "../types/utilities/add-dependency";
 import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
-import type { DependencyResolutionKey } from "../types";
+import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
+import type { DiScopeBuilder } from "./di-scope-builder";
 
 export type DiDependentMappingBuilder
 <
@@ -58,7 +58,7 @@ export type DiDependentMappingBuilder
     (
         constructor: Constructor<
             AwaitedResolvedDependencies<T_RegisteredDependencies, T_ResolutionKeys>,
-            Promised<T_Abstraction>
+            T_Abstraction
         >,
         lifetime: DependencyLifetime
     )

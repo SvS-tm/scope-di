@@ -52,7 +52,7 @@ export type DiMappingBuilder
 
     asClassAsync<T_Abstraction>
     (
-        constructor: Constructor<[], Promise<T_Abstraction>>,
+        constructor: Constructor<[], T_Abstraction>,
         lifetime: DependencyLifetime
     )
         : DiScopeBuilder<

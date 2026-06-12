@@ -47,6 +47,12 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 
     public readonly build = () => 
     {
-        return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(this.descriptors));
+        const descriptorsSnapshot = new Map<AllowedDependencyKey, DependencyDescriptor[]>
+        (
+            [...this.descriptors.entries()]
+                .map(([key, descriptors]) => [key, [...descriptors]])
+        );
+
+        return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptorsSnapshot));
     };
 }
