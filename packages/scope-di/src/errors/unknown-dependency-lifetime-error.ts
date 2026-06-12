@@ -7,7 +7,7 @@ export class UnknownDependencyLifetimeError extends Error
     {
         super
         (
-            `Can not resolve dependency by key ${key} as its lifetime is known: ${lifetime}!`, 
+            `Can not resolve dependency by key ${key} as its lifetime is unknown: ${lifetime}!`, 
             { cause: { key, lifetime } }
         );
     }

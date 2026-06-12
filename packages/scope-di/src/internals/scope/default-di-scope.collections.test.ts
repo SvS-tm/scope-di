@@ -105,6 +105,42 @@ describe
 
         it
         (
+            "Resolving a registered empty collection key returns an empty array",
+            () =>
+            {
+                const key = "key";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set(key, []);
+
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
+
+                const [resolved] = scope.resolve([key] as DependenciesCollectionResolutionKey<never>);
+
+                expect(resolved).toStrictEqual([]);
+            }
+        );
+
+        it
+        (
+            "resolveAsync of a registered empty collection key returns an empty array",
+            async () =>
+            {
+                const key = "key";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set(key, []);
+
+                const scope = createDefaultDiScope(descriptors) as DiScope<any>;
+
+                const [resolved] = await scope.resolveAsync([key] as DependenciesCollectionResolutionKey<never>);
+
+                expect(resolved).toStrictEqual([]);
+            }
+        );
+
+        it
+        (
             "In a sync parent (sync class/factory depends on a collection), injected collection contains promises at async positions (not awaited)",
             () =>
             {

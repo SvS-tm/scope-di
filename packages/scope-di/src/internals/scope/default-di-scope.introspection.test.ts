@@ -142,6 +142,55 @@ describe
 
         it
         (
+            "getDescriptors preserves mapping insertion order and descriptor order while skipping empty collections",
+            () =>
+            {
+                const descriptor1: DependencyDescriptor =
+                {
+                    key: "b",
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: "b1"
+                };
+
+                const descriptor2: DependencyDescriptor =
+                {
+                    key: "b",
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: "b2"
+                };
+
+                const descriptor3: DependencyDescriptor =
+                {
+                    key: "a",
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: "a1"
+                };
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set("empty-before", [])
+                    .set("b", [descriptor1, descriptor2])
+                    .set("empty-middle", [])
+                    .set("a", [descriptor3])
+                    .set("empty-after", []);
+
+                const scope = createDefaultDiScope(registry);
+
+                expect(scope.registry.getDescriptors()).toStrictEqual
+                (
+                    [
+                        descriptor1,
+                        descriptor2,
+                        descriptor3
+                    ]
+                );
+            }
+        );
+
+        it
+        (
             "findResolvedDependencyByDescriptor returns success for cached falsy values",
             () =>
             {

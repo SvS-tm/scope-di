@@ -29,6 +29,32 @@ describe
 
         it
         (
+            "Unregistered single key: DependencyNotRegisteredError includes message and cause",
+            () =>
+            {
+                const key = "key";
+                const scope = createDefaultDiScope();
+
+                expect(() => scope.resolve(key as never)).toThrow
+                (
+                    new DependencyNotRegisteredError(key)
+                );
+
+                try
+                {
+                    scope.resolve(key as never);
+                }
+                catch (error)
+                {
+                    expect(error).toBeInstanceOf(DependencyNotRegisteredError);
+                    expect((error as Error).message).toBe(`Can not resolve dependency by key ${key} as it was not registered!`);
+                    expect((error as Error).cause).toBe(key);
+                }
+            }
+        );
+
+        it
+        (
             "Unregistered collection key: resolve() of unregistered collection key throws DependencyNotRegisteredError", 
             () => 
             {
@@ -64,6 +90,17 @@ describe
                 const scope = createDefaultDiScope(descriptors);
 
                 expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyTypeError);
+
+                try
+                {
+                    scope.resolve(key as never);
+                }
+                catch (error)
+                {
+                    expect(error).toBeInstanceOf(UnknownDependencyTypeError);
+                    expect((error as Error).message).toBe(`Can not resolve dependency by key ${key} as its type is unknown: -1!`);
+                    expect((error as Error).cause).toStrictEqual({ key, type: -1 });
+                }
             }
         );
 
@@ -93,6 +130,17 @@ describe
                 const scope = createDefaultDiScope(descriptors);
 
                 expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyLifetimeError);
+
+                try
+                {
+                    scope.resolve(key as never);
+                }
+                catch (error)
+                {
+                    expect(error).toBeInstanceOf(UnknownDependencyLifetimeError);
+                    expect((error as Error).message).toBe(`Can not resolve dependency by key ${key} as its lifetime is unknown: -1!`);
+                    expect((error as Error).cause).toStrictEqual({ key, lifetime: -1 });
+                }
             }
         );
     }

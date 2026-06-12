@@ -7,7 +7,7 @@ export class UnknownDependencyTypeError extends Error
     {
         super
         (
-            `Can not resolve dependency by key ${key} as its type is known: ${type}!`, 
+            `Can not resolve dependency by key ${key} as its type is unknown: ${type}!`, 
             { cause: { key, type } }
         );
     }
