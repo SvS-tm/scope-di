@@ -34,7 +34,7 @@ describe
                         .asValue(originalDependency3)
                     .build();
 
-                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
 
                 const rendererSpy = jest.fn();
 
@@ -46,7 +46,7 @@ describe
 
                 const Consumer = resolveAsync
                 (
-                    resolutionKeys("Key1", "Key2", "Key3"), 
+                    ["Key1", "Key2", "Key3"], 
                     asyncResolutionOptions<ConsumerProps>(),
                     ({ props: { prop1, prop2 }, dependencies: [dependency1, dependency2, dependency3] }) =>
                     {
@@ -78,13 +78,13 @@ describe
                         .asFactory(() => throwError<{ value: string; }>(error), DependencyLifetime.Singleton)
                     .build();
 
-                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
 
                 const errorSpy = jest.fn();
 
                 const Consumer = resolveAsync
                 (
-                    resolutionKeys("Key1"), 
+                    ["Key1"], 
                     asyncResolutionOptions
                     (
                         { 
@@ -133,13 +133,13 @@ describe
                         .asFactoryAsync(() => promise, DependencyLifetime.Singleton)
                     .build();
 
-                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
 
                 const resolutionSpy = jest.fn();
 
                 const Consumer = resolveAsync
                 (
-                    resolutionKeys("Key1"), 
+                    ["Key1"], 
                     asyncResolutionOptions
                     (
                         { 
@@ -206,14 +206,14 @@ describe
                         .asFactoryAsync(() => promise, DependencyLifetime.Singleton)
                     .build();
 
-                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
 
                 const errorSpy = jest.fn();
                 const resolutionSpy = jest.fn();
 
                 const Consumer = resolveAsync
                 (
-                    resolutionKeys("Key1"),
+                    ["Key1"],
                     asyncResolutionOptions
                     (
                         {
@@ -262,6 +262,75 @@ describe
 
         it
         (
+            "Uses global error fallback with local pending fallback",
+            async () =>
+            {
+                const key1 = "Key1";
+                const error = new Error("Dependency rejected");
+                const loaderText = "Loading...";
+                const errorSpanId = "error-span";
+                const errorSpanContent = "Global error!";
+
+                const { promise, reject } = Promise.withResolvers<{ value: string; }>();
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactoryAsync(() => promise, DependencyLifetime.Singleton)
+                    .build();
+
+                const errorSpy = jest.fn();
+
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools
+                (
+                    scope,
+                    {
+                        error: ({ error }) =>
+                        {
+                            errorSpy(error);
+
+                            return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
+                        }
+                    }
+                );
+
+                const Consumer = resolveAsync
+                (
+                    ["Key1"],
+                    asyncResolutionOptions
+                    (
+                        {
+                            pending: <span role="progressbar">{loaderText}</span>
+                        }
+                    ),
+                    ({ dependencies: [dependency1] }) => <span data-testid={dependency1.value}>{dependency1.value}</span>
+                );
+
+                await act(async () => render(<Consumer />));
+
+                expect(screen.getByRole("progressbar")).toHaveTextContent(loaderText);
+
+                await act
+                (
+                    async () =>
+                    {
+                        reject(error);
+
+                        await promise.catch(() => undefined);
+                    }
+                );
+
+                expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+                expect(errorSpy).toHaveBeenCalledWith(error);
+
+                const errorSpan = screen.getByTestId(errorSpanId);
+
+                expect(errorSpan).toBeInTheDocument();
+                expect(errorSpan).toHaveTextContent(errorSpanContent);
+            }
+        );
+
+        it
+        (
             "Creates new scope if 'createNewScope' option is true",
             async () =>
             {
@@ -298,11 +367,11 @@ describe
 
                 const depedency1Spy = jest.fn();
 
-                const { resolveAsync, resolutionKeys, asyncResolutionOptions } = createReactDiTools(scope);
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
 
                 const Consumer = resolveAsync
                 (
-                    resolutionKeys("Key1"), 
+                    ["Key1"], 
                     asyncResolutionOptions({ createNewScope: true }),
                     ({ dependencies: [dependency1] }) =>
                     {
@@ -323,6 +392,57 @@ describe
 
                 expect(dependency1).toBeInTheDocument();
                 expect(dependency1).toHaveTextContent(String(rootDependency1.index + 1));
+            }
+        );
+
+        it
+        (
+            "Disposes scope created by 'createNewScope' option on unmount",
+            async () =>
+            {
+                const key1 = "Key1";
+                const disposeSpy = jest.fn();
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactory
+                        (
+                            () => 
+                            (
+                                {
+                                    value: "dependency",
+                                    [Symbol.dispose]: disposeSpy
+                                }
+                            ),
+                            DependencyLifetime.Scoped
+                        )
+                    .build();
+
+                const { resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
+
+                const Consumer = resolveAsync
+                (
+                    ["Key1"],
+                    asyncResolutionOptions({ createNewScope: true }),
+                    ({ dependencies: [dependency1] }) => <span data-testid={key1}>{dependency1.value}</span>
+                );
+
+                let unmount!: () => void;
+
+                await act
+                (
+                    async () =>
+                    {
+                        ({ unmount } = render(<Consumer />));
+                    }
+                );
+
+                expect(await screen.findByTestId(key1)).toHaveTextContent("dependency");
+                expect(disposeSpy).not.toHaveBeenCalled();
+
+                await act(async () => unmount());
+
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
             }
         );
     }

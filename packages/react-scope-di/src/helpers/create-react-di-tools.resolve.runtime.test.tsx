@@ -34,7 +34,7 @@ describe
                         .asValue(originalDependency3)
                     .build();
 
-                const { resolve, resolutionKeys, resolutionOptions } = createReactDiTools(scope);
+                const { resolve, resolutionOptions } = createReactDiTools(scope);
 
                 const rendererSpy = jest.fn();
 
@@ -46,7 +46,7 @@ describe
 
                 const Consumer = resolve
                 (
-                    resolutionKeys("Key1", "Key2", "Key3"), 
+                    ["Key1", "Key2", "Key3"], 
                     resolutionOptions<ConsumerProps>(),
                     ({ props: { prop1, prop2 }, dependencies: [dependency1, dependency2, dependency3] }) =>
                     {
@@ -78,13 +78,13 @@ describe
                         .asFactory(() => throwError<{ value: string; }>(error), DependencyLifetime.Singleton)
                     .build();
 
-                const { resolve, resolutionKeys, resolutionOptions } = createReactDiTools(scope);
+                const { resolve, resolutionOptions } = createReactDiTools(scope);
 
                 const errorSpy = jest.fn();
 
                 const Consumer = resolve
                 (
-                    resolutionKeys("Key1"), 
+                    ["Key1"], 
                     resolutionOptions
                     (
                         { 
@@ -119,6 +119,63 @@ describe
 
         it
         (
+            "Local error fallback overrides global error fallback",
+            () =>
+            {
+                const key1 = "Key1";
+                const error = new Error();
+                const globalErrorId = "global-error";
+                const localErrorId = "local-error";
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactory(() => throwError<{ value: string; }>(error), DependencyLifetime.Singleton)
+                    .build();
+
+                const globalErrorSpy = jest.fn();
+                const localErrorSpy = jest.fn();
+
+                const { resolve, resolutionOptions } = createReactDiTools
+                (
+                    scope,
+                    {
+                        error: ({ error }) =>
+                        {
+                            globalErrorSpy(error);
+
+                            return <span data-testid={globalErrorId}>Global error</span>;
+                        }
+                    }
+                );
+
+                const Consumer = resolve
+                (
+                    ["Key1"],
+                    resolutionOptions
+                    (
+                        {
+                            error: ({ error }) =>
+                            {
+                                localErrorSpy(error);
+
+                                return <span data-testid={localErrorId}>Local error</span>;
+                            }
+                        }
+                    ),
+                    ({ dependencies: [dependency1] }) => <span>{dependency1.value}</span>
+                );
+
+                render(<Consumer />);
+
+                expect(localErrorSpy).toHaveBeenCalledWith(error);
+                expect(globalErrorSpy).not.toHaveBeenCalled();
+                expect(screen.getByTestId(localErrorId)).toBeInTheDocument();
+                expect(screen.queryByTestId(globalErrorId)).not.toBeInTheDocument();
+            }
+        );
+
+        it
+        (
             "Creates new scope if 'createNewScope' option is true",
             () =>
             {
@@ -139,11 +196,11 @@ describe
 
                 const depedency1Spy = jest.fn();
 
-                const { resolve, resolutionKeys, resolutionOptions } = createReactDiTools(scope);
+                const { resolve, resolutionOptions } = createReactDiTools(scope);
 
                 const Consumer = resolve
                 (
-                    resolutionKeys("Key1"), 
+                    ["Key1"], 
                     resolutionOptions({ createNewScope: true }),
                     ({ dependencies: [dependency1] }) =>
                     {
@@ -164,6 +221,49 @@ describe
 
                 expect(dependency1).toBeInTheDocument();
                 expect(dependency1).toHaveTextContent(String(rootDependency1.index + 1));
+            }
+        );
+
+        it
+        (
+            "Disposes scope created by 'createNewScope' option on unmount",
+            () =>
+            {
+                const key1 = "Key1";
+                const disposeSpy = jest.fn();
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactory
+                        (
+                            () => 
+                            (
+                                {
+                                    value: "dependency",
+                                    [Symbol.dispose]: disposeSpy
+                                }
+                            ),
+                            DependencyLifetime.Scoped
+                        )
+                    .build();
+
+                const { resolve, resolutionOptions } = createReactDiTools(scope);
+
+                const Consumer = resolve
+                (
+                    ["Key1"],
+                    resolutionOptions({ createNewScope: true }),
+                    ({ dependencies: [dependency1] }) => <span data-testid={key1}>{dependency1.value}</span>
+                );
+
+                const { unmount } = render(<Consumer />);
+
+                expect(screen.getByTestId(key1)).toHaveTextContent("dependency");
+                expect(disposeSpy).not.toHaveBeenCalled();
+
+                unmount();
+
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
             }
         );
     }

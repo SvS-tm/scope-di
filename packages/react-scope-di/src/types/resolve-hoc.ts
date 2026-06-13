@@ -6,7 +6,7 @@ import type { ResolvedComponentRenderer } from "./resolved-component-renderer";
 
 export type ResolveHoc<T_RegisteredDependencies extends RegisteredDependencies> = 
 <
-    T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
+    const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
     T_Props extends {} = {}
 >
 (

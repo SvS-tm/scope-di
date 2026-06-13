@@ -66,7 +66,7 @@ expectAssignable<JSX.Element>(<UseDependenciesAsyncConsumer />);
 // resolve() injects dependency tuples while preserving the public component props.
 const ResolvedConsumer = tools.resolve
 (
-    tools.resolutionKeys("value", "dependency"),
+    ["value", "dependency"],
     tools.resolutionOptions<ConsumerProps>(),
     ({ props, dependencies }) =>
     {
@@ -84,7 +84,7 @@ expectError(<ResolvedConsumer id="consumer" extra="extra" />);
 // resolveAsync() injects awaited dependency tuples and preserves component props.
 const ResolvedAsyncConsumer = tools.resolveAsync
 (
-    tools.resolutionKeys("asyncDependency", ["items"]),
+    ["asyncDependency", ["items"]],
     tools.asyncResolutionOptions<ConsumerProps>(),
     ({ props, dependencies }) =>
     {
@@ -98,7 +98,14 @@ const ResolvedAsyncConsumer = tools.resolveAsync
 expectAssignable<JSX.Element>(<ResolvedAsyncConsumer id="consumer" />);
 expectError(<ResolvedAsyncConsumer />);
 
-// Registered keys are enforced by public helper functions and hooks.
-expectType<["value", "dependency"]>(tools.resolutionKeys("value", "dependency"));
-expectError(tools.resolutionKeys("missing"));
+// Registered keys are enforced by hooks and HOCs.
 expectError(tools.useDependencies("missing"));
+expectError
+(
+    tools.resolve
+    (
+        ["missing"],
+        tools.resolutionOptions<ConsumerProps>(),
+        () => null
+    )
+);

@@ -6,7 +6,7 @@ import type { ResolvedComponentOptions } from "./resolved-component-options";
 
 export type ResolveAsyncHoc<T_RegisteredDependencies extends RegisteredDependencies> = 
 <
-    T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
+    const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
     T_Props extends {} = {}
 >
 (

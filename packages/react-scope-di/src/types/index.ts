@@ -6,7 +6,6 @@ export * from "./di-scope-component";
 export * from "./react-di-tools";
 export * from "./resolution-async-options-function";
 export * from "./resolution-error-fallback";
-export * from "./resolution-keys-function";
 export * from "./resolution-options-function";
 export * from "./resolution-pending-fallback";
 export * from "./resolve-async-hoc";
