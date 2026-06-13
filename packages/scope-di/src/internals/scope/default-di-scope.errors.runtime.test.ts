@@ -23,7 +23,7 @@ describe
             {
                 const scope = createDefaultDiScope();
 
-                expect(() => scope.resolve("key" as never)).toThrow(DependencyNotRegisteredError);
+                expect(() => scope.resolveRange("key" as never)).toThrow(DependencyNotRegisteredError);
             }
         );
 
@@ -35,14 +35,14 @@ describe
                 const key = "key";
                 const scope = createDefaultDiScope();
 
-                expect(() => scope.resolve(key as never)).toThrow
+                expect(() => scope.resolveRange(key as never)).toThrow
                 (
                     new DependencyNotRegisteredError(key)
                 );
 
                 try
                 {
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
                 catch (error)
                 {
@@ -60,7 +60,7 @@ describe
             {
                 const scope = createDefaultDiScope();
 
-                expect(() => scope.resolve(["key"] as never)).toThrow(DependencyNotRegisteredError);
+                expect(() => scope.resolveRange(["key"] as never)).toThrow(DependencyNotRegisteredError);
             }
         );
 
@@ -89,11 +89,11 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyTypeError);
+                expect(() => scope.resolveRange(key as never)).toThrow(UnknownDependencyTypeError);
 
                 try
                 {
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
                 catch (error)
                 {
@@ -129,11 +129,11 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                expect(() => scope.resolve(key as never)).toThrow(UnknownDependencyLifetimeError);
+                expect(() => scope.resolveRange(key as never)).toThrow(UnknownDependencyLifetimeError);
 
                 try
                 {
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
                 catch (error)
                 {

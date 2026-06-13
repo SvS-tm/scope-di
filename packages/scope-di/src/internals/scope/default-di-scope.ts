@@ -11,6 +11,8 @@ import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { AwaitedResolutionResult } from "../../types/utilities/awaited-resolution-result";
+import type { ResolutionResult } from "../../types/utilities/resolution-result";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import type { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 
@@ -28,7 +30,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     {
     }
 
-    public resolveAsync
+    public resolveRangeAsync
     <
         T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
@@ -51,6 +53,28 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public resolve
     <
+        T_DependencyResolutionKey extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>
+    >
+    (
+        key: T_DependencyResolutionKey
+    )
+    {
+        return this.resolveDependencyByKey(key) as ResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey>;
+    }
+
+    public resolveAsync
+    <
+        T_DependencyResolutionKey extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>
+    >
+    (
+        key: T_DependencyResolutionKey
+    )
+    {
+        return this.resolveAsyncDependencyByKey(key) as Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey>>;
+    }
+
+    public resolveRange
+    <
         T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
     (
@@ -60,7 +84,25 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return this.resolveDependencies(keys) as ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
     }
 
-    private resolveDependencies(keys: DependencyResolutionKey<AllowedDependencyKey>[])
+    private resolveDependencyByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
+    {
+        const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
+
+        if (Array.isArray(descriptorOrCollection))
+        {
+            const descriptorsLength = descriptorOrCollection.length;
+            const collection = new Array(descriptorsLength);
+
+            for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
+                collection[descriptorIndex] = this.resolveByDescriptor(descriptorOrCollection[descriptorIndex]);
+
+            return collection;
+        }
+
+        return this.resolveByDescriptor(descriptorOrCollection);
+    }
+
+    private resolveDependencies(keys: ArrayLike<DependencyResolutionKey<AllowedDependencyKey>>)
     {
         const keysLength = keys.length;
         
@@ -69,24 +111,54 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         for (let index = 0; index < keysLength; ++index)
         {
             const key = keys[index];
-            const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
-
-            if (Array.isArray(descriptorOrCollection))
-            {
-                const descriptorsLength = descriptorOrCollection.length;
-                
-                const collection = new Array(descriptorsLength);
-
-                for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
-                    collection[descriptorIndex] = this.resolveByDescriptor(descriptorOrCollection[descriptorIndex]);
-
-                results[index] = collection;
-            }
-            else
-                results[index] = this.resolveByDescriptor(descriptorOrCollection);
+            results[index] = this.resolveDependencyByKey(key);
         }
 
         return results;
+    }
+
+    private resolveAsyncDependencyByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
+    {
+        const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
+
+        if (Array.isArray(descriptorOrCollection))
+        {
+            const descriptorsLength = descriptorOrCollection.length;
+            const collection = new Array(descriptorsLength);
+            const asyncDependencies: Promise<any>[] = [];
+
+            for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
+            {
+                const descriptor = descriptorOrCollection[descriptorIndex];
+                const value = this.resolveByDescriptor(descriptor);
+
+                if (!isAsyncDescriptor(descriptor))
+                    collection[descriptorIndex] = value;
+                else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                    collection[descriptorIndex] = value[TrackedPromise.value];
+                else
+                {
+                    const awaitAndSetDependency = async () => 
+                        void (collection[descriptorIndex] = await value);
+
+                    asyncDependencies.push(awaitAndSetDependency());
+                }
+            }
+
+            if (asyncDependencies.length > 0)
+                return TrackedPromise.track(Promise.all(asyncDependencies).then(() => collection));
+
+            return TrackedPromise.resolved(collection);
+        }
+
+        const value = this.resolveByDescriptor(descriptorOrCollection);
+
+        if (!isAsyncDescriptor(descriptorOrCollection))
+            return TrackedPromise.resolved(value);
+        else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
+            return TrackedPromise.resolved(value[TrackedPromise.value]);
+        else
+            return value as Promise<unknown>;
     }
 
     private resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])

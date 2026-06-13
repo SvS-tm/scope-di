@@ -15,7 +15,7 @@ describe
             {
                 const scope = createDefaultDiScope();
 
-                const resolved = await scope.resolveAsync();
+                const resolved = await scope.resolveRangeAsync();
 
                 expect(resolved).toStrictEqual([]);
             }
@@ -59,7 +59,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [resolvedValue, resolvedDependency] = await scope.resolveAsync(key1 as never, key2 as never);
+                const [resolvedValue, resolvedDependency] = await scope.resolveRangeAsync(key1 as never, key2 as never);
 
                 expect(resolvedValue).toBe(value);
                 expect(resolvedDependency).toBeInstanceOf(Dependency);
@@ -90,7 +90,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope.resolveRangeAsync(key as never)).rejects.toBe(error);
             }
         );
 
@@ -122,9 +122,9 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope.resolveRangeAsync(key as never)).rejects.toBe(error);
                 
-                const [dependency] = await scope.resolveAsync(key as never);
+                const [dependency] = await scope.resolveRangeAsync(key as never);
 
                 expect(dependency).toBe(value);
                 expect(factory).toHaveBeenCalledTimes(2);
@@ -160,8 +160,8 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const dependency1 = scope.resolveAsync(key as never);
-                const dependency2 = scope.resolveAsync(key as never);
+                const dependency1 = scope.resolveRangeAsync(key as never);
+                const dependency2 = scope.resolveRangeAsync(key as never);
 
                 expect(factory).toHaveBeenCalledTimes(1);
 
@@ -170,7 +170,7 @@ describe
                 await expect(dependency1).rejects.toBe(error);
                 await expect(dependency2).rejects.toBe(error);
 
-                const [dependency] = await scope.resolveAsync(key as never);
+                const [dependency] = await scope.resolveRangeAsync(key as never);
 
                 expect(dependency).toBe(value);
                 expect(factory).toHaveBeenCalledTimes(2);
@@ -222,7 +222,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                await expect(scope.resolveAsync(parentKey as never)).rejects.toBe(error);
+                await expect(scope.resolveRangeAsync(parentKey as never)).rejects.toBe(error);
             }
         );
 
@@ -251,8 +251,8 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [dependency1] = await scope.resolveAsync(key as never);
-                const [dependency2] = await scope.resolveAsync(key as never);
+                const [dependency1] = await scope.resolveRangeAsync(key as never);
+                const [dependency2] = await scope.resolveRangeAsync(key as never);
 
                 expect(dependency1).toBe(value);
                 expect(dependency2).toBe(value);
@@ -285,7 +285,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [dependency] = await scope.resolveAsync(key as never);
+                const [dependency] = await scope.resolveRangeAsync(key as never);
 
                 expect(dependency).toBeInstanceOf(Dependency);
             }
@@ -316,7 +316,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [dependency] = await scope.resolveAsync(key as never);
+                const [dependency] = await scope.resolveRangeAsync(key as never);
 
                 expect(dependency).toBe(value);
                 expect(factory).toHaveBeenCalledTimes(1);
@@ -369,8 +369,8 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [child] = await scope.resolveAsync(childKey as never);
-                const [parent] = await scope.resolveAsync(parentKey as never);
+                const [child] = await scope.resolveRangeAsync(childKey as never);
+                const [parent] = await scope.resolveRangeAsync(parentKey as never);
 
                 expect(parent).toBeInstanceOf(Parent);
                 expect((parent as Parent).child).toBe(child);
@@ -415,8 +415,8 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [child] = await scope.resolveAsync(childKey as never);
-                const [parent] = await scope.resolveAsync(parentKey as never);
+                const [child] = await scope.resolveRangeAsync(childKey as never);
+                const [parent] = await scope.resolveRangeAsync(parentKey as never);
 
                 expect(parent).toStrictEqual({ child });
                 expect(factory).toHaveBeenCalledWith(child);
@@ -448,8 +448,8 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [promise1] = scope.resolve(key as never);
-                const [promise2] = scope.resolve(key as never);
+                const [promise1] = scope.resolveRange(key as never);
+                const [promise2] = scope.resolveRange(key as never);
 
                 expect(promise1).toBe(promise2);
                 expect(factory).toHaveBeenCalledTimes(1);

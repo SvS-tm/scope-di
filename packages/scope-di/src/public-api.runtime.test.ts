@@ -13,9 +13,47 @@ describe
             {
                 const scope = configureRootScope().build();
 
-                expect(scope.resolve()).toStrictEqual([]);
-                await expect(scope.resolveAsync()).resolves.toStrictEqual([]);
-                expect(() => scope.resolve("missing" as never)).toThrow(DependencyNotRegisteredError);
+                expect(scope.resolveRange()).toStrictEqual([]);
+                await expect(scope.resolveRangeAsync()).resolves.toStrictEqual([]);
+                expect(() => scope.resolveRange("missing" as never)).toThrow(DependencyNotRegisteredError);
+            }
+        );
+
+        it
+        (
+            "resolve returns a single dependency without tuple wrapping",
+            () =>
+            {
+                const scope = configureRootScope()
+                    .map("value").asValue("value")
+                    .map("items").asValue("old")
+                    .map("items").asValue("new")
+                    .build();
+
+                expect(scope.resolve("value")).toBe("value");
+                expect(scope.resolve(["items"])).toStrictEqual(["new", "old"]);
+            }
+        );
+
+        it
+        (
+            "resolveAsync returns a single awaited dependency without tuple wrapping",
+            async () =>
+            {
+                const asyncValue = {};
+                const scope = configureRootScope()
+                    .map("value").asValue("value")
+                    .map("async").asFactoryAsync(async () => asyncValue, DependencyLifetime.Singleton)
+                    .map("items").asValue("old")
+                    .map("items").asFactoryAsync(async () => "new", DependencyLifetime.Singleton)
+                    .map("sync-items").asValue("sync-old")
+                    .map("sync-items").asValue("sync-new")
+                    .build();
+
+                await expect(scope.resolveAsync("value")).resolves.toBe("value");
+                await expect(scope.resolveAsync("async")).resolves.toBe(asyncValue);
+                await expect(scope.resolveAsync(["items"])).resolves.toStrictEqual(["new", "old"]);
+                await expect(scope.resolveAsync(["sync-items"])).resolves.toStrictEqual(["sync-new", "sync-old"]);
             }
         );
 
@@ -33,8 +71,8 @@ describe
                 const scope = builder.build();
                 const childScope = scope.createChildScope();
 
-                const [resolved] = scope.resolve(key);
-                const [resolvedAgain] = childScope.resolve(key);
+                const [resolved] = scope.resolveRange(key);
+                const [resolvedAgain] = childScope.resolveRange(key);
 
                 expect(resolved).toBe(value);
                 expect(resolvedAgain).toBe(value);
@@ -58,13 +96,13 @@ describe
 
                 const childScope = scope.createChildScope();
 
-                const [singleton] = scope.resolve("singleton");
-                const [singletonFromChild] = childScope.resolve("singleton");
-                const [scoped] = scope.resolve("scoped");
-                const [scopedAgain] = scope.resolve("scoped");
-                const [scopedFromChild] = childScope.resolve("scoped");
-                const [transient] = scope.resolve("transient");
-                const [transientAgain] = scope.resolve("transient");
+                const [singleton] = scope.resolveRange("singleton");
+                const [singletonFromChild] = childScope.resolveRange("singleton");
+                const [scoped] = scope.resolveRange("scoped");
+                const [scopedAgain] = scope.resolveRange("scoped");
+                const [scopedFromChild] = childScope.resolveRange("scoped");
+                const [transient] = scope.resolveRange("transient");
+                const [transientAgain] = scope.resolveRange("transient");
 
                 expect(singletonFromChild).toBe(singleton);
                 expect(scopedAgain).toBe(scoped);
@@ -87,10 +125,10 @@ describe
                     .map("transient").asFactory(transientFactory, DependencyLifetime.Transient)
                     .build();
 
-                const [singleton] = scope.resolve("singleton");
-                const [singletonAgain] = scope.resolve("singleton");
-                const [transient] = scope.resolve("transient");
-                const [transientAgain] = scope.resolve("transient");
+                const [singleton] = scope.resolveRange("singleton");
+                const [singletonAgain] = scope.resolveRange("singleton");
+                const [transient] = scope.resolveRange("transient");
+                const [transientAgain] = scope.resolveRange("transient");
 
                 expect(singletonAgain).toBe(singleton);
                 expect(singletonFactory).toHaveBeenCalledTimes(1);
@@ -118,12 +156,12 @@ describe
                     .map(key).asClassAsync(AsyncDependency, DependencyLifetime.Singleton)
                     .build();
 
-                const [promise] = scope.resolve(key);
+                const [promise] = scope.resolveRange(key);
 
                 expect(promise).toBeInstanceOf(Promise);
                 await expect(promise).resolves.toBe(value);
 
-                const [resolved] = await scope.resolveAsync(key);
+                const [resolved] = await scope.resolveRangeAsync(key);
 
                 expect(resolved).toBeInstanceOf(Promise);
                 await expect(resolved).resolves.toBe(value);
@@ -149,8 +187,8 @@ describe
                     .map(key).asFactoryAsync(factory, DependencyLifetime.Singleton)
                     .build();
 
-                const [promise] = scope.resolve(key);
-                const [samePromise] = scope.resolve(key);
+                const [promise] = scope.resolveRange(key);
+                const [samePromise] = scope.resolveRange(key);
 
                 expect(samePromise).toBe(promise);
                 expect(factory).toHaveBeenCalledTimes(1);
@@ -163,9 +201,9 @@ describe
                     .map(key).asFactoryAsync(factory, DependencyLifetime.Singleton)
                     .build();
 
-                await expect(retryScope.resolveAsync(key)).rejects.toBe(error);
+                await expect(retryScope.resolveRangeAsync(key)).rejects.toBe(error);
 
-                const [resolved] = await retryScope.resolveAsync(key);
+                const [resolved] = await retryScope.resolveRangeAsync(key);
 
                 expect(resolved).toBe(value);
                 expect(factory).toHaveBeenCalledTimes(3);
@@ -195,7 +233,7 @@ describe
                     .class(Parent, DependencyLifetime.Singleton)
                     .build();
 
-                const [parent] = scope.resolve("parent");
+                const [parent] = scope.resolveRange("parent");
 
                 expect(parent).toBeInstanceOf(Parent);
                 expect(parent.first).toBe("first");
@@ -215,7 +253,7 @@ describe
                     .factory((items: string[]) => items, DependencyLifetime.Singleton)
                     .build();
 
-                const [items] = scope.resolve("parent");
+                const [items] = scope.resolveRange("parent");
 
                 expect(items).toStrictEqual(["new", "old"]);
             }
@@ -234,7 +272,7 @@ describe
                     .factory((dependency) => dependency, DependencyLifetime.Singleton)
                     .build();
 
-                const [dependency] = scope.resolve("parent");
+                const [dependency] = scope.resolveRange("parent");
 
                 expect(dependency).toBeInstanceOf(Promise);
                 await expect(dependency).resolves.toBe(value);
@@ -269,7 +307,7 @@ describe
                     .classAsync(Parent, DependencyLifetime.Singleton)
                     .build();
 
-                const [parent] = await scope.resolveAsync("parent");
+                const [parent] = await scope.resolveRangeAsync("parent");
 
                 expect(parent).toBeInstanceOf(Parent);
                 expect(parent.syncValue).toBe("sync");
@@ -300,7 +338,7 @@ describe
                     .factoryAsync(factory, DependencyLifetime.Singleton)
                     .build();
 
-                const [parent] = await scope.resolveAsync("parent");
+                const [parent] = await scope.resolveRangeAsync("parent");
 
                 expect(parent).toStrictEqual
                 (
@@ -324,8 +362,8 @@ describe
                     .map("key").asValue("new")
                     .build();
 
-                const [defaultDependency] = scope.resolve("key");
-                const [collection] = scope.resolve(["key"] as never);
+                const [defaultDependency] = scope.resolveRange("key");
+                const [collection] = scope.resolveRange(["key"] as never);
 
                 expect(defaultDependency).toBe("new");
                 expect(collection).toStrictEqual(["new", "middle", "old"]);
@@ -350,8 +388,8 @@ describe
 
                 const scope = updatedBuilder.build();
 
-                expect(() => scope.resolve(key as never)).toThrow(DependencyNotRegisteredError);
-                expect(() => scope.resolve([key] as never)).toThrow(DependencyNotRegisteredError);
+                expect(() => scope.resolveRange(key as never)).toThrow(DependencyNotRegisteredError);
+                expect(() => scope.resolveRange([key] as never)).toThrow(DependencyNotRegisteredError);
             }
         );
 
@@ -366,7 +404,7 @@ describe
                     .map("c").asClass(class C {}, DependencyLifetime.Singleton)
                     .build();
 
-                const [a, b, c] = scope.resolve("a", "b", "c");
+                const [a, b, c] = scope.resolveRange("a", "b", "c");
 
                 expect(a).toBe("a");
                 expect(b).toBe("b");
@@ -386,12 +424,12 @@ describe
 
                 const updatedBuilder = builder.map("b").asValue("b");
 
-                expect(scope.resolve("a")).toStrictEqual(["a"]);
-                expect(() => scope.resolve("b" as never)).toThrow(DependencyNotRegisteredError);
+                expect(scope.resolveRange("a")).toStrictEqual(["a"]);
+                expect(() => scope.resolveRange("b" as never)).toThrow(DependencyNotRegisteredError);
 
                 const updatedScope = updatedBuilder.build();
 
-                expect(updatedScope.resolve("b")).toStrictEqual(["b"]);
+                expect(updatedScope.resolveRange("b")).toStrictEqual(["b"]);
             }
         );
     }

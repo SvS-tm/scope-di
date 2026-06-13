@@ -33,8 +33,8 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
-                const [dependency1] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
+                const [dependency1] = scope.resolveRange(key as never);
 
                 expect(dependency).toBe(dependency1);
             }
@@ -64,11 +64,11 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
 
                 const childScope = scope.createChildScope();
 
-                const [dependency1] = childScope.resolve(key as never);
+                const [dependency1] = childScope.resolveRange(key as never);
 
                 expect(dependency).toBe(dependency1);
             }
@@ -99,9 +99,9 @@ describe
                 const scope = createDefaultDiScope(registry);
                 const childScope = scope.createChildScope();
 
-                const [childDependency] = childScope.resolve(key as never);
-                const [rootDependency] = scope.resolve(key as never);
-                const [childDependency1] = childScope.resolve(key as never);
+                const [childDependency] = childScope.resolveRange(key as never);
+                const [rootDependency] = scope.resolveRange(key as never);
+                const [childDependency1] = childScope.resolveRange(key as never);
 
                 expect(childDependency).toBe(rootDependency);
                 expect(childDependency1).toBe(childDependency);
@@ -132,8 +132,8 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
-                const [dependency1] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
+                const [dependency1] = scope.resolveRange(key as never);
 
                 expect(dependency).toBe(dependency1);
             }
@@ -163,11 +163,11 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
 
                 const childScope = scope.createChildScope();
 
-                const [dependency1] = childScope.resolve(key as never);
+                const [dependency1] = childScope.resolveRange(key as never);
 
                 expect(dependency).not.toBe(dependency1);
             }
@@ -197,12 +197,12 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
                 
                 const scope1 = scope.createChildScope();
                 const scope2 = scope1.createChildScope();
 
-                const [dependency1] = scope2.resolve(key as never);
+                const [dependency1] = scope2.resolveRange(key as never);
 
                 expect(dependency).toBe(dependency1);
             }
@@ -235,8 +235,8 @@ describe
                 const scope1 = scope.createChildScope();
                 const scope2 = scope1.createChildScope();
 
-                const [dependency1] = scope2.resolve(key as never);
-                const [dependency] = scope.resolve(key as never);
+                const [dependency1] = scope2.resolveRange(key as never);
+                const [dependency] = scope.resolveRange(key as never);
 
                 expect(dependency).not.toBe(dependency1);
             }
@@ -266,8 +266,8 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                const [dependency] = scope.resolve(key as never);
-                const [dependency1] = scope.resolve(key as never);
+                const [dependency] = scope.resolveRange(key as never);
+                const [dependency1] = scope.resolveRange(key as never);
 
                 expect(dependency).not.toBe(dependency1);
             }

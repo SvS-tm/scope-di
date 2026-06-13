@@ -31,7 +31,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [resolved] = scope.resolve(key as never);
+                const [resolved] = scope.resolveRange(key as never);
 
                 expect(resolved).toBe(value);
             }
@@ -61,7 +61,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [resolved] = scope.resolve(key as never);
+                const [resolved] = scope.resolveRange(key as never);
 
                 expect(resolved).toBeInstanceOf(Test);
             }
@@ -91,7 +91,7 @@ describe
                 
                 const scope = createDefaultDiScope(descriptors);
 
-                const [resolved] = scope.resolve(key as never);
+                const [resolved] = scope.resolveRange(key as never);
 
                 expect(resolved).toBe(value);
             }
@@ -121,7 +121,7 @@ describe
                 
                 const scope = createDefaultDiScope(new Map(descriptors));
 
-                const [resolved] = scope.resolve(key as never);
+                const [resolved] = scope.resolveRange(key as never);
 
                 expect(resolved).toBeInstanceOf(Promise);
 
@@ -155,7 +155,7 @@ describe
                 
                 const scope = createDefaultDiScope(new Map(descriptors));
 
-                const [resolved] = scope.resolve(key as never);
+                const [resolved] = scope.resolveRange(key as never);
 
                 expect(resolved).toBeInstanceOf(Promise);
 

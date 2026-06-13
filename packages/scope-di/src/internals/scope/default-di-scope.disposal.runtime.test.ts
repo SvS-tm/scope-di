@@ -48,7 +48,7 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -108,7 +108,7 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 await asyncDisposalPromise;
@@ -154,7 +154,7 @@ describe
                 {
                     await using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -198,7 +198,7 @@ describe
                 {
                     await using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 expect(asyncDisposeSpy).toHaveBeenCalledTimes(1);
@@ -266,7 +266,7 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 await asyncDisposalPromise;
@@ -321,7 +321,7 @@ describe
                 {
                     await using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(key as never);
+                    scope.resolveRange(key as never);
                 }
 
                 expect(asyncDisposeSpy).toHaveBeenCalledTimes(1);
@@ -462,7 +462,7 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
     
-                    scope.resolve(mainKey as never);
+                    scope.resolveRange(mainKey as never);
                 }
 
                 expect(mainSyncDisposeSpy).toHaveBeenCalledTimes(1);
@@ -504,11 +504,11 @@ describe
                     );
 
                 using scope = createDefaultDiScope(descriptors);
-                const [rootDependency] = scope.resolve(key as never);
+                const [rootDependency] = scope.resolveRange(key as never);
 
                 {
                     using childScope = scope.createChildScope();
-                    const [childDependency] = childScope.resolve(key as never);
+                    const [childDependency] = childScope.resolveRange(key as never);
 
                     expect(childDependency).toBe(rootDependency);
                 }
@@ -553,7 +553,7 @@ describe
                 {
                     using childScope = scope.createChildScope();
 
-                    childScope.resolve(key as never);
+                    childScope.resolveRange(key as never);
                 }
 
                 expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -597,7 +597,7 @@ describe
                     {
                         using childScope = scope.createChildScope();
 
-                        childScope.resolve(key as never);
+                        childScope.resolveRange(key as never);
                     }
 
                     expect(disposeSpy).not.toHaveBeenCalled();
@@ -641,8 +641,8 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
 
-                    const [dependency1] = scope.resolve(key as never);
-                    const [dependency2] = scope.resolve(key as never);
+                    const [dependency1] = scope.resolveRange(key as never);
+                    const [dependency2] = scope.resolveRange(key as never);
 
                     expect(dependency1).not.toBe(dependency2);
                 }
@@ -701,8 +701,8 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
 
-                    const [dependency1] = scope.resolve(key as never);
-                    const [dependency2] = scope.resolve(key as never);
+                    const [dependency1] = scope.resolveRange(key as never);
+                    const [dependency2] = scope.resolveRange(key as never);
 
                     expect(dependency1).not.toBe(dependency2);
                 }
@@ -770,8 +770,8 @@ describe
                 {
                     using scope = createDefaultDiScope(descriptors);
 
-                    const [dependency1] = scope.resolve(key as never);
-                    const [dependency2] = scope.resolve(key as never);
+                    const [dependency1] = scope.resolveRange(key as never);
+                    const [dependency2] = scope.resolveRange(key as never);
 
                     expect(dependency1).not.toBe(dependency2);
                 }
@@ -817,7 +817,7 @@ describe
                 {
                     await using scope = createDefaultDiScope(descriptors);
 
-                    await scope.resolveAsync(key as never);
+                    await scope.resolveRangeAsync(key as never);
                 }
 
                 expect(asyncDisposeSpy).toHaveBeenCalledTimes(1);
@@ -858,7 +858,7 @@ describe
                 {
                     await using scope = createDefaultDiScope(descriptors);
 
-                    await scope.resolveAsync(key as never);
+                    await scope.resolveRangeAsync(key as never);
                 }
 
                 expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -889,7 +889,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope.resolveRangeAsync(key as never)).rejects.toBe(error);
                 await expect(scope[Symbol.asyncDispose]()).resolves.toBeUndefined();
             }
         );
@@ -918,7 +918,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
 
-                await expect(scope.resolveAsync(key as never)).rejects.toBe(error);
+                await expect(scope.resolveRangeAsync(key as never)).rejects.toBe(error);
                 await expect(scope[Symbol.asyncDispose]()).resolves.toBeUndefined();
             }
         );

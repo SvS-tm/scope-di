@@ -257,7 +257,7 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                scope.resolve(...cases.map(({ descriptor }) => descriptor.key) as never[]);
+                scope.resolveRange(...cases.map(({ descriptor }) => descriptor.key) as never[]);
 
                 for (const { descriptor, value } of cases)
                 {
@@ -315,7 +315,7 @@ describe
                 const scope = createDefaultDiScope(registry);
                 const childScope = scope.createChildScope();
 
-                scope.resolve(key as never);
+                scope.resolveRange(key as never);
 
                 const lookupResult = childScope.findResolvedDependencyByDescriptor(descriptor);
 

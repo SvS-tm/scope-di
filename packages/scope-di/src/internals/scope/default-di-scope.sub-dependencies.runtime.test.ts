@@ -108,7 +108,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
                         
-                const [promise] = scope.resolve(parentKey as never);
+                const [promise] = scope.resolveRange(parentKey as never);
 
                 const parent = await (promise as Promise<Parent>);
                 
@@ -221,7 +221,7 @@ describe
 
                 const scope = createDefaultDiScope(descriptors);
         
-                const [parent] = scope.resolve(parentKey as never) as [Parent];
+                const [parent] = scope.resolveRange(parentKey as never) as [Parent];
 
                 expect(parent).toBeInstanceOf(Parent);
                 expect(parent.child1).toBeInstanceOf(Child1);
