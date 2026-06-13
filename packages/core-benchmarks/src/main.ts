@@ -1,134 +1,323 @@
 // deno-lint-ignore-file no-sloppy-imports
 import * as scopeDiRegistration from "./scope-di/registration.ts";
+import * as scopeDiResolution from "./scope-di/resolution.ts";
+import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
 import * as inversifyRegistration from "./inversify/registration.ts";
+import * as inversifyResolution from "./inversify/resolution.ts";
 import * as tsyringeRegistration from "./tsyringe/registration.ts";
+import * as tsyringeResolution from "./tsyringe/resolution.ts";
 import * as awilixRegistration from "./awilix/registration.ts";
+import * as awilixResolution from "./awilix/resolution.ts";
 import * as typediRegistration from "./typedi/registration.ts";
+import * as typediResolution from "./typedi/resolution.ts";
 import * as typedInjectRegistration from "./typed-inject/registration.ts";
+import * as typedInjectResolution from "./typed-inject/resolution.ts";
 import * as needleDiRegistration from "./needle-di/registration.ts";
+import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group } from "mitata";
+
+type BenchmarkAction = typeof scopeDiRegistration.registrationClass;
+
+type BenchmarkRun =
+{
+    name: string;
+    action: BenchmarkAction;
+    baseline: boolean;
+};
+
+function createRuns
+(
+    benchmarkName: string,
+    actions:
+    {
+        scopeDi: BenchmarkAction;
+        inversify: BenchmarkAction;
+        tsyringe: BenchmarkAction;
+        awilix: BenchmarkAction;
+        typedi: BenchmarkAction;
+        typedInject: BenchmarkAction;
+        needleDi?: BenchmarkAction;
+    }
+)
+    : BenchmarkRun[]
+{
+    const runs: BenchmarkRun[] = [
+        {
+            name: `scope-di:${benchmarkName}`,
+            action: actions.scopeDi,
+            baseline: true
+        },
+        {
+            name: `inversify:${benchmarkName}`,
+            action: actions.inversify,
+            baseline: false
+        },
+        {
+            name: `tsyringe:${benchmarkName}`,
+            action: actions.tsyringe,
+            baseline: false
+        },
+        {
+            name: `awilix:${benchmarkName}`,
+            action: actions.awilix,
+            baseline: false
+        },
+        {
+            name: `typedi:${benchmarkName}`,
+            action: actions.typedi,
+            baseline: false
+        },
+        {
+            name: `typed-inject:${benchmarkName}`,
+            action: actions.typedInject,
+            baseline: false
+        }
+    ];
+
+    if(actions.needleDi)
+    {
+        runs.push
+        (
+            {
+                name: `needle-di:${benchmarkName}`,
+                action: actions.needleDi,
+                baseline: false
+            }
+        );
+    }
+
+    return runs;
+}
+
+function getRuntimeArgs()
+{
+    const args = (globalThis as { process?: { argv?: string[] }; Deno?: { args?: string[] } });
+
+    return args.process?.argv ?? args.Deno?.args ?? [];
+}
+
+function getOutputFormat(runtimeArgs: string[])
+{
+    return runtimeArgs.includes("--json")
+        ? "json" as const
+        : "mitata" as const;
+}
+
+function getFilter(runtimeArgs: string[])
+{
+    const filterArgument = runtimeArgs.find((argument) => argument.startsWith("--filter="));
+
+    if (!filterArgument)
+        return undefined;
+
+    return new RegExp(filterArgument.slice("--filter=".length));
+}
 
 const benchmarks = 
 [
     {
         name: "registrationClass",
-        runs: 
-        [
+        runs: createRuns
+        (
+            "registrationClass",
             {
-                name: "scope-di:registrationClass",
-                action: scopeDiRegistration.registrationClass,
-                baseline: true
-            },
-            {
-                name: "inversify:registrationClass",
-                action: inversifyRegistration.registrationClass,
-                baseline: false
-            },
-            {
-                name: "tsyringe:registrationClass",
-                action: tsyringeRegistration.registrationClass,
-                baseline: false
-            },
-            {
-                name: "awilix:registrationClass",
-                action: awilixRegistration.registrationClass,
-                baseline: false
-            },
-            {
-                name: "typedi:registrationClass",
-                action: typediRegistration.registrationClass,
-                baseline: false
-            },
-            {
-                name: "typed-inject:registrationClass",
-                action: typedInjectRegistration.registrationClass,
-                baseline: false
-            },
-            {
-                name: "needle-di:registrationClass",
-                action: needleDiRegistration.registrationClass,
-                baseline: false
+                scopeDi: scopeDiRegistration.registrationClass,
+                inversify: inversifyRegistration.registrationClass,
+                tsyringe: tsyringeRegistration.registrationClass,
+                awilix: awilixRegistration.registrationClass,
+                typedi: typediRegistration.registrationClass,
+                typedInject: typedInjectRegistration.registrationClass,
+                needleDi: needleDiRegistration.registrationClass
             }
-        ]
+        )
     },
     {
         name: "registrationValue",
-        runs:
-        [
+        runs: createRuns
+        (
+            "registrationValue",
             {
-                name: "scope-di:registrationValue",
-                action: scopeDiRegistration.registrationValue,
-                baseline: true
-            },
-            {
-                name: "inversify:registrationValue",
-                action: inversifyRegistration.registrationValue,
-                baseline: false
-            },
-            {
-                name: "tsyringe:registrationValue",
-                action: tsyringeRegistration.registrationValue,
-                baseline: false
-            },
-            {
-                name: "awilix:registrationValue",
-                action: awilixRegistration.registrationValue,
-                baseline: false
-            },
-            {
-                name: "typedi:registrationValue",
-                action: typediRegistration.registrationValue,
-                baseline: false
-            },
-            {
-                name: "typed-inject:registrationValue",
-                action: typedInjectRegistration.registrationValue,
-                baseline: false
-            },
-            {
-                name: "needle-di:registrationValue",
-                action: needleDiRegistration.registrationValue,
-                baseline: false
+                scopeDi: scopeDiRegistration.registrationValue,
+                inversify: inversifyRegistration.registrationValue,
+                tsyringe: tsyringeRegistration.registrationValue,
+                awilix: awilixRegistration.registrationValue,
+                typedi: typediRegistration.registrationValue,
+                typedInject: typedInjectRegistration.registrationValue,
+                needleDi: needleDiRegistration.registrationValue
             }
-        ]
+        )
     },
     {
         name: "registrationFactory",
+        runs: createRuns
+        (
+            "registrationFactory",
+            {
+                scopeDi: scopeDiRegistration.registrationFactory,
+                inversify: inversifyRegistration.registrationFactory,
+                tsyringe: tsyringeRegistration.registrationFactory,
+                awilix: awilixRegistration.registrationFactory,
+                typedi: typediRegistration.registrationFactory,
+                typedInject: typedInjectRegistration.registrationFactory,
+                needleDi: needleDiRegistration.registrationFactory
+            }
+        )
+    },
+    {
+        name: "resolveValue",
+        runs: createRuns
+        (
+            "resolveValue",
+            {
+                scopeDi: scopeDiResolution.resolveValue,
+                inversify: inversifyResolution.resolveValue,
+                tsyringe: tsyringeResolution.resolveValue,
+                awilix: awilixResolution.resolveValue,
+                typedi: typediResolution.resolveValue,
+                typedInject: typedInjectResolution.resolveValue,
+                needleDi: needleDiResolution.resolveValue
+            }
+        )
+    },
+    {
+        name: "resolveSingletonClass",
+        runs: createRuns
+        (
+            "resolveSingletonClass",
+            {
+                scopeDi: scopeDiResolution.resolveSingletonClass,
+                inversify: inversifyResolution.resolveSingletonClass,
+                tsyringe: tsyringeResolution.resolveSingletonClass,
+                awilix: awilixResolution.resolveSingletonClass,
+                typedi: typediResolution.resolveSingletonClass,
+                typedInject: typedInjectResolution.resolveSingletonClass,
+                needleDi: needleDiResolution.resolveSingletonClass
+            }
+        )
+    },
+    {
+        name: "resolveTransientClass",
+        runs: createRuns
+        (
+            "resolveTransientClass",
+            {
+                scopeDi: scopeDiResolution.resolveTransientClass,
+                inversify: inversifyResolution.resolveTransientClass,
+                tsyringe: tsyringeResolution.resolveTransientClass,
+                awilix: awilixResolution.resolveTransientClass,
+                typedi: typediResolution.resolveTransientClass,
+                typedInject: typedInjectResolution.resolveTransientClass
+            }
+        )
+    },
+    {
+        name: "resolveSingletonFactory",
+        runs: createRuns
+        (
+            "resolveSingletonFactory",
+            {
+                scopeDi: scopeDiResolution.resolveSingletonFactory,
+                inversify: inversifyResolution.resolveSingletonFactory,
+                tsyringe: tsyringeResolution.resolveSingletonFactory,
+                awilix: awilixResolution.resolveSingletonFactory,
+                typedi: typediResolution.resolveSingletonFactory,
+                typedInject: typedInjectResolution.resolveSingletonFactory,
+                needleDi: needleDiResolution.resolveSingletonFactory
+            }
+        )
+    },
+    {
+        name: "resolveTransientFactory",
+        runs: createRuns
+        (
+            "resolveTransientFactory",
+            {
+                scopeDi: scopeDiResolution.resolveTransientFactory,
+                inversify: inversifyResolution.resolveTransientFactory,
+                tsyringe: tsyringeResolution.resolveTransientFactory,
+                awilix: awilixResolution.resolveTransientFactory,
+                typedi: typediResolution.resolveTransientFactory,
+                typedInject: typedInjectResolution.resolveTransientFactory
+            }
+        )
+    },
+    {
+        name: "resolveTransientFactoryChain",
+        runs: createRuns
+        (
+            "resolveTransientFactoryChain",
+            {
+                scopeDi: scopeDiResolution.resolveTransientFactoryChain,
+                inversify: inversifyResolution.resolveTransientFactoryChain,
+                tsyringe: tsyringeResolution.resolveTransientFactoryChain,
+                awilix: awilixResolution.resolveTransientFactoryChain,
+                typedi: typediResolution.resolveTransientFactoryChain,
+                typedInject: typedInjectResolution.resolveTransientFactoryChain
+            }
+        )
+    },
+    {
+        name: "scope-di diagnostics",
         runs:
         [
             {
-                name: "scope-di:registrationFactory",
-                action: scopeDiRegistration.registrationFactory,
+                name: "scope-di:registryResolveSingleDescriptor",
+                action: scopeDiDiagnostics.registryResolveSingleDescriptor,
                 baseline: true
             },
             {
-                name: "inversify:registrationFactory",
-                action: inversifyRegistration.registrationFactory,
+                name: "scope-di:registryResolveCollectionDescriptors",
+                action: scopeDiDiagnostics.registryResolveCollectionDescriptors,
                 baseline: false
             },
             {
-                name: "tsyringe:registrationFactory",
-                action: tsyringeRegistration.registrationFactory,
+                name: "scope-di:findResolvedSingletonMiss",
+                action: scopeDiDiagnostics.findResolvedSingletonMiss,
                 baseline: false
             },
             {
-                name: "awilix:registrationFactory",
-                action: awilixRegistration.registrationFactory,
+                name: "scope-di:findResolvedSingletonHit",
+                action: scopeDiDiagnostics.findResolvedSingletonHit,
                 baseline: false
             },
             {
-                name: "typedi:registrationFactory",
-                action: typediRegistration.registrationFactory,
+                name: "scope-di:findResolvedTransient",
+                action: scopeDiDiagnostics.findResolvedTransient,
                 baseline: false
             },
             {
-                name: "typed-inject:registrationFactory",
-                action: typedInjectRegistration.registrationFactory,
+                name: "scope-di:resolveNoKeys",
+                action: scopeDiDiagnostics.resolveNoKeys,
                 baseline: false
             },
             {
-                name: "needle-di:registrationFactory",
-                action: needleDiRegistration.registrationFactory,
+                name: "scope-di:resolveCachedValue",
+                action: scopeDiDiagnostics.resolveCachedValue,
+                baseline: false
+            },
+            {
+                name: "scope-di:resolveCachedThreeValues",
+                action: scopeDiDiagnostics.resolveCachedThreeValues,
+                baseline: false
+            },
+            {
+                name: "scope-di:resolveCollectionValues",
+                action: scopeDiDiagnostics.resolveCollectionValues,
+                baseline: false
+            },
+            {
+                name: "scope-di:createChildScope",
+                action: scopeDiDiagnostics.createChildScope,
+                baseline: false
+            },
+            {
+                name: "scope-di:disposeEmptyScope",
+                action: scopeDiDiagnostics.disposeEmptyScope,
+                baseline: false
+            },
+            {
+                name: "scope-di:disposeResolvedSingleton",
+                action: scopeDiDiagnostics.disposeResolvedSingleton,
                 baseline: false
             }
         ]
@@ -167,4 +356,14 @@ for(const { name, runs } of benchmarks)
     );
 }
 
-await run({ colors: true, format: "mitata" });
+const runtimeArgs = getRuntimeArgs();
+const outputFormat = getOutputFormat(runtimeArgs);
+const filter = getFilter(runtimeArgs);
+const runOptions = { colors: outputFormat !== "json", format: outputFormat } as const;
+
+await run
+(
+    filter
+        ? { ...runOptions, filter }
+        : runOptions
+);
