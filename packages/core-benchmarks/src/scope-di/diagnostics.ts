@@ -75,7 +75,7 @@ export function *resolveNoKeys(_: k_state)
 {
     const scope = configureRootScope().build();
 
-    yield () => do_not_optimize(scope.resolve());
+    yield () => do_not_optimize(scope.resolveRange());
 }
 
 export function *resolveCachedValue(_: k_state)
@@ -95,7 +95,7 @@ export function *resolveCachedThreeValues(_: k_state)
         .map("c").asValue({})
         .build();
 
-    yield () => do_not_optimize(scope.resolve("a", "b", "c"));
+    yield () => do_not_optimize(scope.resolveRange("a", "b", "c"));
 }
 
 export function *resolveCollectionValues(_: k_state)
