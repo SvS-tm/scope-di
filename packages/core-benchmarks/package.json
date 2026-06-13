@@ -13,11 +13,15 @@
   "license": "ISC",
   "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
   "dependencies": {
+    "@needle-di/core": "^1.1.2",
     "@svs-tm/scope-di": "workspace:*",
     "@svs-tm/system": "workspace:*",
-    "inversify": "^7.10.6",
+    "awilix": "^13.0.4",
+    "inversify": "^8.1.0",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.10.0"
+    "tsyringe": "^4.10.0",
+    "typed-inject": "^5.0.0",
+    "typedi": "^0.10.0"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",

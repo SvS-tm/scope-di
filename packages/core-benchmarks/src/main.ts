@@ -2,6 +2,10 @@
 import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as inversifyRegistration from "./inversify/registration.ts";
 import * as tsyringeRegistration from "./tsyringe/registration.ts";
+import * as awilixRegistration from "./awilix/registration.ts";
+import * as typediRegistration from "./typedi/registration.ts";
+import * as typedInjectRegistration from "./typed-inject/registration.ts";
+import * as needleDiRegistration from "./needle-di/registration.ts";
 import { bench, boxplot, summary, run, group } from "mitata";
 
 const benchmarks = 
@@ -24,6 +28,26 @@ const benchmarks =
                 name: "tsyringe:registrationClass",
                 action: tsyringeRegistration.registrationClass,
                 baseline: false
+            },
+            {
+                name: "awilix:registrationClass",
+                action: awilixRegistration.registrationClass,
+                baseline: false
+            },
+            {
+                name: "typedi:registrationClass",
+                action: typediRegistration.registrationClass,
+                baseline: false
+            },
+            {
+                name: "typed-inject:registrationClass",
+                action: typedInjectRegistration.registrationClass,
+                baseline: false
+            },
+            {
+                name: "needle-di:registrationClass",
+                action: needleDiRegistration.registrationClass,
+                baseline: false
             }
         ]
     },
@@ -45,6 +69,26 @@ const benchmarks =
                 name: "tsyringe:registrationValue",
                 action: tsyringeRegistration.registrationValue,
                 baseline: false
+            },
+            {
+                name: "awilix:registrationValue",
+                action: awilixRegistration.registrationValue,
+                baseline: false
+            },
+            {
+                name: "typedi:registrationValue",
+                action: typediRegistration.registrationValue,
+                baseline: false
+            },
+            {
+                name: "typed-inject:registrationValue",
+                action: typedInjectRegistration.registrationValue,
+                baseline: false
+            },
+            {
+                name: "needle-di:registrationValue",
+                action: needleDiRegistration.registrationValue,
+                baseline: false
             }
         ]
     },
@@ -65,6 +109,26 @@ const benchmarks =
             {
                 name: "tsyringe:registrationFactory",
                 action: tsyringeRegistration.registrationFactory,
+                baseline: false
+            },
+            {
+                name: "awilix:registrationFactory",
+                action: awilixRegistration.registrationFactory,
+                baseline: false
+            },
+            {
+                name: "typedi:registrationFactory",
+                action: typediRegistration.registrationFactory,
+                baseline: false
+            },
+            {
+                name: "typed-inject:registrationFactory",
+                action: typedInjectRegistration.registrationFactory,
+                baseline: false
+            },
+            {
+                name: "needle-di:registrationFactory",
+                action: needleDiRegistration.registrationFactory,
                 baseline: false
             }
         ]
