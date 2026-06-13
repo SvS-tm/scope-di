@@ -10,7 +10,6 @@ import { DependencyDescriptorType } from "../../types/dependency-descriptor-type
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
-import type { ScheduleResolutionResult } from "../../types/internals/schedule-resolution-result";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import type { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
@@ -58,79 +57,71 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         ...keys: T_DependencyResolutionKeys
     )
     {
-        return keys.map
-        (
-            (key) => 
-            {
-                const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
-
-                if (Array.isArray(descriptorOrCollection))
-                {
-                    return descriptorOrCollection.map((descriptor) => this.resolveByDescriptor(descriptor));
-                }
-                else
-                {
-                    return this.resolveByDescriptor(descriptorOrCollection);
-                }
-            }
-        ) as ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
+        return this.resolveDependencies(keys) as ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
     }
 
-    private scheduleResolution(descriptor: DependencyDescriptor) : ScheduleResolutionResult
+    private resolveDependencies(keys: DependencyResolutionKey<AllowedDependencyKey>[])
     {
-        const result = this.resolveByDescriptor(descriptor);
-                
-        if (isAsyncDescriptor(descriptor))
+        const keysLength = keys.length;
+        
+        const results = new Array(keysLength);
+
+        for (let index = 0; index < keysLength; ++index)
         {
-            /**
-             * @note in case it was tracked promise and it was already resolved - we'll go with sync path
-             */
-            if (TrackedPromise.isTracked(result) && result[TrackedPromise.status] === TrackedPromiseStatus.Success)
+            const key = keys[index];
+            const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
+
+            if (Array.isArray(descriptorOrCollection))
             {
-                return { isReady: true, value: result[TrackedPromise.value] };
+                const descriptorsLength = descriptorOrCollection.length;
+                
+                const collection = new Array(descriptorsLength);
+
+                for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
+                    collection[descriptorIndex] = this.resolveByDescriptor(descriptorOrCollection[descriptorIndex]);
+
+                results[index] = collection;
             }
             else
-            {
-                return { isReady: false, value: result };
-            }
+                results[index] = this.resolveByDescriptor(descriptorOrCollection);
         }
-        else
-            return { isReady: true, value: result };
+
+        return results;
     }
 
     private resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
     {
-        const descriptors = keys?.map((key) => this.registry.resolveDescriptorsByKey(key));
-
-        if (!isSafeReference(descriptors))
+        if (!isSafeReference(keys))
             return null;
 
         const asyncDependencies: Promise<any>[] = [];
 
-        const results: (unknown | unknown[])[] = new Array(descriptors.length);
+        const keysLength = keys.length;
+        const results: (unknown | unknown[])[] = new Array(keysLength);
 
-        for (let index = 0; index < results.length; ++index)
+        for (let index = 0; index < keysLength; ++index)
         {
-            const descriptorOrCollection = descriptors[index];
+            const descriptorOrCollection = this.registry.resolveDescriptorsByKey(keys[index]);
 
             if (Array.isArray(descriptorOrCollection))
             {
-                const collection = new Array(descriptorOrCollection.length);
+                const descriptorsLength = descriptorOrCollection.length;
+                const collection = new Array(descriptorsLength);
 
-                for (let index = 0; index < descriptorOrCollection.length; ++index)
+                for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
                 {
-                    const descriptor = descriptorOrCollection[index];
+                    const descriptor = descriptorOrCollection[descriptorIndex];
 
-                    const { isReady, value } = this.scheduleResolution(descriptor);
+                    const value = this.resolveByDescriptor(descriptor);
 
-                    if (isReady)
-                    {
-                        collection[index] = value;
-                    }
+                    if (!isAsyncDescriptor(descriptor))
+                        collection[descriptorIndex] = value;
+                    else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                        collection[descriptorIndex] = value[TrackedPromise.value];
                     else
                     {
                         const awaitAndSetDependency = async () => 
-                            void (collection[index] = await value);
+                            void (collection[descriptorIndex] = await value);
 
                         asyncDependencies.push(awaitAndSetDependency());
                     }
@@ -140,12 +131,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             else
             {
-                const { isReady, value } = this.scheduleResolution(descriptorOrCollection);
+                const value = this.resolveByDescriptor(descriptorOrCollection);
 
-                if (isReady)
-                {
+                if (!isAsyncDescriptor(descriptorOrCollection))
                     results[index] = value;
-                }
+                else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                    results[index] = value[TrackedPromise.value];
                 else
                 {
                     const awaitAndSetDependency = async () => 
@@ -170,8 +161,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 return descriptor.value;
             case DependencyDescriptorType.Class:
             {
-                const subDependenciesKeys = descriptor.subDependenciesKeys ?? [];
-                const dependencies = this.resolve(...subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
+                const subDependenciesKeys = descriptor.subDependenciesKeys;
+
+                if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
+                    return new descriptor.constructor();
+
+                const dependencies = this.resolveDependencies(subDependenciesKeys as DependencyResolutionKey<AllowedDependencyKey>[]);
 
                 return isSafeReference(dependencies)
                     ? new descriptor.constructor(...dependencies)
@@ -210,8 +205,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             case DependencyDescriptorType.Factory:
             {
-                const subDependenciesKeys = descriptor.subDependenciesKeys ?? [];
-                const dependencies = this.resolve(...subDependenciesKeys as DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]);
+                const subDependenciesKeys = descriptor.subDependenciesKeys;
+
+                if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
+                    return descriptor.factory();
+
+                const dependencies = this.resolveDependencies(subDependenciesKeys as DependencyResolutionKey<AllowedDependencyKey>[]);
 
                 return isSafeReference(dependencies) 
                     ? descriptor.factory(...dependencies)
