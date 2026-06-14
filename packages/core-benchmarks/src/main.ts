@@ -257,6 +257,36 @@ const benchmarks =
         )
     },
     {
+        name: "resolveTransientFactoryWithFiveDependencies",
+        runs: createRuns
+        (
+            "resolveTransientFactoryWithFiveDependencies",
+            {
+                scopeDi: scopeDiResolution.resolveTransientFactoryWithFiveDependencies,
+                inversify: inversifyResolution.resolveTransientFactoryWithFiveDependencies,
+                tsyringe: tsyringeResolution.resolveTransientFactoryWithFiveDependencies,
+                awilix: awilixResolution.resolveTransientFactoryWithFiveDependencies,
+                typedi: typediResolution.resolveTransientFactoryWithFiveDependencies,
+                typedInject: typedInjectResolution.resolveTransientFactoryWithFiveDependencies
+            }
+        )
+    },
+    {
+        name: "resolveTransientFactoryWithSixDependencies",
+        runs: createRuns
+        (
+            "resolveTransientFactoryWithSixDependencies",
+            {
+                scopeDi: scopeDiResolution.resolveTransientFactoryWithSixDependencies,
+                inversify: inversifyResolution.resolveTransientFactoryWithSixDependencies,
+                tsyringe: tsyringeResolution.resolveTransientFactoryWithSixDependencies,
+                awilix: awilixResolution.resolveTransientFactoryWithSixDependencies,
+                typedi: typediResolution.resolveTransientFactoryWithSixDependencies,
+                typedInject: typedInjectResolution.resolveTransientFactoryWithSixDependencies
+            }
+        )
+    },
+    {
         name: "scope-di diagnostics",
         runs:
         [
@@ -301,8 +331,28 @@ const benchmarks =
                 baseline: false
             },
             {
+                name: "scope-di:resolveCachedFiveValues",
+                action: scopeDiDiagnostics.resolveCachedFiveValues,
+                baseline: false
+            },
+            {
+                name: "scope-di:resolveCachedSixValues",
+                action: scopeDiDiagnostics.resolveCachedSixValues,
+                baseline: false
+            },
+            {
                 name: "scope-di:resolveCollectionValues",
                 action: scopeDiDiagnostics.resolveCollectionValues,
+                baseline: false
+            },
+            {
+                name: "scope-di:resolveTransientFactoryWithFiveDependencies",
+                action: scopeDiDiagnostics.resolveTransientFactoryWithFiveDependencies,
+                baseline: false
+            },
+            {
+                name: "scope-di:resolveTransientFactoryWithSixDependencies",
+                action: scopeDiDiagnostics.resolveTransientFactoryWithSixDependencies,
                 baseline: false
             },
             {

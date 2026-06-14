@@ -19,6 +19,8 @@ class Root
     }
 }
 
+class Dependency {}
+
 export function *resolveValue(_: k_state)
 {
     const container = new Container();
@@ -70,4 +72,31 @@ export function *resolveTransientFactoryChain(_: k_state)
     container.bind("root").toDynamicValue((context) => new Root(context.get("middle") as Middle)).inTransientScope();
 
     yield () => do_not_optimize(container.get("root"));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const container = new Container();
+    container.bind("a").to(Dependency).inTransientScope();
+    container.bind("b").to(Dependency).inTransientScope();
+    container.bind("c").to(Dependency).inTransientScope();
+    container.bind("d").to(Dependency).inTransientScope();
+    container.bind("e").to(Dependency).inTransientScope();
+    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+
+    yield () => do_not_optimize(container.get("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const container = new Container();
+    container.bind("a").to(Dependency).inTransientScope();
+    container.bind("b").to(Dependency).inTransientScope();
+    container.bind("c").to(Dependency).inTransientScope();
+    container.bind("d").to(Dependency).inTransientScope();
+    container.bind("e").to(Dependency).inTransientScope();
+    container.bind("f").to(Dependency).inTransientScope();
+    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f") })).inTransientScope();
+
+    yield () => do_not_optimize(container.get("parent"));
 }

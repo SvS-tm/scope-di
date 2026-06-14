@@ -19,6 +19,8 @@ class Root
     }
 }
 
+class Dependency {}
+
 let containerIndex = 0;
 
 function createIsolatedContainer()
@@ -77,4 +79,31 @@ export function *resolveTransientFactoryChain(_: k_state)
     container.set({ id: "root", factory: () => new Root(container.get("middle")), transient: true });
 
     yield () => do_not_optimize(container.get("root"));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const container = createIsolatedContainer();
+    container.set({ id: "a", type: Dependency, transient: true });
+    container.set({ id: "b", type: Dependency, transient: true });
+    container.set({ id: "c", type: Dependency, transient: true });
+    container.set({ id: "d", type: Dependency, transient: true });
+    container.set({ id: "e", type: Dependency, transient: true });
+    container.set({ id: "parent", factory: () => ({ a: container.get("a"), b: container.get("b"), c: container.get("c"), d: container.get("d"), e: container.get("e") }), transient: true });
+
+    yield () => do_not_optimize(container.get("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const container = createIsolatedContainer();
+    container.set({ id: "a", type: Dependency, transient: true });
+    container.set({ id: "b", type: Dependency, transient: true });
+    container.set({ id: "c", type: Dependency, transient: true });
+    container.set({ id: "d", type: Dependency, transient: true });
+    container.set({ id: "e", type: Dependency, transient: true });
+    container.set({ id: "f", type: Dependency, transient: true });
+    container.set({ id: "parent", factory: () => ({ a: container.get("a"), b: container.get("b"), c: container.get("c"), d: container.get("d"), e: container.get("e"), f: container.get("f") }), transient: true });
+
+    yield () => do_not_optimize(container.get("parent"));
 }

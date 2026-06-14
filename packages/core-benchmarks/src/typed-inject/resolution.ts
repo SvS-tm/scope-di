@@ -18,6 +18,8 @@ class Root
     }
 }
 
+class Dependency {}
+
 function createLeaf()
 {
     return new Leaf();
@@ -34,6 +36,23 @@ function createRoot(middle: Middle)
     return new Root(middle);
 }
 createRoot.inject = ["middle"] as const;
+
+function createDependency()
+{
+    return new Dependency();
+}
+
+function createParentWithFiveDependencies(a: Dependency, b: Dependency, c: Dependency, d: Dependency, e: Dependency)
+{
+    return { a, b, c, d, e };
+}
+createParentWithFiveDependencies.inject = ["a", "b", "c", "d", "e"] as const;
+
+function createParentWithSixDependencies(a: Dependency, b: Dependency, c: Dependency, d: Dependency, e: Dependency, f: Dependency)
+{
+    return { a, b, c, d, e, f };
+}
+createParentWithSixDependencies.inject = ["a", "b", "c", "d", "e", "f"] as const;
 
 export function *resolveValue(_: k_state)
 {
@@ -86,4 +105,31 @@ export function *resolveTransientFactoryChain(_: k_state)
         .provideFactory("root", createRoot, Scope.Transient);
 
     yield () => do_not_optimize(injector.resolve("root"));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const injector = createInjector()
+        .provideFactory("a", createDependency, Scope.Transient)
+        .provideFactory("b", createDependency, Scope.Transient)
+        .provideFactory("c", createDependency, Scope.Transient)
+        .provideFactory("d", createDependency, Scope.Transient)
+        .provideFactory("e", createDependency, Scope.Transient)
+        .provideFactory("parent", createParentWithFiveDependencies, Scope.Transient);
+
+    yield () => do_not_optimize(injector.resolve("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const injector = createInjector()
+        .provideFactory("a", createDependency, Scope.Transient)
+        .provideFactory("b", createDependency, Scope.Transient)
+        .provideFactory("c", createDependency, Scope.Transient)
+        .provideFactory("d", createDependency, Scope.Transient)
+        .provideFactory("e", createDependency, Scope.Transient)
+        .provideFactory("f", createDependency, Scope.Transient)
+        .provideFactory("parent", createParentWithSixDependencies, Scope.Transient);
+
+    yield () => do_not_optimize(injector.resolve("parent"));
 }

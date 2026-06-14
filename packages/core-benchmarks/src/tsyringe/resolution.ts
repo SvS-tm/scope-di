@@ -19,6 +19,8 @@ class Root
     }
 }
 
+class Dependency {}
+
 function createIsolatedContainer(): DependencyContainer
 {
     return container.createChildContainer();
@@ -75,4 +77,31 @@ export function *resolveTransientFactoryChain(_: k_state)
     isolatedContainer.register("root", { useFactory: (container: DependencyContainer) => new Root(container.resolve("middle")) });
 
     yield () => do_not_optimize(isolatedContainer.resolve("root"));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const isolatedContainer = createIsolatedContainer();
+    isolatedContainer.register("a", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("b", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("c", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("d", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("e", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("parent", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e") }) });
+
+    yield () => do_not_optimize(isolatedContainer.resolve("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const isolatedContainer = createIsolatedContainer();
+    isolatedContainer.register("a", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("b", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("c", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("d", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("e", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("f", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("parent", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e"), f: container.resolve("f") }) });
+
+    yield () => do_not_optimize(isolatedContainer.resolve("parent"));
 }

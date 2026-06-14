@@ -18,6 +18,8 @@ class Root
     }
 }
 
+class Dependency {}
+
 export function *resolveValue(_: k_state)
 {
     const container = createContainer();
@@ -69,4 +71,31 @@ export function *resolveTransientFactoryChain(_: k_state)
     container.register("root", asFunction(({ middle }) => new Root(middle), { lifetime: Lifetime.TRANSIENT }));
 
     yield () => do_not_optimize(container.resolve("root"));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const container = createContainer();
+    container.register("a", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("b", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("c", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("d", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("e", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("parent", asFunction(({ a, b, c, d, e }) => ({ a, b, c, d, e }), { lifetime: Lifetime.TRANSIENT }));
+
+    yield () => do_not_optimize(container.resolve("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const container = createContainer();
+    container.register("a", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("b", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("c", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("d", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("e", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("f", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("parent", asFunction(({ a, b, c, d, e, f }) => ({ a, b, c, d, e, f }), { lifetime: Lifetime.TRANSIENT }));
+
+    yield () => do_not_optimize(container.resolve("parent"));
 }

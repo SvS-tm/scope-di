@@ -9,6 +9,10 @@ class DisposableDependency implements Disposable
     }
 }
 
+class Dependency
+{
+}
+
 function getSingleDescriptor(descriptorOrCollection: DependencyDescriptor | readonly DependencyDescriptor[])
 {
     if (Array.isArray(descriptorOrCollection))
@@ -98,6 +102,33 @@ export function *resolveCachedThreeValues(_: k_state)
     yield () => do_not_optimize(scope.resolveRange("a", "b", "c"));
 }
 
+export function *resolveCachedFiveValues(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("a").asValue({})
+        .map("b").asValue({})
+        .map("c").asValue({})
+        .map("d").asValue({})
+        .map("e").asValue({})
+        .build();
+
+    yield () => do_not_optimize(scope.resolveRange("a", "b", "c", "d", "e"));
+}
+
+export function *resolveCachedSixValues(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("a").asValue({})
+        .map("b").asValue({})
+        .map("c").asValue({})
+        .map("d").asValue({})
+        .map("e").asValue({})
+        .map("f").asValue({})
+        .build();
+
+    yield () => do_not_optimize(scope.resolveRange("a", "b", "c", "d", "e", "f"));
+}
+
 export function *resolveCollectionValues(_: k_state)
 {
     const scope = configureRootScope()
@@ -107,6 +138,37 @@ export function *resolveCollectionValues(_: k_state)
         .build();
 
     yield () => do_not_optimize(scope.resolve(["item"] as never));
+}
+
+export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("a").asClass(Dependency, DependencyLifetime.Transient)
+        .map("b").asClass(Dependency, DependencyLifetime.Transient)
+        .map("c").asClass(Dependency, DependencyLifetime.Transient)
+        .map("d").asClass(Dependency, DependencyLifetime.Transient)
+        .map("e").asClass(Dependency, DependencyLifetime.Transient)
+        .map("parent").asDependent("a", "b", "c", "d", "e")
+        .factory((a, b, c, d, e) => ({ a, b, c, d, e }), DependencyLifetime.Transient)
+        .build();
+
+    yield () => do_not_optimize(scope.resolve("parent"));
+}
+
+export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("a").asClass(Dependency, DependencyLifetime.Transient)
+        .map("b").asClass(Dependency, DependencyLifetime.Transient)
+        .map("c").asClass(Dependency, DependencyLifetime.Transient)
+        .map("d").asClass(Dependency, DependencyLifetime.Transient)
+        .map("e").asClass(Dependency, DependencyLifetime.Transient)
+        .map("f").asClass(Dependency, DependencyLifetime.Transient)
+        .map("parent").asDependent("a", "b", "c", "d", "e", "f")
+        .factory((a, b, c, d, e, f) => ({ a, b, c, d, e, f }), DependencyLifetime.Transient)
+        .build();
+
+    yield () => do_not_optimize(scope.resolve("parent"));
 }
 
 export function *createChildScope(_: k_state)

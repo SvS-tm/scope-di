@@ -5,11 +5,15 @@ import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type
 import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
 import type { AwaitedResolvedDependencies } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { AsyncClassDependencyDescriptor } from "../../types/async-class-dependency-descriptor";
+import type { AsyncFactoryDependencyDescriptor } from "../../types/async-factory-dependency-descriptor";
+import type { ClassDependencyDescriptor } from "../../types/class-dependency-descriptor";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
+import type { FactoryDependencyDescriptor } from "../../types/factory-dependency-descriptor";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AwaitedResolutionResult } from "../../types/utilities/awaited-resolution-result";
 import type { ResolutionResult } from "../../types/utilities/resolution-result";
@@ -19,9 +23,26 @@ import type { DefaultDiDependenciesRegistry } from "../registry/default-di-depen
 export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScope<T_RegisteredDependencies>
 {
+    /**
+     * @note all dependencies that can be looked-up from scope are stored here
+     */
     private readonly dependenciesCache = new Map<DependencyDescriptor, unknown | unknown[]>();
+    
+    /**
+     * @note Sync transient values that implement only sync disposal.
+     */
     private transientDependencies: Disposable[] | undefined;
+
+    /**
+     * @note Promises produced by async descriptors. These must be awaited before checking disposal hooks.
+     */
     private transientAsyncDependencies: Promise<unknown>[] | undefined;
+    
+    /**
+     * @note Sync transient values that implement async disposal. Do not merge with async dependencies:
+     * sync descriptors are allowed to return Promise values, and those promises are dependencies themselves.
+     */
+    private transientAsyncDisposables: AsyncDisposable[] | undefined;
 
     public constructor
     (
@@ -30,27 +51,6 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         public readonly parent?: DefaultDiScope<T_RegisteredDependencies>
     )
     {
-    }
-
-    public resolveRangeAsync
-    <
-        T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
-    >
-    (
-        ...keys: T_DependencyResolutionKeys
-    )
-    {
-        const promise = this.resolveAsyncDependencies(keys);
-
-        if (isSafeReference(promise))
-        {
-            if (promise[TrackedPromise.status] === TrackedPromiseStatus.Success)
-                return TrackedPromise.resolved((promise[TrackedPromise.value] ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
-            else
-                return promise.then((result) => (result ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
-        }
-
-        return TrackedPromise.resolved([] as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
     }
 
     public resolve
@@ -84,6 +84,27 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
     )
     {
         return this.resolveDependencies(keys) as ResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>;
+    }
+
+    public resolveRangeAsync
+    <
+        T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    >
+    (
+        ...keys: T_DependencyResolutionKeys
+    )
+    {
+        const promise = this.resolveAsyncDependencies(keys);
+
+        if (isSafeReference(promise))
+        {
+            if (promise[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                return TrackedPromise.resolved((promise[TrackedPromise.value] ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
+            else
+                return promise.then((result) => (result ?? []) as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
+        }
+
+        return TrackedPromise.resolved([] as AwaitedResolvedDependencies<T_RegisteredDependencies, T_DependencyResolutionKeys>);
     }
 
     private resolveDependencyByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
@@ -233,102 +254,351 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         {
             case DependencyDescriptorType.Value:
                 return descriptor.value;
+
             case DependencyDescriptorType.Class:
-            {
-                const subDependenciesKeys = descriptor.subDependenciesKeys;
+                return this.instantiateClass(descriptor);
 
-                if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
-                    return new descriptor.constructor();
-
-                const dependencies = this.resolveDependencies(subDependenciesKeys as DependencyResolutionKey<AllowedDependencyKey>[]);
-
-                return isSafeReference(dependencies)
-                    ? new descriptor.constructor(...dependencies)
-                    : new descriptor.constructor();
-            }
             case DependencyDescriptorType.ClassAsync:
-            {
-                const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+                return this.instantiateAsyncClass(descriptor);
 
-                if (isSafeReference(promise))
-                {
-                    if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
-                    {
-                        const resolveAsync = async () =>
-                        {
-                            const dependencies = await promise;
-    
-                            return isSafeReference(dependencies)
-                                ? await new descriptor.constructor(...dependencies)
-                                : await new descriptor.constructor();
-                        };
-    
-                        return TrackedPromise.track(resolveAsync());
-                    }
-
-                    /**
-                     * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
-                     */
-                    return TrackedPromise.resolved(new descriptor.constructor(...promise[TrackedPromise.value]));
-                }
-
-                /**
-                 * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
-                 */
-                return TrackedPromise.resolved(new descriptor.constructor());
-            }
             case DependencyDescriptorType.Factory:
-            {
-                const subDependenciesKeys = descriptor.subDependenciesKeys;
+                return this.instantiateFactory(descriptor);
 
-                if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
-                    return descriptor.factory();
-
-                const dependencies = this.resolveDependencies(subDependenciesKeys as DependencyResolutionKey<AllowedDependencyKey>[]);
-
-                return isSafeReference(dependencies) 
-                    ? descriptor.factory(...dependencies)
-                    : descriptor.factory();
-            }
             case DependencyDescriptorType.FactoryAsync:
-            {
-                const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+                return this.instantiateAsyncFactory(descriptor);
 
-                if (isSafeReference(promise))
-                {
-                    if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
-                    {
-                        const resolveAsync = async () =>
-                        {
-                            const dependencies = await promise;
-    
-                            return isSafeReference(dependencies)
-                                ? await descriptor.factory(...dependencies)
-                                : await descriptor.factory();
-                        };
-    
-                        return TrackedPromise.track(resolveAsync());
-                    }
-
-                    /**
-                     * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
-                     * So lets just track it
-                     */
-                    return TrackedPromise.track(descriptor.factory(...promise[TrackedPromise.value]));
-                }
-
-                /**
-                 * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
-                 * So lets just track it
-                 */
-                return TrackedPromise.track(descriptor.factory());
-            }
             default:
             {
                 const unknownDescriptor = descriptor as DependencyDescriptor;
 
                 throw new UnknownDependencyTypeError(unknownDescriptor.key, unknownDescriptor.type);
             }
+        }
+    }
+
+    private instantiateClass(descriptor: ClassDependencyDescriptor<unknown>)
+    {
+        const subDependenciesKeys = descriptor.subDependenciesKeys;
+
+        if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
+            return new descriptor.constructor();
+
+        switch (subDependenciesKeys.length)
+        {
+            case 1:
+            {
+                return new descriptor.constructor
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0])
+                );
+            }
+            case 2:
+            {
+                return new descriptor.constructor
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1])
+                );
+            }
+            case 3:
+            {
+                return new descriptor.constructor
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2])
+                );
+            }
+            case 4:
+            {
+                return new descriptor.constructor
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2]),
+                    this.resolveDependencyByKey(subDependenciesKeys[3])
+                );
+            }
+            case 5:
+            {
+                return new descriptor.constructor
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2]),
+                    this.resolveDependencyByKey(subDependenciesKeys[3]),
+                    this.resolveDependencyByKey(subDependenciesKeys[4])
+                );
+            }
+        }
+
+        const dependencies = this.resolveDependencies(subDependenciesKeys);
+
+        return isSafeReference(dependencies)
+            ? new descriptor.constructor(...dependencies)
+            : new descriptor.constructor();
+    }
+
+    private instantiateAsyncClass(descriptor: AsyncClassDependencyDescriptor<unknown>)
+    {
+        const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+
+        if (isSafeReference(promise))
+        {
+            if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
+            {
+                const resolveAsync = async () =>
+                {
+                    const dependencies = await promise;
+
+                    return isSafeReference(dependencies)
+                        ? await this.instantiateClassWithResolvedDependencies(descriptor, dependencies)
+                        : await new descriptor.constructor();
+                };
+
+                return TrackedPromise.track(resolveAsync());
+            }
+
+            /**
+             * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
+             */
+            return TrackedPromise.resolved(this.instantiateClassWithResolvedDependencies(descriptor, promise[TrackedPromise.value]));
+        }
+
+        /**
+         * @note Class constructor can't have async work, so we can safely wrap it in resolved tracked promise here
+         */
+        return TrackedPromise.resolved(new descriptor.constructor());
+    }
+
+    private instantiateFactory(descriptor: FactoryDependencyDescriptor<unknown>)
+    {
+        const subDependenciesKeys = descriptor.subDependenciesKeys;
+
+        if (!isSafeReference(subDependenciesKeys) || subDependenciesKeys.length === 0)
+            return descriptor.factory();
+
+        switch (subDependenciesKeys.length)
+        {
+            case 1:
+            {
+                return descriptor.factory
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0])
+                );
+            }
+            case 2:
+            {
+                return descriptor.factory
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1])
+                );
+            }
+            case 3:
+            {
+                return descriptor.factory
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2])
+                );
+            }
+            case 4:
+            {
+                return descriptor.factory
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2]),
+                    this.resolveDependencyByKey(subDependenciesKeys[3])
+                );
+            }
+            case 5:
+            {
+                return descriptor.factory
+                (
+                    this.resolveDependencyByKey(subDependenciesKeys[0]),
+                    this.resolveDependencyByKey(subDependenciesKeys[1]),
+                    this.resolveDependencyByKey(subDependenciesKeys[2]),
+                    this.resolveDependencyByKey(subDependenciesKeys[3]),
+                    this.resolveDependencyByKey(subDependenciesKeys[4])
+                );
+            }
+        }
+
+        const dependencies = this.resolveDependencies(subDependenciesKeys);
+
+        return isSafeReference(dependencies) 
+            ? descriptor.factory(...dependencies)
+            : descriptor.factory();
+    }
+
+    private instantiateAsyncFactory(descriptor: AsyncFactoryDependencyDescriptor<unknown>)
+    {
+        const promise = this.resolveAsyncDependencies(descriptor.subDependenciesKeys);
+
+        if (isSafeReference(promise))
+        {
+            if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
+            {
+                const resolveAsync = async () =>
+                {
+                    const dependencies = await promise;
+
+                    return isSafeReference(dependencies)
+                        ? await this.instantiateFactoryWithResolvedDependencies(descriptor, dependencies)
+                        : await descriptor.factory();
+                };
+
+                return TrackedPromise.track(resolveAsync());
+            }
+
+            /**
+             * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
+             * So lets just track it
+             */
+            return TrackedPromise.track(this.instantiateFactoryWithResolvedDependencies(descriptor, promise[TrackedPromise.value]));
+        }
+
+        /**
+         * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
+         * So lets just track it
+         */
+        return TrackedPromise.track(descriptor.factory());
+    }
+
+    private instantiateClassWithResolvedDependencies
+    (
+        descriptor: ClassDependencyDescriptor<unknown> | AsyncClassDependencyDescriptor<unknown>, 
+        dependencies: unknown[]
+    )
+    {
+        switch (dependencies.length)
+        {
+            case 0:
+                return new descriptor.constructor();
+            case 1:
+            {
+                return new descriptor.constructor
+                (
+                    dependencies[0]
+                );
+            }
+            case 2:
+            {
+                return new descriptor.constructor
+                (
+                    dependencies[0], 
+                    dependencies[1]
+                );
+            }
+            case 3:
+            {
+                return new descriptor.constructor
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2]
+                );
+            }
+            case 4:
+            {
+                return new descriptor.constructor
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2], 
+                    dependencies[3]
+                );
+            }
+            case 5:
+            {
+                return new descriptor.constructor
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2], 
+                    dependencies[3], 
+                    dependencies[4]
+                );
+            }
+            default:
+                return new descriptor.constructor(...dependencies);
+        }
+    }
+
+    private instantiateFactoryWithResolvedDependencies
+    (
+        descriptor: FactoryDependencyDescriptor<unknown>, 
+        dependencies: unknown[]
+    )
+        : unknown;
+
+    private instantiateFactoryWithResolvedDependencies
+    (
+        descriptor: AsyncFactoryDependencyDescriptor<unknown>, 
+        dependencies: unknown[]
+    )
+        : Promise<unknown>;
+
+    private instantiateFactoryWithResolvedDependencies
+    (
+        descriptor: FactoryDependencyDescriptor<unknown> | AsyncFactoryDependencyDescriptor<unknown>, 
+        dependencies: unknown[]
+    )
+    {
+        switch (dependencies.length)
+        {
+            case 0:
+                return descriptor.factory();
+            case 1:
+            {
+                return descriptor.factory
+                (
+                    dependencies[0]
+                );
+            }
+            case 2:
+            {
+                return descriptor.factory
+                (
+                    dependencies[0], 
+                    dependencies[1]
+                );
+            }
+            case 3:
+            {
+                return descriptor.factory
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2]
+                );
+            }
+            case 4:
+            {
+                return descriptor.factory
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2], 
+                    dependencies[3]
+                );
+            }
+            case 5:
+            {
+                return descriptor.factory
+                (
+                    dependencies[0], 
+                    dependencies[1], 
+                    dependencies[2], 
+                    dependencies[3], 
+                    dependencies[4]
+                );
+            }
+            default:
+                return descriptor.factory(...dependencies);
         }
     }
 
@@ -447,7 +717,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
 
         if (isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]))
-            (this.transientAsyncDependencies ??= []).push(dependency);
+            (this.transientAsyncDisposables ??= []).push(dependency as AsyncDisposable);
         else if (isSafeReference((dependency as Partial<Disposable>)[Symbol.dispose]))
             (this.transientDependencies ??= []).push(dependency as Disposable);
     }
@@ -492,9 +762,9 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         await Promise.all(promises);
     }
 
-    private async disposeTransientAsyncDependencies(dependencies?: Promise<unknown>[])
+    private async disposeTransientAsyncDependencies()
     {
-        if (!isSafeReference(dependencies))
+        if (!isSafeReference(this.transientAsyncDependencies))
             return;
 
         async function disposeAsync(dependency: unknown)
@@ -507,10 +777,23 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
                 (dependency as Partial<Disposable>)[Symbol.dispose]?.();
         }
 
-        const promises = new Array(dependencies.length);
+        const promises = new Array(this.transientAsyncDependencies.length);
 
-        for (let index = 0; index < dependencies.length; ++index)
-            promises[index] = disposeAsync(dependencies[index]);
+        for (let index = 0; index < this.transientAsyncDependencies.length; ++index)
+            promises[index] = disposeAsync(this.transientAsyncDependencies[index]);
+
+        await Promise.all(promises);
+    }
+
+    private async disposeTransientAsyncDisposables()
+    {
+        if (!isSafeReference(this.transientAsyncDisposables))
+            return;
+
+        const promises = new Array(this.transientAsyncDisposables.length);
+
+        for (let index = 0; index < this.transientAsyncDisposables.length; ++index)
+            promises[index] = this.transientAsyncDisposables[index][Symbol.asyncDispose]();
 
         await Promise.all(promises);
     }
@@ -531,12 +814,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         }
     }
 
-    private disposeTransientDependencies(dependencies?: Disposable[])
+    private disposeTransientDependencies()
     {
-        if (!isSafeReference(dependencies))
+        if (!isSafeReference(this.transientDependencies))
             return;
 
-        for (const dependency of dependencies)
+        for (const dependency of this.transientDependencies)
             dependency[Symbol.dispose]();
     }
 
@@ -545,10 +828,11 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         const dependencies = [...this.dependenciesCache.entries()];
 
         this.disposeAsyncDependencies(dependencies);
-        this.disposeTransientAsyncDependencies(this.transientAsyncDependencies);
+        this.disposeTransientAsyncDependencies();
+        this.disposeTransientAsyncDisposables();
         
         this.disposeSyncDependencies(dependencies);
-        this.disposeTransientDependencies(this.transientDependencies);
+        this.disposeTransientDependencies();
     }
 
     public async [Symbol.asyncDispose]()
@@ -556,12 +840,14 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         const dependencies = [...this.dependenciesCache.entries()];
 
         const asyncDependenciesDisposal = this.disposeAsyncDependencies(dependencies);
-        const transientAsyncDependenciesDisposal = this.disposeTransientAsyncDependencies(this.transientAsyncDependencies);
+        const transientAsyncDependenciesDisposal = this.disposeTransientAsyncDependencies();
+        const transientAsyncDisposablesDisposal = this.disposeTransientAsyncDisposables();
 
         this.disposeSyncDependencies(dependencies);
-        this.disposeTransientDependencies(this.transientDependencies);
+        this.disposeTransientDependencies();
 
         await asyncDependenciesDisposal;
         await transientAsyncDependenciesDisposal;
+        await transientAsyncDisposablesDisposal;
     }
 }
