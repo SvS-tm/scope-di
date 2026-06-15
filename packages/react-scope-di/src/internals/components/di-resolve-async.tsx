@@ -6,6 +6,7 @@ import type { ResolvedAsyncComponentRenderer } from "../../types/resolved-async-
 import type { ResolvedComponentOptions } from "../../types/resolved-component-options";
 import type { UseDependenciesAsyncHook } from "../../types/use-dependencies-async-hook";
 import { suspendedAwait } from "../helpers/promise";
+import { getComponentDisplayName } from "../helpers/get-component-display-name";
 import { DiErrorBoundary } from "./di-error-boundary";
 import { DiSuspense } from "./di-suspense";
 
@@ -97,7 +98,7 @@ export const diResolveAsync =
     useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>
 ) : ComponentType<T_Props> =>
 {
-    return (props: T_Props) =>
+    const ResolvedAsyncComponent = (props: T_Props) =>
     {
         if (options?.createNewScope)
         {
@@ -122,4 +123,8 @@ export const diResolveAsync =
             );
         }
     };
+
+    ResolvedAsyncComponent.displayName = `DiResolveAsync(${getComponentDisplayName(renderer, "Renderer")})`;
+
+    return ResolvedAsyncComponent;
 };

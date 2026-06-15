@@ -1,6 +1,7 @@
 import type { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
-import { useState } from "react";
+import { useMemo } from "react";
 import { UseDependenciesHook } from "../../types/use-dependencies-hook";
+import { useDependencyResolutionKeysVersion } from "./use-dependency-resolution-keys-version";
 import { useDiScope } from "./use-di-scope";
 
 export const createUseDependenciesHook = 
@@ -15,7 +16,9 @@ export const createUseDependenciesHook =
     return (...keys) =>
     {
         const scope = useDiScope(rootScope);
-        const [dependencies] = useState(() => scope.resolveRange(...keys));
+
+        const keysVersion = useDependencyResolutionKeysVersion(keys);
+        const dependencies = useMemo(() => scope.resolveRange(...keys), [scope, keysVersion]);
 
         return dependencies;
     };

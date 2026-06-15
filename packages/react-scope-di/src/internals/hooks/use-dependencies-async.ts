@@ -1,10 +1,12 @@
-import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, ResolvedDependencies, DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
+import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, DiScope, RegisteredDependencies, ResolvedDependencies } from "@svs-tm/scope-di";
+import { isAsyncDescriptor } from "@svs-tm/scope-di";
 import { type ControlledTrackedPromise, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { useEffect, useMemo } from "react";
 import { NotExpectedAsyncDependencyStateError } from "../../errors/not-expected-async-dependency-state-error";
 import type { AsyncResolutionResult, UseDependenciesAsyncHook } from "../../types";
 import { asyncResolutionResultMarker } from "../constants/async-resolution-result-marker";
 import { DependenciesResolutionTraceResult, traceDependenciesResolution } from "../helpers/di-scope";
+import { useDependencyResolutionKeysVersion } from "./use-dependency-resolution-keys-version";
 import { useDiScope } from "./use-di-scope";
 
 const marker = { [asyncResolutionResultMarker]: true } as const;
@@ -33,6 +35,21 @@ type DependenciesResolutionResult
     }
 );
 
+function getSettledAsyncDependencyValue
+(
+    key: DependencyResolutionKey<DependencyMappingKey<RegisteredDependencies>>,
+    dependency: Promise<unknown>
+)
+{
+    const tracked = TrackedPromise.track(dependency);
+    const status = tracked[TrackedPromise.status];
+
+    if (status === TrackedPromiseStatus.Success)
+        return tracked[TrackedPromise.value];
+    else
+        throw new NotExpectedAsyncDependencyStateError(key, status);
+}
+
 export const createUseDependenciesAsyncHook = 
 <
     T_RegisteredDependencies extends RegisteredDependencies
@@ -45,6 +62,7 @@ export const createUseDependenciesAsyncHook =
     return (...keys) =>
     {
         const scope = useDiScope(rootScope);
+        const keysVersion = useDependencyResolutionKeysVersion(keys);
 
         const resolution = useMemo<DependenciesResolutionResult<T_RegisteredDependencies, typeof keys>>
         (
@@ -70,23 +88,35 @@ export const createUseDependenciesAsyncHook =
                                 (
                                     dependencies.map
                                     (
-                                        (dependency, index) => 
+                                        (dependencyOrCollection, index) => 
                                         {
                                             const key = keys[index];
 
-                                            if (scope.registry.isAsyncKey(key) && dependency instanceof Promise)
+                                            if (Array.isArray(key) && Array.isArray(dependencyOrCollection))
                                             {
-                                                const tracked = TrackedPromise.track(dependency);
+                                                const descriptors = scope.registry.resolveDescriptorsByKey(key);
 
-                                                const status = tracked[TrackedPromise.status];
+                                                if (Array.isArray(descriptors))
+                                                {
+                                                    return dependencyOrCollection.map
+                                                    (
+                                                        (dependency: unknown, dependencyIndex: number) =>
+                                                        {
+                                                            const descriptor = descriptors[dependencyIndex];
 
-                                                if (status === TrackedPromiseStatus.Success)
-                                                    return tracked[TrackedPromise.value];
-                                                else
-                                                    throw new NotExpectedAsyncDependencyStateError(key, status);
+                                                            if (descriptor && isAsyncDescriptor(descriptor) && dependency instanceof Promise)
+                                                                return getSettledAsyncDependencyValue(key, dependency);
+
+                                                            return dependency;
+                                                        }
+                                                    );
+                                                }
                                             }
 
-                                            return dependency;
+                                            if (scope.registry.isAsyncKey(key) && dependencyOrCollection instanceof Promise)
+                                                return getSettledAsyncDependencyValue(key, dependencyOrCollection);
+
+                                            return dependencyOrCollection;
                                         }
                                     ) as ResolvedDependencies<T_RegisteredDependencies, typeof keys>
                                 ),
@@ -96,7 +126,7 @@ export const createUseDependenciesAsyncHook =
                     }
                 }
             },
-            [scope]
+            [scope, keysVersion]
         );
 
         /**

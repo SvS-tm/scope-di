@@ -11,6 +11,29 @@ describe
     {
         it
         (
+            "Generated component has a display name based on the renderer",
+            () =>
+            {
+                const scope = configureRootScope()
+                    .map("Key1")
+                        .asValue({})
+                    .build();
+
+                const { resolveAsync } = createReactDiTools(scope);
+
+                function DependencyConsumer()
+                {
+                    return <span />;
+                }
+
+                const Consumer = resolveAsync(["Key1"], undefined, DependencyConsumer);
+
+                expect(Consumer.displayName).toBe("DiResolveAsync(DependencyConsumer)");
+            }
+        );
+
+        it
+        (
             "Props and dependencies are injected correctly", 
             async () => 
             {
@@ -342,7 +365,7 @@ describe
                         .asFactoryAsync(async () => ({ index: ++counter }), DependencyLifetime.Scoped)
                     .build();
 
-                const [rootDependency1] = await scope.resolveAsync(key1);
+                const rootDependency1 = await scope.resolveAsync(key1);
 
                 const scopePrototype = Object.getPrototypeOf(scope) as typeof scope;
 

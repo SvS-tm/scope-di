@@ -1,7 +1,8 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
+import { Suspense, type JSX } from "react";
 import { createReactDiTools } from "./create-react-di-tools";
 
 class ParentDependency
@@ -50,6 +51,44 @@ describe
 
         it
         (
+            "Key change: resolves dependencies for the latest requested key",
+            async () =>
+            {
+                const dependency1 = { value: "Dependency1" };
+                const dependency2 = { value: "Dependency2" };
+
+                const scope = configureRootScope()
+                    .map("Key1")
+                        .asFactoryAsync(async () => dependency1, DependencyLifetime.Singleton)
+                    .map("Key2")
+                        .asFactoryAsync(async () => dependency2, DependencyLifetime.Singleton)
+                    .build();
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                const { result, rerender } = renderHook
+                (
+                    ({ key }) => useDependenciesAsync(key),
+                    { initialProps: { key: "Key1" as "Key1" | "Key2" } }
+                );
+
+                const promise1 = result.current;
+                const [resolvedDependency1] = await act(async () => await result.current);
+
+                expect(resolvedDependency1).toBe(dependency1);
+
+                rerender({ key: "Key2" });
+
+                expect(result.current).not.toBe(promise1);
+
+                const [resolvedDependency2] = await act(async () => await result.current);
+
+                expect(resolvedDependency2).toBe(dependency2);
+            }
+        );
+
+        it
+        (
             "Mixed sync/async keys: after resolve, values are returned in the reverse key order and awaited", 
             async () => 
             {
@@ -76,6 +115,37 @@ describe
                 expect(dependency1).toBe(originalDependency3);
                 expect(dependency2).toBe(originalDependency2);
                 expect(dependency3).toBe(originalDependency1);
+            }
+        );
+
+        it
+        (
+            "Settled async collection: returns an already resolved collection result",
+            async () =>
+            {
+                const key1 = "Key1";
+                const originalDependency1 = {};
+                const originalDependency2 = {};
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asFactoryAsync(async () => originalDependency1, DependencyLifetime.Singleton)
+                    .map(key1)
+                        .asFactoryAsync(async () => originalDependency2, DependencyLifetime.Singleton)
+                    .build();
+
+                await scope.resolveRangeAsync([key1]);
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                const { result } = renderHook(() => useDependenciesAsync([key1]));
+
+                expect(getTrackedStatus(result.current)).toBe(TrackedPromiseStatus.Success);
+
+                const [[dependency1, dependency2]] = await result.current;
+
+                expect(dependency1).toBe(originalDependency2);
+                expect(dependency2).toBe(originalDependency1);
             }
         );
 
@@ -134,6 +204,43 @@ describe
 
                 expect(parent).toBeInstanceOf(ParentDependency);
                 expect(parent.dependency).toBe(dependency);
+            }
+        );
+
+        it
+        (
+            "Discarded render does not start async dependency resolution",
+            async () =>
+            {
+                const factorySpy = jest.fn(async () => ({ value: "dependency" }));
+                const suspendedRender = new Promise(() => undefined);
+
+                const scope = configureRootScope()
+                    .map("dependency")
+                        .asFactoryAsync(factorySpy, DependencyLifetime.Singleton)
+                    .build();
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                function Consumer(): JSX.Element
+                {
+                    useDependenciesAsync("dependency");
+
+                    throw suspendedRender;
+                }
+
+                render
+                (
+                    <Suspense fallback={<span data-testid="pending">Pending</span>}>
+                        <Consumer />
+                    </Suspense>
+                );
+
+                expect(screen.getByTestId("pending")).toBeInTheDocument();
+
+                await act(async () => undefined);
+
+                expect(factorySpy).not.toHaveBeenCalled();
             }
         );
 

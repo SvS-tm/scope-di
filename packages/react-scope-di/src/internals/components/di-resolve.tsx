@@ -4,6 +4,7 @@ import { DiResolutionOptions, UseDependenciesHook } from "../../types";
 import { DiScopeComponent } from "../../types/di-scope-component";
 import type { ResolvedComponentOptions } from "../../types/resolved-component-options";
 import type { ResolvedComponentRenderer } from "../../types/resolved-component-renderer";
+import { getComponentDisplayName } from "../helpers/get-component-display-name";
 import { DiErrorBoundary } from "./di-error-boundary";
 
 type DependenciesProviderProps
@@ -56,7 +57,7 @@ export const diResolve =
 ) 
     : ComponentType<T_Props> =>
 {
-    return (props: T_Props) =>
+    const ResolvedComponent = (props: T_Props) =>
     {
         if (options?.createNewScope)
         {
@@ -81,4 +82,8 @@ export const diResolve =
             );
         }
     };
+
+    ResolvedComponent.displayName = `DiResolve(${getComponentDisplayName(renderer, "Renderer")})`;
+
+    return ResolvedComponent;
 };

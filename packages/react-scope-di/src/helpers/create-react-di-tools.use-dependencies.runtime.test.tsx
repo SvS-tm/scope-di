@@ -41,6 +41,37 @@ describe
 
         it
         (
+            "Key change: resolves dependencies for the latest requested key",
+            () =>
+            {
+                const dependency1 = { value: "Dependency1" };
+                const dependency2 = { value: "Dependency2" };
+
+                const scope = configureRootScope()
+                    .map("Key1")
+                        .asValue(dependency1)
+                    .map("Key2")
+                        .asValue(dependency2)
+                    .build();
+
+                const { useDependencies } = createReactDiTools(scope);
+
+                const { result, rerender } = renderHook
+                (
+                    ({ key }) => useDependencies(key),
+                    { initialProps: { key: "Key1" as "Key1" | "Key2" } }
+                );
+
+                expect(result.current).toEqual([dependency1]);
+
+                rerender({ key: "Key2" });
+
+                expect(result.current).toEqual([dependency2]);
+            }
+        );
+
+        it
+        (
             "Reverse registration order: registering A, then B, then C under the same key resolves as [C, B, A]",
             () =>
             {
