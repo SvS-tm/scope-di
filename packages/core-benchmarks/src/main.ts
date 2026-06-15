@@ -128,6 +128,21 @@ function getFilter(runtimeArgs: string[])
     return new RegExp(filterArgument.slice("--filter=".length));
 }
 
+function getIterations(runtimeArgs: string[])
+{
+    const iterationsArgument = runtimeArgs.find((argument) => argument.startsWith("--iterations="));
+
+    if(!iterationsArgument)
+        return 300;
+
+    const iterations = Number(iterationsArgument.slice("--iterations=".length));
+
+    if(!Number.isSafeInteger(iterations) || iterations <= 0)
+        throw new Error(`Invalid benchmark iterations count: ${iterationsArgument}`);
+
+    return iterations;
+}
+
 function getMode(runtimeArgs: string[])
     : BenchmarkMode
 {
@@ -165,7 +180,7 @@ function getRuntimeName()
     return "unknown";
 }
 
-function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined, outputFormat: "json" | "mitata")
+function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined, outputFormat: "json" | "mitata", iterations: number)
 {
     const runtime = globalThis as
     {
@@ -181,6 +196,7 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
         benchmark: {
             mode,
             filter: filter?.source,
+            iterations,
             outputFormat,
             timestamp: new Date().toISOString()
         },
@@ -827,10 +843,9 @@ const benchmarks =
     }
 ] satisfies BenchmarkGroup[];
 
-const iterations = [3000];
-
 const runtimeArgs = getRuntimeArgs();
 const mode = getMode(runtimeArgs);
+const iterations = [getIterations(runtimeArgs)];
 const selectedBenchmarks = benchmarks.filter
 (
     ({ modes }) =>
@@ -875,7 +890,7 @@ for(const { name, runs } of selectedBenchmarks)
 const outputFormat = getOutputFormat(runtimeArgs);
 const filter = getFilter(runtimeArgs);
 const runOptions = { colors: outputFormat !== "json", format: outputFormat } as const;
-const metadata = createBenchmarkMetadata(mode, filter, outputFormat);
+const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
 const jsonOutputCapture = outputFormat === "json"
     ? createJsonOutputCapture()
     : undefined;
