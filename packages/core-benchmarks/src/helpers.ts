@@ -7,10 +7,25 @@ export function *createWarmResolutionBenchmark<TContainer>(container: TContainer
     yield () => do_not_optimize(resolve(container));
 }
 
-export function *createColdResolutionBenchmark<TContainer>(createContainer: () => TContainer, resolve: (container: TContainer) => unknown)
+export function *createColdResolutionBenchmark<TContainer>
+(
+    createContainer: () => TContainer,
+    resolve: (container: TContainer) => unknown,
+    cleanupContainer?: (container: TContainer) => void
+)
 {
+    let previousContainer: TContainer | undefined;
+
     yield {
-        [0]: createContainer,
+        [0]()
+        {
+            if(previousContainer)
+                cleanupContainer?.(previousContainer);
+
+            previousContainer = createContainer();
+
+            return previousContainer;
+        },
 
         bench(container: TContainer)
         {

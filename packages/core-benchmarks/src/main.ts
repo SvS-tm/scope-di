@@ -108,7 +108,7 @@ function getRuntimeArgs()
 {
     const args = (globalThis as { process?: { argv?: string[] }; Deno?: { args?: string[] } });
 
-    return args.process?.argv ?? args.Deno?.args ?? [];
+    return args.Deno?.args ?? args.process?.argv ?? [];
 }
 
 function getOutputFormat(runtimeArgs: string[])
@@ -180,6 +180,18 @@ function getRuntimeName()
     return "unknown";
 }
 
+function getBestEffortValue<T>(getValue: () => T, fallback: T)
+{
+    try
+    {
+        return getValue();
+    }
+    catch
+    {
+        return fallback;
+    }
+}
+
 function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined, outputFormat: "json" | "mitata", iterations: number)
 {
     const runtime = globalThis as
@@ -189,7 +201,7 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
         process?: { version?: string; versions?: NodeJS.ProcessVersions };
     };
 
-    const cpus = os.cpus();
+    const cpus = getBestEffortValue(() => os.cpus(), [] as ReturnType<typeof os.cpus>);
     const firstCpu = cpus[0];
 
     return {
@@ -208,10 +220,10 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
             versions: runtime.process?.versions
         },
         machine: {
-            platform: os.platform(),
-            release: os.release(),
-            arch: os.arch(),
-            hostname: os.hostname(),
+            platform: getBestEffortValue(() => os.platform(), "unknown"),
+            release: getBestEffortValue(() => os.release(), "unknown"),
+            arch: getBestEffortValue(() => os.arch(), "unknown"),
+            hostname: getBestEffortValue(() => os.hostname(), "unknown"),
             cpu:
             {
                 model: firstCpu?.model,
@@ -220,8 +232,8 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
             },
             memory:
             {
-                total: os.totalmem(),
-                free: os.freemem()
+                total: getBestEffortValue(() => os.totalmem(), undefined as number | undefined),
+                free: getBestEffortValue(() => os.freemem(), undefined as number | undefined)
             }
         }
     };
@@ -291,18 +303,101 @@ function createJsonOutputCapture(): JsonOutputCapture | undefined
     };
 }
 
+function findJsonObjectEnd(rawOutput: string, start: number)
+{
+    let depth = 0;
+    let escaped = false;
+    let inString = false;
+
+    for(let index = start; index < rawOutput.length; ++index)
+    {
+        const character = rawOutput[index];
+
+        if(inString)
+        {
+            if(escaped)
+            {
+                escaped = false;
+            }
+            else if(character === "\\")
+            {
+                escaped = true;
+            }
+            else if(character === "\"")
+            {
+                inString = false;
+            }
+
+            continue;
+        }
+
+        if(character === "\"")
+        {
+            inString = true;
+        }
+        else if(character === "{")
+        {
+            depth++;
+        }
+        else if(character === "}")
+        {
+            depth--;
+
+            if(depth === 0)
+                return index + 1;
+        }
+    }
+
+    return -1;
+}
+
+function isMitataJsonPayload(value: unknown)
+    : value is object
+{
+    return typeof value === "object"
+        && value !== null
+        && "layout" in value
+        && "benchmarks" in value;
+}
+
+function parseMitataJsonPayload(rawOutput: string)
+{
+    let jsonStart = rawOutput.indexOf("{");
+
+    while(jsonStart >= 0)
+    {
+        const jsonEnd = findJsonObjectEnd(rawOutput, jsonStart);
+
+        if(jsonEnd < 0)
+            return undefined;
+
+        try
+        {
+            const payload = JSON.parse(rawOutput.slice(jsonStart, jsonEnd)) as unknown;
+
+            if(isMitataJsonPayload(payload))
+                return payload;
+        }
+        catch
+        {
+        }
+
+        jsonStart = rawOutput.indexOf("{", jsonStart + 1);
+    }
+
+    return undefined;
+}
+
 function writeJsonOutputWithMetadata(rawOutput: string, metadata: ReturnType<typeof createBenchmarkMetadata>)
 {
-    const jsonStart = rawOutput.indexOf("{\"layout\"");
+    const payload = parseMitataJsonPayload(rawOutput);
 
-    if(jsonStart < 0)
+    if(!payload)
     {
         console.log(rawOutput);
 
         return;
     }
-
-    const payload = JSON.parse(rawOutput.slice(jsonStart)) as object;
 
     console.log(JSON.stringify({ metadata, ...payload }));
 }
@@ -895,12 +990,21 @@ const jsonOutputCapture = outputFormat === "json"
     ? createJsonOutputCapture()
     : undefined;
 
-await run
-(
-    filter
-        ? { ...runOptions, filter }
-        : runOptions
-);
+let rawJsonOutput: string | undefined;
 
-if(jsonOutputCapture)
-    writeJsonOutputWithMetadata(jsonOutputCapture.restore(), metadata);
+try
+{
+    await run
+    (
+        filter
+            ? { ...runOptions, filter }
+            : runOptions
+    );
+}
+finally
+{
+    rawJsonOutput = jsonOutputCapture?.restore();
+}
+
+if(rawJsonOutput !== undefined)
+    writeJsonOutputWithMetadata(rawJsonOutput, metadata);
