@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-sloppy-imports
 import { Container } from "@needle-di/core";
-import { do_not_optimize, type k_state } from "mitata";
+import type { k_state } from "mitata";
+import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
 
@@ -24,55 +25,113 @@ class TransientToken {}
 class SingletonFactoryToken {}
 class TransientFactoryToken {}
 
-export function *resolveValue(_: k_state)
+function createValueContainer()
 {
     const container = new Container();
     container.bind({ provide: ValueToken, useValue: {} });
 
-    yield () => do_not_optimize(container.get(ValueToken));
+    return container;
 }
 
-export function *resolveSingletonClass(_: k_state)
+export function *warmResolveValue(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createValueContainer(), (container) => container.get(ValueToken));
+}
+
+export function *coldResolveValue(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createValueContainer, (container) => container.get(ValueToken));
+}
+
+function createSingletonClassContainer()
 {
     const container = new Container();
     container.bind({ provide: SingletonToken, useClass: Leaf });
-    container.get(SingletonToken);
 
-    yield () => do_not_optimize(container.get(SingletonToken));
+    return container;
 }
 
-export function *resolveTransientClass(_: k_state)
+export function *warmResolveSingletonClass(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createSingletonClassContainer(), (container) => container.get(SingletonToken));
+}
+
+export function *coldResolveSingletonClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonClassContainer, (container) => container.get(SingletonToken));
+}
+
+function createTransientClassContainer()
 {
     const container = new Container();
     container.bind({ provide: TransientToken, useFactory: () => new Leaf() });
 
-    yield () => do_not_optimize(container.get(TransientToken));
+    return container;
 }
 
-export function *resolveSingletonFactory(_: k_state)
+export function *warmResolveTransientClass(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientClassContainer(), (container) => container.get(TransientToken));
+}
+
+export function *coldResolveTransientClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientClassContainer, (container) => container.get(TransientToken));
+}
+
+function createSingletonFactoryContainer()
 {
     const value = {};
     const container = new Container();
     container.bind({ provide: SingletonFactoryToken, useFactory: () => value });
-    container.get(SingletonFactoryToken);
 
-    yield () => do_not_optimize(container.get(SingletonFactoryToken));
+    return container;
 }
 
-export function *resolveTransientFactory(_: k_state)
+export function *warmResolveSingletonFactory(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createSingletonFactoryContainer(), (container) => container.get(SingletonFactoryToken));
+}
+
+export function *coldResolveSingletonFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonFactoryContainer, (container) => container.get(SingletonFactoryToken));
+}
+
+function createTransientFactoryContainer()
 {
     const container = new Container();
     container.bind({ provide: TransientFactoryToken, useFactory: () => ({}) });
 
-    yield () => do_not_optimize(container.get(TransientFactoryToken));
+    return container;
 }
 
-export function *resolveTransientFactoryChain(_: k_state)
+export function *warmResolveTransientFactory(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryContainer(), (container) => container.get(TransientFactoryToken));
+}
+
+export function *coldResolveTransientFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryContainer, (container) => container.get(TransientFactoryToken));
+}
+
+function createTransientFactoryChainContainer()
 {
     const container = new Container();
     container.bind({ provide: Leaf, useFactory: () => new Leaf() });
     container.bind({ provide: Middle, useFactory: (container) => new Middle(container.get(Leaf)) });
     container.bind({ provide: Root, useFactory: (container) => new Root(container.get(Middle)) });
 
-    yield () => do_not_optimize(container.get(Root));
+    return container;
+}
+
+export function *warmResolveTransientFactoryChain(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryChainContainer(), (container) => container.get(Root));
+}
+
+export function *coldResolveTransientFactoryChain(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryChainContainer, (container) => container.get(Root));
 }

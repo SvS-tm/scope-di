@@ -26,7 +26,7 @@ describe
 
         it
         (
-            "Mixed descriptor types: value/class/factory/async* descriptors all show up as-is with correct fields",
+            "Mixed descriptor types: value/class/factory/async *descriptors all show up as-is with correct fields",
             () =>
             {
                 class Dependency1 {}

@@ -88,7 +88,43 @@ export function *resolveCachedValue(_: k_state)
         .map("value").asValue({})
         .build();
 
+    scope.resolve("value");
+
     yield () => do_not_optimize(scope.resolve("value"));
+}
+
+export function *resolveColdValue(_: k_state)
+{
+    yield () =>
+    {
+        const scope = configureRootScope()
+            .map("value").asValue({})
+            .build();
+
+        do_not_optimize(scope.resolve("value"));
+    };
+}
+
+export function *findResolvedValueMiss(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("value").asValue({})
+        .build();
+    const descriptor = getSingleDescriptor(scope.registry.resolveDescriptorsByKey("value"));
+
+    yield () => do_not_optimize(scope.findResolvedDependencyByDescriptor(descriptor));
+}
+
+export function *findResolvedValueHit(_: k_state)
+{
+    const scope = configureRootScope()
+        .map("value").asValue({})
+        .build();
+    const descriptor = getSingleDescriptor(scope.registry.resolveDescriptorsByKey("value"));
+
+    scope.resolve("value");
+
+    yield () => do_not_optimize(scope.findResolvedDependencyByDescriptor(descriptor));
 }
 
 export function *resolveCachedThreeValues(_: k_state)

@@ -8,7 +8,7 @@ function createIsolatedContainer(): DependencyContainer
     return container.createChildContainer();
 }
 
-export function* registrationClass(state: k_state) 
+export function *registrationClass(state: k_state) 
 {
     const iterations = state.get("iterations") as number;
 
@@ -25,7 +25,7 @@ export function* registrationClass(state: k_state)
     };
 }
 
-export function* registrationValue(state: k_state) 
+export function *registrationValue(state: k_state) 
 {
     const iterations = state.get("iterations") as number;
 
@@ -42,7 +42,7 @@ export function* registrationValue(state: k_state)
     };
 }
 
-export function* registrationFactory(state: k_state)
+export function *registrationFactory(state: k_state)
 {
     const iterations = state.get("iterations") as number;
 

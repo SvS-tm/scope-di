@@ -729,7 +729,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private async disposeAsyncDependencies(dependencies: [DependencyDescriptor, unknown][])
     {
-        function* generatePromises()
+        function *generatePromises()
         {
             for (const [descriptor, dependencyOrCollection] of dependencies)
             {

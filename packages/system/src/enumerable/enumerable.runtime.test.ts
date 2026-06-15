@@ -344,7 +344,7 @@ describe
                     "can be called repeatedly for fromFactory", 
                     () =>
                     {
-                        function* numbers()
+                        function *numbers()
                         {
                             yield 1;
                             yield 2;
@@ -363,7 +363,7 @@ describe
                     "reflects one-shot behavior for fromIterable(generator())", 
                     () =>
                     {
-                        function* numbers()
+                        function *numbers()
                         {
                             yield 1;
                             yield 2;

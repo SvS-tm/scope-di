@@ -1,7 +1,8 @@
 // deno-lint-ignore-file no-sloppy-imports
 import "reflect-metadata";
 import { Container } from "inversify";
-import { do_not_optimize, type k_state } from "mitata";
+import type { k_state } from "mitata";
+import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
 
@@ -21,60 +22,118 @@ class Root
 
 class Dependency {}
 
-export function *resolveValue(_: k_state)
+function createValueContainer()
 {
     const container = new Container();
     container.bind("value").toConstantValue({});
 
-    yield () => do_not_optimize(container.get("value"));
+    return container;
 }
 
-export function *resolveSingletonClass(_: k_state)
+export function *warmResolveValue(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createValueContainer(), (container) => container.get("value"));
+}
+
+export function *coldResolveValue(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createValueContainer, (container) => container.get("value"));
+}
+
+function createSingletonClassContainer()
 {
     const container = new Container();
     container.bind("singleton").to(Leaf).inSingletonScope();
-    container.get("singleton");
 
-    yield () => do_not_optimize(container.get("singleton"));
+    return container;
 }
 
-export function *resolveTransientClass(_: k_state)
+export function *warmResolveSingletonClass(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createSingletonClassContainer(), (container) => container.get("singleton"));
+}
+
+export function *coldResolveSingletonClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonClassContainer, (container) => container.get("singleton"));
+}
+
+function createTransientClassContainer()
 {
     const container = new Container();
     container.bind("transient").to(Leaf).inTransientScope();
 
-    yield () => do_not_optimize(container.get("transient"));
+    return container;
 }
 
-export function *resolveSingletonFactory(_: k_state)
+export function *warmResolveTransientClass(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientClassContainer(), (container) => container.get("transient"));
+}
+
+export function *coldResolveTransientClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientClassContainer, (container) => container.get("transient"));
+}
+
+function createSingletonFactoryContainer()
 {
     const value = {};
     const container = new Container();
     container.bind("singleton").toDynamicValue(() => value).inSingletonScope();
-    container.get("singleton");
 
-    yield () => do_not_optimize(container.get("singleton"));
+    return container;
 }
 
-export function *resolveTransientFactory(_: k_state)
+export function *warmResolveSingletonFactory(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createSingletonFactoryContainer(), (container) => container.get("singleton"));
+}
+
+export function *coldResolveSingletonFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonFactoryContainer, (container) => container.get("singleton"));
+}
+
+function createTransientFactoryContainer()
 {
     const container = new Container();
     container.bind("transient").toDynamicValue(() => ({})).inTransientScope();
 
-    yield () => do_not_optimize(container.get("transient"));
+    return container;
 }
 
-export function *resolveTransientFactoryChain(_: k_state)
+export function *warmResolveTransientFactory(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryContainer(), (container) => container.get("transient"));
+}
+
+export function *coldResolveTransientFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryContainer, (container) => container.get("transient"));
+}
+
+function createTransientFactoryChainContainer()
 {
     const container = new Container();
     container.bind("leaf").toDynamicValue(() => new Leaf()).inTransientScope();
     container.bind("middle").toDynamicValue((context) => new Middle(context.get("leaf") as Leaf)).inTransientScope();
     container.bind("root").toDynamicValue((context) => new Root(context.get("middle") as Middle)).inTransientScope();
 
-    yield () => do_not_optimize(container.get("root"));
+    return container;
 }
 
-export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+export function *warmResolveTransientFactoryChain(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryChainContainer(), (container) => container.get("root"));
+}
+
+export function *coldResolveTransientFactoryChain(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryChainContainer, (container) => container.get("root"));
+}
+
+function createTransientFactoryWithFiveDependenciesContainer()
 {
     const container = new Container();
     container.bind("a").to(Dependency).inTransientScope();
@@ -84,10 +143,20 @@ export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
     container.bind("e").to(Dependency).inTransientScope();
     container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
 
-    yield () => do_not_optimize(container.get("parent"));
+    return container;
 }
 
-export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+export function *warmResolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer(), (container) => container.get("parent"));
+}
+
+export function *coldResolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer, (container) => container.get("parent"));
+}
+
+function createTransientFactoryWithSixDependenciesContainer()
 {
     const container = new Container();
     container.bind("a").to(Dependency).inTransientScope();
@@ -98,5 +167,15 @@ export function *resolveTransientFactoryWithSixDependencies(_: k_state)
     container.bind("f").to(Dependency).inTransientScope();
     container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f") })).inTransientScope();
 
-    yield () => do_not_optimize(container.get("parent"));
+    return container;
+}
+
+export function *warmResolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer(), (container) => container.get("parent"));
+}
+
+export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.get("parent"));
 }

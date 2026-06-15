@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-sloppy-imports
 import { createInjector, Scope } from "typed-inject";
-import { do_not_optimize, type k_state } from "mitata";
+import type { k_state } from "mitata";
+import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
 
@@ -54,75 +55,130 @@ function createParentWithSixDependencies(a: Dependency, b: Dependency, c: Depend
 }
 createParentWithSixDependencies.inject = ["a", "b", "c", "d", "e", "f"] as const;
 
-export function *resolveValue(_: k_state)
+function createValueInjector()
 {
-    const injector = createInjector()
+    return createInjector()
         .provideValue("value", {});
-
-    yield () => do_not_optimize(injector.resolve("value"));
 }
 
-export function *resolveSingletonClass(_: k_state)
+export function *warmResolveValue(_: k_state)
 {
-    const injector = createInjector()
+    yield *createWarmResolutionBenchmark(createValueInjector(), (injector) => injector.resolve("value"));
+}
+
+export function *coldResolveValue(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createValueInjector, (injector) => injector.resolve("value"));
+}
+
+function createSingletonClassInjector()
+{
+    return createInjector()
         .provideClass("singleton", Leaf, Scope.Singleton);
-    injector.resolve("singleton");
-
-    yield () => do_not_optimize(injector.resolve("singleton"));
 }
 
-export function *resolveTransientClass(_: k_state)
+export function *warmResolveSingletonClass(_: k_state)
 {
-    const injector = createInjector()
-        .provideClass("transient", Leaf, Scope.Transient);
-
-    yield () => do_not_optimize(injector.resolve("transient"));
+    yield *createWarmResolutionBenchmark(createSingletonClassInjector(), (injector) => injector.resolve("singleton"));
 }
 
-export function *resolveSingletonFactory(_: k_state)
+export function *coldResolveSingletonClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonClassInjector, (injector) => injector.resolve("singleton"));
+}
+
+function createTransientClassInjector()
+{
+    return createInjector()
+        .provideClass("transient", Leaf, Scope.Transient);
+}
+
+export function *warmResolveTransientClass(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientClassInjector(), (injector) => injector.resolve("transient"));
+}
+
+export function *coldResolveTransientClass(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientClassInjector, (injector) => injector.resolve("transient"));
+}
+
+function createSingletonFactoryInjector()
 {
     const value = {};
-    const injector = createInjector()
+
+    return createInjector()
         .provideFactory("singleton", () => value, Scope.Singleton);
-    injector.resolve("singleton");
-
-    yield () => do_not_optimize(injector.resolve("singleton"));
 }
 
-export function *resolveTransientFactory(_: k_state)
+export function *warmResolveSingletonFactory(_: k_state)
 {
-    const injector = createInjector()
+    yield *createWarmResolutionBenchmark(createSingletonFactoryInjector(), (injector) => injector.resolve("singleton"));
+}
+
+export function *coldResolveSingletonFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createSingletonFactoryInjector, (injector) => injector.resolve("singleton"));
+}
+
+function createTransientFactoryInjector()
+{
+    return createInjector()
         .provideFactory("transient", () => ({}), Scope.Transient);
-
-    yield () => do_not_optimize(injector.resolve("transient"));
 }
 
-export function *resolveTransientFactoryChain(_: k_state)
+export function *warmResolveTransientFactory(_: k_state)
 {
-    const injector = createInjector()
+    yield *createWarmResolutionBenchmark(createTransientFactoryInjector(), (injector) => injector.resolve("transient"));
+}
+
+export function *coldResolveTransientFactory(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryInjector, (injector) => injector.resolve("transient"));
+}
+
+function createTransientFactoryChainInjector()
+{
+    return createInjector()
         .provideFactory("leaf", createLeaf, Scope.Transient)
         .provideFactory("middle", createMiddle, Scope.Transient)
         .provideFactory("root", createRoot, Scope.Transient);
-
-    yield () => do_not_optimize(injector.resolve("root"));
 }
 
-export function *resolveTransientFactoryWithFiveDependencies(_: k_state)
+export function *warmResolveTransientFactoryChain(_: k_state)
 {
-    const injector = createInjector()
+    yield *createWarmResolutionBenchmark(createTransientFactoryChainInjector(), (injector) => injector.resolve("root"));
+}
+
+export function *coldResolveTransientFactoryChain(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryChainInjector, (injector) => injector.resolve("root"));
+}
+
+function createTransientFactoryWithFiveDependenciesInjector()
+{
+    return createInjector()
         .provideFactory("a", createDependency, Scope.Transient)
         .provideFactory("b", createDependency, Scope.Transient)
         .provideFactory("c", createDependency, Scope.Transient)
         .provideFactory("d", createDependency, Scope.Transient)
         .provideFactory("e", createDependency, Scope.Transient)
         .provideFactory("parent", createParentWithFiveDependencies, Scope.Transient);
-
-    yield () => do_not_optimize(injector.resolve("parent"));
 }
 
-export function *resolveTransientFactoryWithSixDependencies(_: k_state)
+export function *warmResolveTransientFactoryWithFiveDependencies(_: k_state)
 {
-    const injector = createInjector()
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithFiveDependenciesInjector(), (injector) => injector.resolve("parent"));
+}
+
+export function *coldResolveTransientFactoryWithFiveDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithFiveDependenciesInjector, (injector) => injector.resolve("parent"));
+}
+
+function createTransientFactoryWithSixDependenciesInjector()
+{
+    return createInjector()
         .provideFactory("a", createDependency, Scope.Transient)
         .provideFactory("b", createDependency, Scope.Transient)
         .provideFactory("c", createDependency, Scope.Transient)
@@ -130,6 +186,14 @@ export function *resolveTransientFactoryWithSixDependencies(_: k_state)
         .provideFactory("e", createDependency, Scope.Transient)
         .provideFactory("f", createDependency, Scope.Transient)
         .provideFactory("parent", createParentWithSixDependencies, Scope.Transient);
+}
 
-    yield () => do_not_optimize(injector.resolve("parent"));
+export function *warmResolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithSixDependenciesInjector(), (injector) => injector.resolve("parent"));
+}
+
+export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesInjector, (injector) => injector.resolve("parent"));
 }

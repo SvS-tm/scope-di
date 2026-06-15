@@ -14,15 +14,24 @@ import * as typedInjectRegistration from "./typed-inject/registration.ts";
 import * as typedInjectResolution from "./typed-inject/resolution.ts";
 import * as needleDiRegistration from "./needle-di/registration.ts";
 import * as needleDiResolution from "./needle-di/resolution.ts";
-import { bench, boxplot, summary, run, group } from "mitata";
+import { bench, boxplot, summary, run, group, type k_state } from "mitata";
 
-type BenchmarkAction = typeof scopeDiRegistration.registrationClass;
+type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown>;
 
 type BenchmarkRun =
 {
     name: string;
     action: BenchmarkAction;
     baseline: boolean;
+};
+
+type BenchmarkMode = "fast" | "complete";
+
+type BenchmarkGroup =
+{
+    name: string;
+    runs: BenchmarkRun[];
+    modes?: BenchmarkMode[];
 };
 
 function createRuns
@@ -113,6 +122,22 @@ function getFilter(runtimeArgs: string[])
     return new RegExp(filterArgument.slice("--filter=".length));
 }
 
+function getMode(runtimeArgs: string[])
+    : BenchmarkMode
+{
+    const modeArgument = runtimeArgs.find((argument) => argument.startsWith("--mode="));
+
+    if(!modeArgument)
+        return "complete";
+
+    const mode = modeArgument.slice("--mode=".length);
+
+    if(mode === "fast" || mode === "complete")
+        return mode;
+
+    throw new Error(`Unknown benchmark mode: ${mode}`);
+}
+
 const benchmarks = 
 [
     {
@@ -164,219 +189,379 @@ const benchmarks =
         )
     },
     {
-        name: "resolveValue",
+        name: "warmResolveValue",
+        modes: ["fast", "complete"],
         runs: createRuns
         (
-            "resolveValue",
+            "warmResolveValue",
             {
-                scopeDi: scopeDiResolution.resolveValue,
-                inversify: inversifyResolution.resolveValue,
-                tsyringe: tsyringeResolution.resolveValue,
-                awilix: awilixResolution.resolveValue,
-                typedi: typediResolution.resolveValue,
-                typedInject: typedInjectResolution.resolveValue,
-                needleDi: needleDiResolution.resolveValue
+                scopeDi: scopeDiResolution.warmResolveValue,
+                inversify: inversifyResolution.warmResolveValue,
+                tsyringe: tsyringeResolution.warmResolveValue,
+                awilix: awilixResolution.warmResolveValue,
+                typedi: typediResolution.warmResolveValue,
+                typedInject: typedInjectResolution.warmResolveValue,
+                needleDi: needleDiResolution.warmResolveValue
             }
         )
     },
     {
-        name: "resolveSingletonClass",
+        name: "coldResolveValue",
+        modes: ["complete"],
         runs: createRuns
         (
-            "resolveSingletonClass",
+            "coldResolveValue",
             {
-                scopeDi: scopeDiResolution.resolveSingletonClass,
-                inversify: inversifyResolution.resolveSingletonClass,
-                tsyringe: tsyringeResolution.resolveSingletonClass,
-                awilix: awilixResolution.resolveSingletonClass,
-                typedi: typediResolution.resolveSingletonClass,
-                typedInject: typedInjectResolution.resolveSingletonClass,
-                needleDi: needleDiResolution.resolveSingletonClass
+                scopeDi: scopeDiResolution.coldResolveValue,
+                inversify: inversifyResolution.coldResolveValue,
+                tsyringe: tsyringeResolution.coldResolveValue,
+                awilix: awilixResolution.coldResolveValue,
+                typedi: typediResolution.coldResolveValue,
+                typedInject: typedInjectResolution.coldResolveValue,
+                needleDi: needleDiResolution.coldResolveValue
             }
         )
     },
     {
-        name: "resolveTransientClass",
+        name: "warmResolveSingletonClass",
+        modes: ["fast", "complete"],
         runs: createRuns
         (
-            "resolveTransientClass",
+            "warmResolveSingletonClass",
             {
-                scopeDi: scopeDiResolution.resolveTransientClass,
-                inversify: inversifyResolution.resolveTransientClass,
-                tsyringe: tsyringeResolution.resolveTransientClass,
-                awilix: awilixResolution.resolveTransientClass,
-                typedi: typediResolution.resolveTransientClass,
-                typedInject: typedInjectResolution.resolveTransientClass
+                scopeDi: scopeDiResolution.warmResolveSingletonClass,
+                inversify: inversifyResolution.warmResolveSingletonClass,
+                tsyringe: tsyringeResolution.warmResolveSingletonClass,
+                awilix: awilixResolution.warmResolveSingletonClass,
+                typedi: typediResolution.warmResolveSingletonClass,
+                typedInject: typedInjectResolution.warmResolveSingletonClass,
+                needleDi: needleDiResolution.warmResolveSingletonClass
             }
         )
     },
     {
-        name: "resolveSingletonFactory",
+        name: "coldResolveSingletonClass",
+        modes: ["complete"],
         runs: createRuns
         (
-            "resolveSingletonFactory",
+            "coldResolveSingletonClass",
             {
-                scopeDi: scopeDiResolution.resolveSingletonFactory,
-                inversify: inversifyResolution.resolveSingletonFactory,
-                tsyringe: tsyringeResolution.resolveSingletonFactory,
-                awilix: awilixResolution.resolveSingletonFactory,
-                typedi: typediResolution.resolveSingletonFactory,
-                typedInject: typedInjectResolution.resolveSingletonFactory,
-                needleDi: needleDiResolution.resolveSingletonFactory
+                scopeDi: scopeDiResolution.coldResolveSingletonClass,
+                inversify: inversifyResolution.coldResolveSingletonClass,
+                tsyringe: tsyringeResolution.coldResolveSingletonClass,
+                awilix: awilixResolution.coldResolveSingletonClass,
+                typedi: typediResolution.coldResolveSingletonClass,
+                typedInject: typedInjectResolution.coldResolveSingletonClass,
+                needleDi: needleDiResolution.coldResolveSingletonClass
             }
         )
     },
     {
-        name: "resolveTransientFactory",
+        name: "warmResolveTransientClass",
         runs: createRuns
         (
-            "resolveTransientFactory",
+            "warmResolveTransientClass",
             {
-                scopeDi: scopeDiResolution.resolveTransientFactory,
-                inversify: inversifyResolution.resolveTransientFactory,
-                tsyringe: tsyringeResolution.resolveTransientFactory,
-                awilix: awilixResolution.resolveTransientFactory,
-                typedi: typediResolution.resolveTransientFactory,
-                typedInject: typedInjectResolution.resolveTransientFactory
+                scopeDi: scopeDiResolution.warmResolveTransientClass,
+                inversify: inversifyResolution.warmResolveTransientClass,
+                tsyringe: tsyringeResolution.warmResolveTransientClass,
+                awilix: awilixResolution.warmResolveTransientClass,
+                typedi: typediResolution.warmResolveTransientClass,
+                typedInject: typedInjectResolution.warmResolveTransientClass
             }
         )
     },
     {
-        name: "resolveTransientFactoryChain",
+        name: "coldResolveTransientClass",
         runs: createRuns
         (
-            "resolveTransientFactoryChain",
+            "coldResolveTransientClass",
             {
-                scopeDi: scopeDiResolution.resolveTransientFactoryChain,
-                inversify: inversifyResolution.resolveTransientFactoryChain,
-                tsyringe: tsyringeResolution.resolveTransientFactoryChain,
-                awilix: awilixResolution.resolveTransientFactoryChain,
-                typedi: typediResolution.resolveTransientFactoryChain,
-                typedInject: typedInjectResolution.resolveTransientFactoryChain
+                scopeDi: scopeDiResolution.coldResolveTransientClass,
+                inversify: inversifyResolution.coldResolveTransientClass,
+                tsyringe: tsyringeResolution.coldResolveTransientClass,
+                awilix: awilixResolution.coldResolveTransientClass,
+                typedi: typediResolution.coldResolveTransientClass,
+                typedInject: typedInjectResolution.coldResolveTransientClass
             }
         )
     },
     {
-        name: "resolveTransientFactoryWithFiveDependencies",
+        name: "warmResolveSingletonFactory",
         runs: createRuns
         (
-            "resolveTransientFactoryWithFiveDependencies",
+            "warmResolveSingletonFactory",
             {
-                scopeDi: scopeDiResolution.resolveTransientFactoryWithFiveDependencies,
-                inversify: inversifyResolution.resolveTransientFactoryWithFiveDependencies,
-                tsyringe: tsyringeResolution.resolveTransientFactoryWithFiveDependencies,
-                awilix: awilixResolution.resolveTransientFactoryWithFiveDependencies,
-                typedi: typediResolution.resolveTransientFactoryWithFiveDependencies,
-                typedInject: typedInjectResolution.resolveTransientFactoryWithFiveDependencies
+                scopeDi: scopeDiResolution.warmResolveSingletonFactory,
+                inversify: inversifyResolution.warmResolveSingletonFactory,
+                tsyringe: tsyringeResolution.warmResolveSingletonFactory,
+                awilix: awilixResolution.warmResolveSingletonFactory,
+                typedi: typediResolution.warmResolveSingletonFactory,
+                typedInject: typedInjectResolution.warmResolveSingletonFactory,
+                needleDi: needleDiResolution.warmResolveSingletonFactory
             }
         )
     },
     {
-        name: "resolveTransientFactoryWithSixDependencies",
+        name: "coldResolveSingletonFactory",
         runs: createRuns
         (
-            "resolveTransientFactoryWithSixDependencies",
+            "coldResolveSingletonFactory",
             {
-                scopeDi: scopeDiResolution.resolveTransientFactoryWithSixDependencies,
-                inversify: inversifyResolution.resolveTransientFactoryWithSixDependencies,
-                tsyringe: tsyringeResolution.resolveTransientFactoryWithSixDependencies,
-                awilix: awilixResolution.resolveTransientFactoryWithSixDependencies,
-                typedi: typediResolution.resolveTransientFactoryWithSixDependencies,
-                typedInject: typedInjectResolution.resolveTransientFactoryWithSixDependencies
+                scopeDi: scopeDiResolution.coldResolveSingletonFactory,
+                inversify: inversifyResolution.coldResolveSingletonFactory,
+                tsyringe: tsyringeResolution.coldResolveSingletonFactory,
+                awilix: awilixResolution.coldResolveSingletonFactory,
+                typedi: typediResolution.coldResolveSingletonFactory,
+                typedInject: typedInjectResolution.coldResolveSingletonFactory,
+                needleDi: needleDiResolution.coldResolveSingletonFactory
             }
         )
     },
     {
-        name: "scope-di diagnostics",
+        name: "warmResolveTransientFactory",
+        runs: createRuns
+        (
+            "warmResolveTransientFactory",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactory,
+                inversify: inversifyResolution.warmResolveTransientFactory,
+                tsyringe: tsyringeResolution.warmResolveTransientFactory,
+                awilix: awilixResolution.warmResolveTransientFactory,
+                typedi: typediResolution.warmResolveTransientFactory,
+                typedInject: typedInjectResolution.warmResolveTransientFactory
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactory",
+        runs: createRuns
+        (
+            "coldResolveTransientFactory",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactory,
+                inversify: inversifyResolution.coldResolveTransientFactory,
+                tsyringe: tsyringeResolution.coldResolveTransientFactory,
+                awilix: awilixResolution.coldResolveTransientFactory,
+                typedi: typediResolution.coldResolveTransientFactory,
+                typedInject: typedInjectResolution.coldResolveTransientFactory
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryChain",
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryChain",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryChain,
+                inversify: inversifyResolution.warmResolveTransientFactoryChain,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryChain,
+                awilix: awilixResolution.warmResolveTransientFactoryChain,
+                typedi: typediResolution.warmResolveTransientFactoryChain,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryChain
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryChain",
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryChain",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryChain,
+                inversify: inversifyResolution.coldResolveTransientFactoryChain,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryChain,
+                awilix: awilixResolution.coldResolveTransientFactoryChain,
+                typedi: typediResolution.coldResolveTransientFactoryChain,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryChain
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryWithFiveDependencies",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryWithFiveDependencies",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryWithFiveDependencies,
+                inversify: inversifyResolution.warmResolveTransientFactoryWithFiveDependencies,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryWithFiveDependencies,
+                awilix: awilixResolution.warmResolveTransientFactoryWithFiveDependencies,
+                typedi: typediResolution.warmResolveTransientFactoryWithFiveDependencies,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryWithFiveDependencies
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryWithFiveDependencies",
+        modes: ["complete"],
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryWithFiveDependencies",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryWithFiveDependencies,
+                inversify: inversifyResolution.coldResolveTransientFactoryWithFiveDependencies,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryWithFiveDependencies,
+                awilix: awilixResolution.coldResolveTransientFactoryWithFiveDependencies,
+                typedi: typediResolution.coldResolveTransientFactoryWithFiveDependencies,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryWithFiveDependencies
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryWithSixDependencies",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryWithSixDependencies",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryWithSixDependencies,
+                inversify: inversifyResolution.warmResolveTransientFactoryWithSixDependencies,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryWithSixDependencies,
+                awilix: awilixResolution.warmResolveTransientFactoryWithSixDependencies,
+                typedi: typediResolution.warmResolveTransientFactoryWithSixDependencies,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryWithSixDependencies
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryWithSixDependencies",
+        modes: ["complete"],
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryWithSixDependencies",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryWithSixDependencies,
+                inversify: inversifyResolution.coldResolveTransientFactoryWithSixDependencies,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryWithSixDependencies,
+                awilix: awilixResolution.coldResolveTransientFactoryWithSixDependencies,
+                typedi: typediResolution.coldResolveTransientFactoryWithSixDependencies,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryWithSixDependencies
+            }
+        )
+    },
+    {
+        name: "diagnostics:scope-di",
+        modes: ["fast", "complete"],
         runs:
         [
             {
-                name: "scope-di:registryResolveSingleDescriptor",
+                name: "diagnostics:scope-di:registryResolveSingleDescriptor",
                 action: scopeDiDiagnostics.registryResolveSingleDescriptor,
                 baseline: true
             },
             {
-                name: "scope-di:registryResolveCollectionDescriptors",
+                name: "diagnostics:scope-di:registryResolveCollectionDescriptors",
                 action: scopeDiDiagnostics.registryResolveCollectionDescriptors,
                 baseline: false
             },
             {
-                name: "scope-di:findResolvedSingletonMiss",
+                name: "diagnostics:scope-di:findResolvedSingletonMiss",
                 action: scopeDiDiagnostics.findResolvedSingletonMiss,
                 baseline: false
             },
             {
-                name: "scope-di:findResolvedSingletonHit",
+                name: "diagnostics:scope-di:findResolvedSingletonHit",
                 action: scopeDiDiagnostics.findResolvedSingletonHit,
                 baseline: false
             },
             {
-                name: "scope-di:findResolvedTransient",
+                name: "diagnostics:scope-di:findResolvedTransient",
                 action: scopeDiDiagnostics.findResolvedTransient,
                 baseline: false
             },
             {
-                name: "scope-di:resolveNoKeys",
+                name: "diagnostics:scope-di:resolveNoKeys",
                 action: scopeDiDiagnostics.resolveNoKeys,
                 baseline: false
             },
             {
-                name: "scope-di:resolveCachedValue",
+                name: "diagnostics:scope-di:resolveCachedValue",
                 action: scopeDiDiagnostics.resolveCachedValue,
                 baseline: false
             },
             {
-                name: "scope-di:resolveCachedThreeValues",
+                name: "diagnostics:scope-di:resolveColdValue",
+                action: scopeDiDiagnostics.resolveColdValue,
+                baseline: false
+            },
+            {
+                name: "diagnostics:scope-di:findResolvedValueMiss",
+                action: scopeDiDiagnostics.findResolvedValueMiss,
+                baseline: false
+            },
+            {
+                name: "diagnostics:scope-di:findResolvedValueHit",
+                action: scopeDiDiagnostics.findResolvedValueHit,
+                baseline: false
+            },
+            {
+                name: "diagnostics:scope-di:resolveCachedThreeValues",
                 action: scopeDiDiagnostics.resolveCachedThreeValues,
                 baseline: false
             },
             {
-                name: "scope-di:resolveCachedFiveValues",
+                name: "diagnostics:scope-di:resolveCachedFiveValues",
                 action: scopeDiDiagnostics.resolveCachedFiveValues,
                 baseline: false
             },
             {
-                name: "scope-di:resolveCachedSixValues",
+                name: "diagnostics:scope-di:resolveCachedSixValues",
                 action: scopeDiDiagnostics.resolveCachedSixValues,
                 baseline: false
             },
             {
-                name: "scope-di:resolveCollectionValues",
+                name: "diagnostics:scope-di:resolveCollectionValues",
                 action: scopeDiDiagnostics.resolveCollectionValues,
                 baseline: false
             },
             {
-                name: "scope-di:resolveTransientFactoryWithFiveDependencies",
+                name: "diagnostics:scope-di:resolveTransientFactoryWithFiveDependencies",
                 action: scopeDiDiagnostics.resolveTransientFactoryWithFiveDependencies,
                 baseline: false
             },
             {
-                name: "scope-di:resolveTransientFactoryWithSixDependencies",
+                name: "diagnostics:scope-di:resolveTransientFactoryWithSixDependencies",
                 action: scopeDiDiagnostics.resolveTransientFactoryWithSixDependencies,
                 baseline: false
             },
             {
-                name: "scope-di:createChildScope",
+                name: "diagnostics:scope-di:createChildScope",
                 action: scopeDiDiagnostics.createChildScope,
                 baseline: false
             },
             {
-                name: "scope-di:disposeEmptyScope",
+                name: "diagnostics:scope-di:disposeEmptyScope",
                 action: scopeDiDiagnostics.disposeEmptyScope,
                 baseline: false
             },
             {
-                name: "scope-di:disposeResolvedSingleton",
+                name: "diagnostics:scope-di:disposeResolvedSingleton",
                 action: scopeDiDiagnostics.disposeResolvedSingleton,
                 baseline: false
             }
         ]
     }
-];
+] satisfies BenchmarkGroup[];
 
 const iterations = [3000];
 
-for(const { name, runs } of benchmarks)
+const runtimeArgs = getRuntimeArgs();
+const mode = getMode(runtimeArgs);
+const selectedBenchmarks = benchmarks.filter
+(
+    ({ modes }) =>
+    {
+        if(mode === "complete")
+            return !modes || modes.includes(mode);
+
+        return modes?.includes(mode) ?? false;
+    }
+);
+
+for(const { name, runs } of selectedBenchmarks)
 {
     group
     (
@@ -406,7 +591,6 @@ for(const { name, runs } of benchmarks)
     );
 }
 
-const runtimeArgs = getRuntimeArgs();
 const outputFormat = getOutputFormat(runtimeArgs);
 const filter = getFilter(runtimeArgs);
 const runOptions = { colors: outputFormat !== "json", format: outputFormat } as const;
