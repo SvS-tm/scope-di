@@ -178,3 +178,124 @@ export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
 {
     yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.resolve("parent"));
 }
+
+function createTransientFactoryDeepChainContainer()
+{
+    const container = createContainer();
+    container.register("leaf", asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    container.register("level1", asFunction(({ leaf }) => ({ leaf }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("level2", asFunction(({ level1 }) => ({ level1 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("level3", asFunction(({ level2 }) => ({ level2 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("level4", asFunction(({ level3 }) => ({ level3 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("root", asFunction(({ level4 }) => ({ level4 }), { lifetime: Lifetime.TRANSIENT }));
+
+    return container;
+}
+
+export function *warmResolveTransientFactoryDeepChain(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepChainContainer(), (container) => container.resolve("root"));
+}
+
+export function *coldResolveTransientFactoryDeepChain(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepChainContainer, (container) => container.resolve("root"));
+}
+
+function createTransientFactoryWithTenDependenciesContainer()
+{
+    const container = createContainer();
+    for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
+    {
+        container.register(key, asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+    }
+
+    container.register("parent", asFunction(({ a, b, c, d, e, f, g, h, i, j }) => ({ a, b, c, d, e, f, g, h, i, j }), { lifetime: Lifetime.TRANSIENT }));
+
+    return container;
+}
+
+export function *warmResolveTransientFactoryWithTenDependencies(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer(), (container) => container.resolve("parent"));
+}
+
+export function *coldResolveTransientFactoryWithTenDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer, (container) => container.resolve("parent"));
+}
+
+function createTransientFactoryDeepWideGraphContainer()
+{
+    const container = createContainer();
+    for(const prefix of ["a", "b", "c", "d", "e"])
+    {
+        for(let index = 1; index <= 5; index++)
+        {
+            container.register(`${prefix}${index}`, asClass(Dependency, { lifetime: Lifetime.TRANSIENT }));
+        }
+    }
+
+    container.register("a", asFunction(({ a1, a2, a3, a4, a5 }) => ({ a1, a2, a3, a4, a5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("b", asFunction(({ b1, b2, b3, b4, b5 }) => ({ b1, b2, b3, b4, b5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("c", asFunction(({ c1, c2, c3, c4, c5 }) => ({ c1, c2, c3, c4, c5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("d", asFunction(({ d1, d2, d3, d4, d5 }) => ({ d1, d2, d3, d4, d5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("e", asFunction(({ e1, e2, e3, e4, e5 }) => ({ e1, e2, e3, e4, e5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("root", asFunction(({ a, b, c, d, e }) => ({ a, b, c, d, e }), { lifetime: Lifetime.TRANSIENT }));
+
+    return container;
+}
+
+export function *warmResolveTransientFactoryDeepWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+export function *coldResolveTransientFactoryDeepWideGraph(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepWideGraphContainer, (container) => container.resolve("root"));
+}
+
+function createCachedFactoryWideGraphContainer()
+{
+    const container = createContainer();
+    for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
+    {
+        container.register(key, asClass(Dependency, { lifetime: Lifetime.SINGLETON }));
+    }
+
+    container.register("root", asFunction(({ a, b, c, d, e, f, g, h, i, j }) => ({ a, b, c, d, e, f, g, h, i, j }), { lifetime: Lifetime.TRANSIENT }));
+
+    return container;
+}
+
+export function *warmResolveCachedFactoryWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createCachedFactoryWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+function createCachedFactoryDeepWideGraphContainer()
+{
+    const container = createContainer();
+    for(const prefix of ["a", "b", "c", "d", "e"])
+    {
+        for(let index = 1; index <= 5; index++)
+        {
+            container.register(`${prefix}${index}`, asClass(Dependency, { lifetime: Lifetime.SINGLETON }));
+        }
+    }
+
+    container.register("a", asFunction(({ a1, a2, a3, a4, a5 }) => ({ a1, a2, a3, a4, a5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("b", asFunction(({ b1, b2, b3, b4, b5 }) => ({ b1, b2, b3, b4, b5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("c", asFunction(({ c1, c2, c3, c4, c5 }) => ({ c1, c2, c3, c4, c5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("d", asFunction(({ d1, d2, d3, d4, d5 }) => ({ d1, d2, d3, d4, d5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("e", asFunction(({ e1, e2, e3, e4, e5 }) => ({ e1, e2, e3, e4, e5 }), { lifetime: Lifetime.TRANSIENT }));
+    container.register("root", asFunction(({ a, b, c, d, e }) => ({ a, b, c, d, e }), { lifetime: Lifetime.TRANSIENT }));
+
+    return container;
+}
+
+export function *warmResolveCachedFactoryDeepWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}

@@ -596,6 +596,134 @@ const benchmarks =
         )
     },
     {
+        name: "warmResolveTransientFactoryDeepChain",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryDeepChain",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryDeepChain,
+                inversify: inversifyResolution.warmResolveTransientFactoryDeepChain,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryDeepChain,
+                awilix: awilixResolution.warmResolveTransientFactoryDeepChain,
+                typedi: typediResolution.warmResolveTransientFactoryDeepChain,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryDeepChain
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryDeepChain",
+        modes: ["complete"],
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryDeepChain",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryDeepChain,
+                inversify: inversifyResolution.coldResolveTransientFactoryDeepChain,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryDeepChain,
+                awilix: awilixResolution.coldResolveTransientFactoryDeepChain,
+                typedi: typediResolution.coldResolveTransientFactoryDeepChain,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryDeepChain
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryWithTenDependencies",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryWithTenDependencies",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryWithTenDependencies,
+                inversify: inversifyResolution.warmResolveTransientFactoryWithTenDependencies,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryWithTenDependencies,
+                awilix: awilixResolution.warmResolveTransientFactoryWithTenDependencies,
+                typedi: typediResolution.warmResolveTransientFactoryWithTenDependencies,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryWithTenDependencies
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryWithTenDependencies",
+        modes: ["complete"],
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryWithTenDependencies",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryWithTenDependencies,
+                inversify: inversifyResolution.coldResolveTransientFactoryWithTenDependencies,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryWithTenDependencies,
+                awilix: awilixResolution.coldResolveTransientFactoryWithTenDependencies,
+                typedi: typediResolution.coldResolveTransientFactoryWithTenDependencies,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryWithTenDependencies
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryDeepWideGraph",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryDeepWideGraph",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryDeepWideGraph,
+                inversify: inversifyResolution.warmResolveTransientFactoryDeepWideGraph,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryDeepWideGraph,
+                awilix: awilixResolution.warmResolveTransientFactoryDeepWideGraph,
+                typedi: typediResolution.warmResolveTransientFactoryDeepWideGraph,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryDeepWideGraph
+            }
+        )
+    },
+    {
+        name: "coldResolveTransientFactoryDeepWideGraph",
+        modes: ["complete"],
+        runs: createRuns
+        (
+            "coldResolveTransientFactoryDeepWideGraph",
+            {
+                scopeDi: scopeDiResolution.coldResolveTransientFactoryDeepWideGraph,
+                inversify: inversifyResolution.coldResolveTransientFactoryDeepWideGraph,
+                tsyringe: tsyringeResolution.coldResolveTransientFactoryDeepWideGraph,
+                awilix: awilixResolution.coldResolveTransientFactoryDeepWideGraph,
+                typedi: typediResolution.coldResolveTransientFactoryDeepWideGraph,
+                typedInject: typedInjectResolution.coldResolveTransientFactoryDeepWideGraph
+            }
+        )
+    },
+    {
+        name: "warmResolveCachedFactoryWideGraph",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveCachedFactoryWideGraph",
+            {
+                scopeDi: scopeDiResolution.warmResolveCachedFactoryWideGraph,
+                inversify: inversifyResolution.warmResolveCachedFactoryWideGraph,
+                tsyringe: tsyringeResolution.warmResolveCachedFactoryWideGraph,
+                awilix: awilixResolution.warmResolveCachedFactoryWideGraph,
+                typedi: typediResolution.warmResolveCachedFactoryWideGraph,
+                typedInject: typedInjectResolution.warmResolveCachedFactoryWideGraph
+            }
+        )
+    },
+    {
+        name: "warmResolveCachedFactoryDeepWideGraph",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveCachedFactoryDeepWideGraph",
+            {
+                scopeDi: scopeDiResolution.warmResolveCachedFactoryDeepWideGraph,
+                inversify: inversifyResolution.warmResolveCachedFactoryDeepWideGraph,
+                tsyringe: tsyringeResolution.warmResolveCachedFactoryDeepWideGraph,
+                awilix: awilixResolution.warmResolveCachedFactoryDeepWideGraph,
+                typedi: typediResolution.warmResolveCachedFactoryDeepWideGraph,
+                typedInject: typedInjectResolution.warmResolveCachedFactoryDeepWideGraph
+            }
+        )
+    },
+    {
         name: "diagnostics:scope-di",
         modes: ["fast", "complete"],
         runs:

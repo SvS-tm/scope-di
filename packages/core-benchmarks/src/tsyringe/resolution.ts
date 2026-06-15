@@ -184,3 +184,124 @@ export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
 {
     yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.resolve("parent"));
 }
+
+function createTransientFactoryDeepChainContainer()
+{
+    const isolatedContainer = createIsolatedContainer();
+    isolatedContainer.register("leaf", { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    isolatedContainer.register("level1", { useFactory: (container: DependencyContainer) => ({ leaf: container.resolve("leaf") }) });
+    isolatedContainer.register("level2", { useFactory: (container: DependencyContainer) => ({ level1: container.resolve("level1") }) });
+    isolatedContainer.register("level3", { useFactory: (container: DependencyContainer) => ({ level2: container.resolve("level2") }) });
+    isolatedContainer.register("level4", { useFactory: (container: DependencyContainer) => ({ level3: container.resolve("level3") }) });
+    isolatedContainer.register("root", { useFactory: (container: DependencyContainer) => ({ level4: container.resolve("level4") }) });
+
+    return isolatedContainer;
+}
+
+export function *warmResolveTransientFactoryDeepChain(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepChainContainer(), (container) => container.resolve("root"));
+}
+
+export function *coldResolveTransientFactoryDeepChain(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepChainContainer, (container) => container.resolve("root"));
+}
+
+function createTransientFactoryWithTenDependenciesContainer()
+{
+    const isolatedContainer = createIsolatedContainer();
+    for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
+    {
+        isolatedContainer.register(key, { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+    }
+
+    isolatedContainer.register("parent", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e"), f: container.resolve("f"), g: container.resolve("g"), h: container.resolve("h"), i: container.resolve("i"), j: container.resolve("j") }) });
+
+    return isolatedContainer;
+}
+
+export function *warmResolveTransientFactoryWithTenDependencies(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer(), (container) => container.resolve("parent"));
+}
+
+export function *coldResolveTransientFactoryWithTenDependencies(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer, (container) => container.resolve("parent"));
+}
+
+function createTransientFactoryDeepWideGraphContainer()
+{
+    const isolatedContainer = createIsolatedContainer();
+    for(const prefix of ["a", "b", "c", "d", "e"])
+    {
+        for(let index = 1; index <= 5; index++)
+        {
+            isolatedContainer.register(`${prefix}${index}`, { useClass: Dependency }, { lifecycle: Lifecycle.Transient });
+        }
+    }
+
+    isolatedContainer.register("a", { useFactory: (container: DependencyContainer) => ({ a1: container.resolve("a1"), a2: container.resolve("a2"), a3: container.resolve("a3"), a4: container.resolve("a4"), a5: container.resolve("a5") }) });
+    isolatedContainer.register("b", { useFactory: (container: DependencyContainer) => ({ b1: container.resolve("b1"), b2: container.resolve("b2"), b3: container.resolve("b3"), b4: container.resolve("b4"), b5: container.resolve("b5") }) });
+    isolatedContainer.register("c", { useFactory: (container: DependencyContainer) => ({ c1: container.resolve("c1"), c2: container.resolve("c2"), c3: container.resolve("c3"), c4: container.resolve("c4"), c5: container.resolve("c5") }) });
+    isolatedContainer.register("d", { useFactory: (container: DependencyContainer) => ({ d1: container.resolve("d1"), d2: container.resolve("d2"), d3: container.resolve("d3"), d4: container.resolve("d4"), d5: container.resolve("d5") }) });
+    isolatedContainer.register("e", { useFactory: (container: DependencyContainer) => ({ e1: container.resolve("e1"), e2: container.resolve("e2"), e3: container.resolve("e3"), e4: container.resolve("e4"), e5: container.resolve("e5") }) });
+    isolatedContainer.register("root", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e") }) });
+
+    return isolatedContainer;
+}
+
+export function *warmResolveTransientFactoryDeepWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+export function *coldResolveTransientFactoryDeepWideGraph(_: k_state)
+{
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepWideGraphContainer, (container) => container.resolve("root"));
+}
+
+function createCachedFactoryWideGraphContainer()
+{
+    const isolatedContainer = createIsolatedContainer();
+    for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
+    {
+        isolatedContainer.register(key, { useClass: Dependency }, { lifecycle: Lifecycle.Singleton });
+    }
+
+    isolatedContainer.register("root", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e"), f: container.resolve("f"), g: container.resolve("g"), h: container.resolve("h"), i: container.resolve("i"), j: container.resolve("j") }) });
+
+    return isolatedContainer;
+}
+
+export function *warmResolveCachedFactoryWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createCachedFactoryWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+function createCachedFactoryDeepWideGraphContainer()
+{
+    const isolatedContainer = createIsolatedContainer();
+    for(const prefix of ["a", "b", "c", "d", "e"])
+    {
+        for(let index = 1; index <= 5; index++)
+        {
+            isolatedContainer.register(`${prefix}${index}`, { useClass: Dependency }, { lifecycle: Lifecycle.Singleton });
+        }
+    }
+
+    isolatedContainer.register("a", { useFactory: (container: DependencyContainer) => ({ a1: container.resolve("a1"), a2: container.resolve("a2"), a3: container.resolve("a3"), a4: container.resolve("a4"), a5: container.resolve("a5") }) });
+    isolatedContainer.register("b", { useFactory: (container: DependencyContainer) => ({ b1: container.resolve("b1"), b2: container.resolve("b2"), b3: container.resolve("b3"), b4: container.resolve("b4"), b5: container.resolve("b5") }) });
+    isolatedContainer.register("c", { useFactory: (container: DependencyContainer) => ({ c1: container.resolve("c1"), c2: container.resolve("c2"), c3: container.resolve("c3"), c4: container.resolve("c4"), c5: container.resolve("c5") }) });
+    isolatedContainer.register("d", { useFactory: (container: DependencyContainer) => ({ d1: container.resolve("d1"), d2: container.resolve("d2"), d3: container.resolve("d3"), d4: container.resolve("d4"), d5: container.resolve("d5") }) });
+    isolatedContainer.register("e", { useFactory: (container: DependencyContainer) => ({ e1: container.resolve("e1"), e2: container.resolve("e2"), e3: container.resolve("e3"), e4: container.resolve("e4"), e5: container.resolve("e5") }) });
+    isolatedContainer.register("root", { useFactory: (container: DependencyContainer) => ({ a: container.resolve("a"), b: container.resolve("b"), c: container.resolve("c"), d: container.resolve("d"), e: container.resolve("e") }) });
+
+    return isolatedContainer;
+}
+
+export function *warmResolveCachedFactoryDeepWideGraph(_: k_state)
+{
+    yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}
