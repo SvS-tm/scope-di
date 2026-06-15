@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-sloppy-imports
+import os from "node:os";
 import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as scopeDiResolution from "./scope-di/resolution.ts";
 import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
@@ -32,6 +33,11 @@ type BenchmarkGroup =
     name: string;
     runs: BenchmarkRun[];
     modes?: BenchmarkMode[];
+};
+
+type JsonOutputCapture =
+{
+    restore(): string;
 };
 
 function createRuns
@@ -136,6 +142,153 @@ function getMode(runtimeArgs: string[])
         return mode;
 
     throw new Error(`Unknown benchmark mode: ${mode}`);
+}
+
+function getRuntimeName()
+{
+    const runtime = globalThis as
+    {
+        Bun?: { version?: string };
+        Deno?: { version?: { deno: string; v8: string; typescript: string } };
+        process?: { versions?: NodeJS.ProcessVersions };
+    };
+
+    if(runtime.Bun)
+        return "bun";
+
+    if(runtime.Deno)
+        return "deno";
+
+    if(runtime.process)
+        return "node";
+
+    return "unknown";
+}
+
+function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined, outputFormat: "json" | "mitata")
+{
+    const runtime = globalThis as
+    {
+        Bun?: { version?: string };
+        Deno?: { version?: { deno: string; v8: string; typescript: string } };
+        process?: { version?: string; versions?: NodeJS.ProcessVersions };
+    };
+
+    const cpus = os.cpus();
+    const firstCpu = cpus[0];
+
+    return {
+        benchmark: {
+            mode,
+            filter: filter?.source,
+            outputFormat,
+            timestamp: new Date().toISOString()
+        },
+        runtime: {
+            name: getRuntimeName(),
+            node: runtime.process?.version,
+            bun: runtime.Bun?.version,
+            deno: runtime.Deno?.version,
+            versions: runtime.process?.versions
+        },
+        machine: {
+            platform: os.platform(),
+            release: os.release(),
+            arch: os.arch(),
+            hostname: os.hostname(),
+            cpu:
+            {
+                model: firstCpu?.model,
+                speed: firstCpu?.speed,
+                count: cpus.length
+            },
+            memory:
+            {
+                total: os.totalmem(),
+                free: os.freemem()
+            }
+        }
+    };
+}
+
+function createJsonOutputCapture(): JsonOutputCapture | undefined
+{
+    const runtime = globalThis as
+    {
+        process?: { stdout?: { write?: (...args: unknown[]) => unknown } };
+    };
+
+    const stdout = runtime.process?.stdout;
+
+    if(!stdout?.write)
+    {
+        const originalLog = console.log.bind(console);
+        const chunks: string[] = [];
+
+        console.log = (...messages: unknown[]) =>
+        {
+            chunks.push(`${messages.join(" ")}\n`);
+        };
+
+        return {
+            restore()
+            {
+                console.log = originalLog;
+
+                return chunks.join("");
+            }
+        };
+    }
+
+    const chunks: string[] = [];
+    const originalWrite = stdout.write.bind(stdout);
+    const originalLog = console.log.bind(console);
+
+    console.log = (...messages: unknown[]) =>
+    {
+        chunks.push(`${messages.join(" ")}\n`);
+    };
+
+    stdout.write = ((chunk: unknown, ...args: unknown[]) =>
+    {
+        if(typeof chunk === "string")
+            chunks.push(chunk);
+        else if(chunk instanceof Uint8Array)
+            chunks.push(new TextDecoder().decode(chunk));
+        else
+            chunks.push(String(chunk));
+
+        const callback = args.find((argument): argument is () => void => typeof argument === "function");
+        callback?.();
+
+        return true;
+    }) as typeof stdout.write;
+
+    return {
+        restore()
+        {
+            stdout.write = originalWrite;
+            console.log = originalLog;
+
+            return chunks.join("");
+        }
+    };
+}
+
+function writeJsonOutputWithMetadata(rawOutput: string, metadata: ReturnType<typeof createBenchmarkMetadata>)
+{
+    const jsonStart = rawOutput.indexOf("{\"layout\"");
+
+    if(jsonStart < 0)
+    {
+        console.log(rawOutput);
+
+        return;
+    }
+
+    const payload = JSON.parse(rawOutput.slice(jsonStart)) as object;
+
+    console.log(JSON.stringify({ metadata, ...payload }));
 }
 
 const benchmarks = 
@@ -594,6 +747,10 @@ for(const { name, runs } of selectedBenchmarks)
 const outputFormat = getOutputFormat(runtimeArgs);
 const filter = getFilter(runtimeArgs);
 const runOptions = { colors: outputFormat !== "json", format: outputFormat } as const;
+const metadata = createBenchmarkMetadata(mode, filter, outputFormat);
+const jsonOutputCapture = outputFormat === "json"
+    ? createJsonOutputCapture()
+    : undefined;
 
 await run
 (
@@ -601,3 +758,6 @@ await run
         ? { ...runOptions, filter }
         : runOptions
 );
+
+if(jsonOutputCapture)
+    writeJsonOutputWithMetadata(jsonOutputCapture.restore(), metadata);
