@@ -15,7 +15,7 @@ export const createUseDependenciesHook =
     return (...keys) =>
     {
         const scope = useDiScope(rootScope);
-        const [dependencies] = useState(() => scope.resolve(...keys));
+        const [dependencies] = useState(() => scope.resolveRange(...keys));
 
         return dependencies;
     };

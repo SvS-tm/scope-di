@@ -55,12 +55,12 @@ export const createUseDependenciesAsyncHook =
                 switch (trace)
                 {
                     case DependenciesResolutionTraceResult.Sync:
-                        return { trace, dependencies: Object.assign(TrackedPromise.resolved(scope.resolve(...keys)), marker) };
+                        return { trace, dependencies: Object.assign(TrackedPromise.resolved(scope.resolveRange(...keys)), marker) };
                     case DependenciesResolutionTraceResult.Async:
                         return { trace, dependencies: Object.assign(TrackedPromise.controlled<AwaitedResolvedDependencies<T_RegisteredDependencies, typeof keys>>(), marker) };
                     case DependenciesResolutionTraceResult.AsyncSettled:
                     {
-                        const dependencies = scope.resolve(...keys);
+                        const dependencies = scope.resolveRange(...keys);
 
                         return {
                             trace,
@@ -113,7 +113,7 @@ export const createUseDependenciesAsyncHook =
                     {
                         try
                         {
-                            const dependencies = await scope.resolveAsync(...keys);
+                            const dependencies = await scope.resolveRangeAsync(...keys);
 
                             resolution.dependencies[TrackedPromise.resolve](dependencies);
                         }
