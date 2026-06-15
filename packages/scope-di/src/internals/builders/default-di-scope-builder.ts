@@ -2,6 +2,7 @@ import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
 import type { DiScopeBuilder } from "../../abstractions";
 import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
@@ -11,48 +12,64 @@ import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependenci
 export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScopeBuilder<T_RegisteredDependencies>
 {
-    private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+    private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
 
     /**
      * @internal This is internal method, its not safe to use it.
      */
-    public readonly register = (descriptor: DependencyDescriptor) =>
+    public register(descriptor: DependencyDescriptor)
     {
-        const descriptors = this.descriptors.get(descriptor.key) ?? [];
+        const descriptorOrCollection = this.descriptors.get(descriptor.key);
 
-        descriptors.unshift(descriptor);
+        if(!descriptorOrCollection)
+        {
+            this.descriptors.set(descriptor.key, descriptor);
+        }
+        else if(Array.isArray(descriptorOrCollection))
+        {
+            descriptorOrCollection.unshift(descriptor);
+        }
+        else
+        {
+            this.descriptors.set(descriptor.key, [descriptor, descriptorOrCollection]);
+        }
+    }
 
-        this.descriptors.set(descriptor.key, descriptors);
-    };
-
-    public readonly map = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) =>
+    public map<T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey)
     {
         return new DefaultDiMappingBuilder(this, key);
-    };
+    }
 
-    public readonly removeMapping = <T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
+    public removeMapping<T_DependencyMappingKey extends DependencyMappingKey<T_RegisteredDependencies>>
     (
         key: T_DependencyMappingKey
-    ) => 
+    )
     {
         this.descriptors.delete(key);
 
         return this as unknown as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
-    };
+    }
 
-    public readonly hasMapping = <T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey) => 
+    public hasMapping<T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey)
     {
         return this.descriptors.has(key);
-    };
+    }
 
-    public readonly build = () => 
+    public build()
     {
-        const descriptorsSnapshot = new Map<AllowedDependencyKey, DependencyDescriptor[]>
-        (
-            [...this.descriptors.entries()]
-                .map(([key, descriptors]) => [key, [...descriptors]])
-        );
+        const descriptorsSnapshot = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
+
+        for(const [key, descriptorOrCollection] of this.descriptors)
+        {
+            descriptorsSnapshot.set
+            (
+                key,
+                Array.isArray(descriptorOrCollection)
+                    ? descriptorOrCollection.slice()
+                    : descriptorOrCollection
+            );
+        }
 
         return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptorsSnapshot));
-    };
+    }
 }

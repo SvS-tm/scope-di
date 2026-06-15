@@ -2,20 +2,35 @@ import { isSafeReference } from "@svs-tm/system";
 import { DiDependenciesRegistry } from "../../abstractions/di-dependencies-registry";
 import { DependencyNotRegisteredError } from "../../errors";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../../types";
+import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
 
 export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
 {
     public constructor
     (
-        protected readonly descriptors: Map<AllowedDependencyKey, DependencyDescriptor[]>
+        protected readonly descriptors: Map<AllowedDependencyKey, DependencyDescriptorsBucket>
     )
     {
     }
 
     public getDescriptors()
     {
-        return [...this.descriptors.values().flatMap((descriptors) => descriptors)];
+        const result: DependencyDescriptor[] = [];
+
+        for(const descriptorOrCollection of this.descriptors.values())
+        {
+            if(Array.isArray(descriptorOrCollection))
+            {
+                result.push(...descriptorOrCollection);
+            }
+            else
+            {
+                result.push(descriptorOrCollection);
+            }
+        }
+
+        return result;
     }
 
     public resolveDescriptorsByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
@@ -23,21 +38,29 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
         if (Array.isArray(key))
         {
             const [mappingKey] = key;
-            const descriptors = this.descriptors.get(mappingKey);
+            const descriptorOrCollection = this.descriptors.get(mappingKey);
 
-            if (!isSafeReference(descriptors))
+            if (!isSafeReference(descriptorOrCollection))
                 throw new DependencyNotRegisteredError(mappingKey);
 
-            return descriptors;
+            if(Array.isArray(descriptorOrCollection))
+                return descriptorOrCollection;
+
+            const collection = [descriptorOrCollection];
+            this.descriptors.set(mappingKey, collection);
+
+            return collection;
         }
         else
         {
-            const descriptor = this.descriptors.get(key)?.[0];
+            const descriptorOrCollection = this.descriptors.get(key);
     
-            if (!isSafeReference(descriptor))
+            if (!isSafeReference(descriptorOrCollection))
                 throw new DependencyNotRegisteredError(key);
     
-            return descriptor;
+            return Array.isArray(descriptorOrCollection)
+                ? descriptorOrCollection[0]
+                : descriptorOrCollection;
         }
     }
 

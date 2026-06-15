@@ -25,11 +25,11 @@ export class DefaultDiMappingBuilder
     {
     }
 
-    public readonly asClassAsync = <T_Abstraction>
+    public asClassAsync<T_Abstraction>
     (
         constructor: Constructor<[], T_Abstraction>, 
         lifetime: DependencyLifetime
-    ) =>
+    )
     {
         this.diScopeBuilder.register
         (
@@ -49,13 +49,13 @@ export class DefaultDiMappingBuilder
                 DependencyDescriptorType.ClassAsync
             >
         >;
-    };
+    }
 
-    public readonly asFactoryAsync = <const T_Abstraction>
+    public asFactoryAsync<const T_Abstraction>
     (
         factory: DependencyFactory<[], Promise<T_Abstraction>>, 
         lifetime: DependencyLifetime
-    ) =>
+    )
     {
         this.diScopeBuilder.register
         (
@@ -75,9 +75,9 @@ export class DefaultDiMappingBuilder
                 DependencyDescriptorType.FactoryAsync
             >
         >;
-    };
+    }
 
-    public readonly asValue = <const T_Abstraction>(value: T_Abstraction) =>
+    public asValue<const T_Abstraction>(value: T_Abstraction)
     {
         this.diScopeBuilder.register
         (
@@ -97,13 +97,13 @@ export class DefaultDiMappingBuilder
                 DependencyDescriptorType.Value
             >
         >;
-    };
+    }
     
-    public readonly asClass = <T_Abstraction>
+    public asClass<T_Abstraction>
     (
         constructor: Constructor<[], T_Abstraction>, 
         lifetime: DependencyLifetime
-    ) => 
+    )
     {
         this.diScopeBuilder.register
         (
@@ -123,13 +123,13 @@ export class DefaultDiMappingBuilder
                 DependencyDescriptorType.Class
             >
         >;
-    };
+    }
 
-    public readonly asFactory = <const T_Abstraction>
+    public asFactory<const T_Abstraction>
     (
         factory: Delegate<[], T_Abstraction>, 
         lifetime: DependencyLifetime
-    ) => 
+    )
     {
         this.diScopeBuilder.register
         (
@@ -149,13 +149,13 @@ export class DefaultDiMappingBuilder
                 DependencyDescriptorType.Factory
             >
         >;
-    };
+    }
 
-    public readonly asDependent = 
+    public asDependent
     <
         T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
-        (...keys: T_Keys) =>
+    (...keys: T_Keys)
     {
         return new DefaultDiDependentMappingBuilder(this.diScopeBuilder, this.key, keys);
     }

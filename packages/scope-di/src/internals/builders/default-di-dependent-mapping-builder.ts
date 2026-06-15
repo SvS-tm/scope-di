@@ -30,14 +30,14 @@ export class DefaultDiDependentMappingBuilder
     {
     }
 
-    public readonly class = <T_Abstraction>
+    public class<T_Abstraction>
     (
         constructor: Constructor<
             ResolvedDependencies<T_RegisteredDependencies, T_Keys>, 
             T_Abstraction
         >, 
         lifetime: DependencyLifetime
-    ) => 
+    )
     {
         this.diScopeBuilder.register
         (
@@ -59,14 +59,15 @@ export class DefaultDiDependentMappingBuilder
             >
         >;
     }
-    public readonly factory = <const T_Abstraction>
+
+    public factory<const T_Abstraction>
     (
         factory: Delegate<
             ResolvedDependencies<T_RegisteredDependencies, T_Keys>, 
             T_Abstraction
         >, 
         lifetime: DependencyLifetime
-    ) => 
+    )
     {
         this.diScopeBuilder.register
         (
@@ -87,16 +88,16 @@ export class DefaultDiDependentMappingBuilder
                 DependencyDescriptorType.Factory
             >
         >;
-    };
+    }
 
-    public readonly classAsync = <T_Abstraction>
+    public classAsync<T_Abstraction>
     (
         constructor: Constructor<
             AwaitedResolvedDependencies<T_RegisteredDependencies, T_Keys>,
             T_Abstraction
         >, 
         lifetime: DependencyLifetime
-    ) => 
+    )
     {
         this.diScopeBuilder.register
         (
@@ -117,16 +118,16 @@ export class DefaultDiDependentMappingBuilder
                 DependencyDescriptorType.ClassAsync
             >
         >;
-    };
+    }
 
-    public readonly factoryAsync = <const T_Abstraction>
+    public factoryAsync<const T_Abstraction>
     (
         factory: DependencyFactory<
             AwaitedResolvedDependencies<T_RegisteredDependencies, T_Keys>,
             Promise<T_Abstraction>
         >, 
         lifetime: DependencyLifetime
-    ) =>
+    )
     {
         this.diScopeBuilder.register
         (

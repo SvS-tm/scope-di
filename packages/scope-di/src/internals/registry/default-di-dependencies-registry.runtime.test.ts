@@ -76,6 +76,60 @@ describe
 
         it
         (
+            "resolveDescriptorsByKey returns a direct descriptor for a single mapping key backed by direct storage",
+            () =>
+            {
+                const key = "key";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: 1
+                };
+
+                const registry = new DefaultDiDependenciesRegistry
+                (
+                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                        .set(key, descriptor)
+                );
+
+                const resolved = registry.resolveDescriptorsByKey(key);
+
+                expect(resolved).toBe(descriptor);
+            }
+        );
+
+        it
+        (
+            "resolveDescriptorsByKey lazily wraps direct descriptor storage for collection mapping keys",
+            () =>
+            {
+                const key = "key";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: 1
+                };
+
+                const registry = new DefaultDiDependenciesRegistry
+                (
+                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                        .set(key, descriptor)
+                );
+
+                const resolved = registry.resolveDescriptorsByKey([key]);
+                const resolvedAgain = registry.resolveDescriptorsByKey([key]);
+
+                expect(resolved).toStrictEqual([descriptor]);
+                expect(resolvedAgain).toBe(resolved);
+            }
+        );
+
+        it
+        (
             "resolveDescriptorsByKeys yields single descriptors and collection descriptors in resolution order",
             () =>
             {
