@@ -785,6 +785,71 @@ describe
 
         it
         (
+            "Transient async factory dependencies are disposed after their promises resolve",
+            async () =>
+            {
+                class AsyncDependency implements AsyncDisposable
+                {
+                    public async [Symbol.asyncDispose]()
+                    {
+                    }
+                }
+
+                class SyncDependency implements Disposable
+                {
+                    public [Symbol.dispose]()
+                    {
+                    }
+                }
+
+                const asyncDisposeSpy = jest
+                    .spyOn(AsyncDependency.prototype, Symbol.asyncDispose);
+
+                const disposeSpy = jest
+                    .spyOn(SyncDependency.prototype, Symbol.dispose);
+
+                const asyncKey = "AsyncTransientFactory";
+                const syncKey = "SyncTransientFactory";
+
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set
+                    (
+                        asyncKey,
+                        [
+                            {
+                                key: asyncKey,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Transient,
+                                factory: async () => new AsyncDependency()
+                            }
+                        ]
+                    )
+                    .set
+                    (
+                        syncKey,
+                        [
+                            {
+                                key: syncKey,
+                                type: DependencyDescriptorType.FactoryAsync,
+                                lifetime: DependencyLifetime.Transient,
+                                factory: async () => new SyncDependency()
+                            }
+                        ]
+                    );
+
+                {
+                    await using scope = createDefaultDiScope(descriptors);
+
+                    await scope.resolveRangeAsync(asyncKey as never, syncKey as never);
+                }
+
+                expect(asyncDisposeSpy).toHaveBeenCalledTimes(1);
+                expect(disposeSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it
+        (
             "Async factory resolved async disposable dependency is async disposed upon async scope disposal",
             async () =>
             {

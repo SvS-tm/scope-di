@@ -9,6 +9,158 @@ describe
     {
         it
         (
+            "Resolving dependent classes uses optimized arity paths for four, five, and fallback dependencies",
+            () =>
+            {
+                class Dependency
+                {
+                    public constructor(public readonly index: number)
+                    {
+                    }
+                }
+
+                class Parent
+                {
+                    public readonly dependencies: unknown[];
+
+                    public constructor(...dependencies: unknown[])
+                    {
+                        this.dependencies = dependencies;
+                    }
+                }
+
+                const dependencyKeys = ["d1", "d2", "d3", "d4", "d5", "d6"];
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+
+                for(let index = 0; index < dependencyKeys.length; ++index)
+                {
+                    descriptors.set
+                    (
+                        dependencyKeys[index],
+                        [
+                            {
+                                key: dependencyKeys[index],
+                                type: DependencyDescriptorType.Factory,
+                                lifetime: DependencyLifetime.Singleton,
+                                factory: () => new Dependency(index)
+                            }
+                        ]
+                    );
+                }
+
+                descriptors
+                    .set
+                    (
+                        "parent4",
+                        [
+                            {
+                                key: "parent4",
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                subDependenciesKeys: dependencyKeys.slice(0, 4),
+                                constructor: Parent
+                            }
+                        ]
+                    )
+                    .set
+                    (
+                        "parent5",
+                        [
+                            {
+                                key: "parent5",
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                subDependenciesKeys: dependencyKeys.slice(0, 5),
+                                constructor: Parent
+                            }
+                        ]
+                    )
+                    .set
+                    (
+                        "parent6",
+                        [
+                            {
+                                key: "parent6",
+                                type: DependencyDescriptorType.Class,
+                                lifetime: DependencyLifetime.Transient,
+                                subDependenciesKeys: dependencyKeys,
+                                constructor: Parent
+                            }
+                        ]
+                    );
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [parent4, parent5, parent6] = scope.resolveRange("parent4" as never, "parent5" as never, "parent6" as never) as [Parent, Parent, Parent];
+
+                expect(parent4.dependencies).toHaveLength(4);
+                expect(parent5.dependencies).toHaveLength(5);
+                expect(parent6.dependencies).toHaveLength(6);
+            }
+        );
+
+        it
+        (
+            "Resolving dependent factories uses optimized arity paths for two through fallback dependencies",
+            () =>
+            {
+                const dependencyKeys = ["d1", "d2", "d3", "d4", "d5", "d6"];
+                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+
+                for(let index = 0; index < dependencyKeys.length; ++index)
+                {
+                    descriptors.set
+                    (
+                        dependencyKeys[index],
+                        [
+                            {
+                                key: dependencyKeys[index],
+                                type: DependencyDescriptorType.Value,
+                                lifetime: DependencyLifetime.Singleton,
+                                value: index
+                            }
+                        ]
+                    );
+                }
+
+                for(const count of [2, 3, 4, 5, 6])
+                {
+                    descriptors.set
+                    (
+                        `parent${count}`,
+                        [
+                            {
+                                key: `parent${count}`,
+                                type: DependencyDescriptorType.Factory,
+                                lifetime: DependencyLifetime.Transient,
+                                subDependenciesKeys: dependencyKeys.slice(0, count),
+                                factory: (...dependencies) => dependencies
+                            }
+                        ]
+                    );
+                }
+
+                const scope = createDefaultDiScope(descriptors);
+
+                const [parent2, parent3, parent4, parent5, parent6] = scope.resolveRange
+                (
+                    "parent2" as never,
+                    "parent3" as never,
+                    "parent4" as never,
+                    "parent5" as never,
+                    "parent6" as never
+                ) as [unknown[], unknown[], unknown[], unknown[], unknown[]];
+
+                expect(parent2).toStrictEqual([0, 1]);
+                expect(parent3).toStrictEqual([0, 1, 2]);
+                expect(parent4).toStrictEqual([0, 1, 2, 3]);
+                expect(parent5).toStrictEqual([0, 1, 2, 3, 4]);
+                expect(parent6).toStrictEqual([0, 1, 2, 3, 4, 5]);
+            }
+        );
+
+        it
+        (
             "Resolving a registered class resolves async/sync dependencies correctly",
             async () =>
             {

@@ -10,6 +10,30 @@ describe
     {
         it
         (
+            "getDescriptors includes descriptors backed by direct storage",
+            () =>
+            {
+                const key = "key";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: 1
+                };
+
+                const registry = new DefaultDiDependenciesRegistry
+                (
+                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                        .set(key, descriptor)
+                );
+
+                expect(registry.getDescriptors()).toStrictEqual([descriptor]);
+            }
+        );
+
+        it
+        (
             "resolveDescriptorsByKey returns the first descriptor for a single mapping key",
             () =>
             {

@@ -1,5 +1,15 @@
 .types
 .rollup.cache
 *.tsbuildinfo
+coverage
+coverage-react-18
+coverage-react-19
 src
 tests-setup.ts
+tests-setup.after-env.ts
+*.test.ts
+*.test.tsx
+jest.config.ts
+tsconfig*.json
+ts.rollup.config.mjs
+dts.rollup.config.mjs

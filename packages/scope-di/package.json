@@ -24,7 +24,6 @@
   ],
   "author": "svs-tm",
   "license": "ISC",
-  "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "@svs-tm/system": "workspace:*"
   },

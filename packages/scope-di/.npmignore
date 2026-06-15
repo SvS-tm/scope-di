@@ -1,5 +1,11 @@
 .types
 .rollup.cache
 *.tsbuildinfo
+coverage
 src
 tests-setup.ts
+*.test.ts
+jest.config.ts
+tsconfig*.json
+ts.rollup.config.mjs
+dts.rollup.config.mjs

@@ -191,6 +191,33 @@ describe
 
         it
         (
+            "findResolvedDependencyByDescriptor returns failure for transient descriptors",
+            () =>
+            {
+                const key = "transient";
+                const descriptor: DependencyDescriptor =
+                {
+                    key,
+                    type: DependencyDescriptorType.Factory,
+                    lifetime: DependencyLifetime.Transient,
+                    factory: () => ({})
+                };
+
+                const registry = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    .set(key, [descriptor]);
+
+                const scope = createDefaultDiScope(registry);
+
+                scope.resolveRange(key as never);
+
+                const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+
+                expect(ChancyValue.isSuccess(lookupResult)).toBe(false);
+            }
+        );
+
+        it
+        (
             "findResolvedDependencyByDescriptor returns success for cached falsy values",
             () =>
             {

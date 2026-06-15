@@ -151,6 +151,37 @@ describe
 
         it
         (
+            "Settled async collection: preserves sync promise values in the collection",
+            async () =>
+            {
+                const key1 = "Key1";
+                const syncPromise = Promise.resolve("sync promise value");
+                const asyncDependency = {};
+
+                const scope = configureRootScope()
+                    .map(key1)
+                        .asValue(syncPromise)
+                    .map(key1)
+                        .asFactoryAsync(async () => asyncDependency, DependencyLifetime.Singleton)
+                    .build();
+
+                await scope.resolveRangeAsync([key1]);
+
+                const { useDependenciesAsync } = createReactDiTools(scope);
+
+                const { result } = renderHook(() => useDependenciesAsync([key1]));
+
+                expect(getTrackedStatus(result.current)).toBe(TrackedPromiseStatus.Success);
+
+                const [[dependency1, dependency2]] = await result.current;
+
+                expect(dependency1).toBe(asyncDependency);
+                expect(dependency2).toBe(syncPromise);
+            }
+        );
+
+        it
+        (
             "ClassAsync with sync dependencies returns an already resolved result",
             async () =>
             {
