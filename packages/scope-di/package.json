@@ -23,7 +23,7 @@
     "scopes"
   ],
   "author": "svs-tm",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@svs-tm/system": "workspace:*"
   },

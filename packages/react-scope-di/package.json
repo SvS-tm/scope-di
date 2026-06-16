@@ -24,7 +24,7 @@
         "react"
     ],
     "author": "svs-tm",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@svs-tm/system": "workspace:*",
         "react-is": "^19.1.1"

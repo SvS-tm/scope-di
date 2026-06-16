@@ -25,7 +25,7 @@
     "bench:bun:json:complete": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --json --mode=complete"
   },
   "author": "svs-tm",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@needle-di/core": "^1.1.2",
     "@svs-tm/scope-di": "workspace:*",

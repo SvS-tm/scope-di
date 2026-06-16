@@ -19,7 +19,7 @@
   },
   "keywords": [],
   "author": "svs-tm",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@jest/globals": "^30.0.5",
     "@rollup/plugin-commonjs": "^28.0.6",
