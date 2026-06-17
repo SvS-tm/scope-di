@@ -7,12 +7,12 @@
     </clipPath>
   </defs>
   <g clip-path="url(#logo-clip)">
-    <rect width="100%" height="100%" fill="white"/>
-    <polygon points="800,500 775,475 750,500 775,525" fill="black"/>
-    <polygon points="625,625 350,350 500,200 650,350 625,375 500,250 400,350 675,625" fill="black"/>
-    <polygon points="250,500 200,500 500,800 675,625 625,625 500,750" fill="black"/>
-    <polygon points="150,500 100,500 500,100 900,500 850,500 500,150" fill="black"/>
-    <polygon points="150,500 100,500 500,900 900,500 850,500 500,850" fill="black"/>
-    <polygon points="0,500 50,500 500,950 950,500 1000,500 500,1000" fill="black"/>
+    <rect width="100%" height="100%" fill="#111315"/>
+    <polygon points="800,500 775,475 750,500 775,525" fill="#61afef"/>
+    <polygon points="625,625 350,350 500,200 650,350 625,375 500,250 400,350 675,625" fill="#61afef"/>
+    <polygon points="250,500 200,500 500,800 675,625 625,625 500,750" fill="#61afef"/>
+    <polygon points="150,500 100,500 500,100 900,500 850,500 500,150" fill="#d8dee9"/>
+    <polygon points="150,500 100,500 500,900 900,500 850,500 500,850" fill="#d8dee9"/>
+    <polygon points="0,500 50,500 500,950 950,500 1000,500 500,1000" fill="#d8dee9"/>
   </g>
 </svg>

@@ -1,41 +1,42 @@
 <svg width="1400" height="500" viewBox="0 0 1400 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
   <title id="title">scope-di</title>
-  <desc id="description">Type-safe dependency injection for TypeScript without decorators, reflect metadata, global containers, or runtime magic.</desc>
+  <desc id="description">Type-safe dependency injection for TypeScript without decorators or reflect metadata.</desc>
 
-  <rect width="1400" height="500" rx="32" fill="#ffffff"/>
-  <rect x="1" y="1" width="1398" height="498" rx="31" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+  <rect width="1400" height="500" rx="32" fill="#111315"/>
+  <rect x="1" y="1" width="1398" height="498" rx="31" fill="none" stroke="#2a2d31" stroke-width="2"/>
+  <rect x="32" y="32" width="1336" height="436" rx="24" fill="#0d0f10" opacity="0.72"/>
 
   <g transform="translate(92 98) scale(0.304)">
-    <rect width="1000" height="1000" fill="white"/>
-    <polygon points="800,500 775,475 750,500 775,525" fill="#111827"/>
-    <polygon points="625,625 350,350 500,200 650,350 625,375 500,250 400,350 675,625" fill="#111827"/>
-    <polygon points="250,500 200,500 500,800 675,625 625,625 500,750" fill="#111827"/>
-    <polygon points="150,500 100,500 500,100 900,500 850,500 500,150" fill="#111827"/>
-    <polygon points="150,500 100,500 500,900 900,500 850,500 500,850" fill="#111827"/>
-    <polygon points="0,500 50,500 500,950 950,500 1000,500 500,1000" fill="#111827"/>
+    <rect width="1000" height="1000" fill="none"/>
+    <polygon points="800,500 775,475 750,500 775,525" fill="#61afef"/>
+    <polygon points="625,625 350,350 500,200 650,350 625,375 500,250 400,350 675,625" fill="#61afef"/>
+    <polygon points="250,500 200,500 500,800 675,625 625,625 500,750" fill="#61afef"/>
+    <polygon points="150,500 100,500 500,100 900,500 850,500 500,150" fill="#d8dee9"/>
+    <polygon points="150,500 100,500 500,900 900,500 850,500 500,850" fill="#d8dee9"/>
+    <polygon points="0,500 50,500 500,950 950,500 1000,500 500,1000" fill="#d8dee9"/>
   </g>
 
-  <g transform="translate(470 84)">
-    <text x="0" y="78" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="78" font-weight="760" letter-spacing="0">scope-di</text>
-    <text x="2" y="136" fill="#374151" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="30" font-weight="500" letter-spacing="0">Type-safe dependency injection for TypeScript</text>
+  <g transform="translate(470 82)">
+    <text x="0" y="78" fill="#d8dee9" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="78" font-weight="760" letter-spacing="0">scope-di</text>
+    <text x="2" y="136" fill="#9ca3af" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="30" font-weight="500" letter-spacing="0">Type-safe dependency injection for TypeScript</text>
 
-    <g transform="translate(0 178)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="620">
-      <rect x="0" y="0" width="274" height="48" rx="24" fill="#f3f4f6"/>
-      <text x="24" y="31" fill="#111827">strong type inference</text>
+    <g transform="translate(0 180)" font-family="Cascadia Code, Consolas, ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" font-size="22" font-weight="620">
+      <rect x="0" y="0" width="286" height="48" rx="8" fill="#171a1d" stroke="#2f343a"/>
+      <text x="143" y="31" text-anchor="middle" fill="#c678dd">strong type inference</text>
 
-      <rect x="292" y="0" width="194" height="48" rx="24" fill="#f3f4f6"/>
-      <text x="316" y="31" fill="#111827">no decorators</text>
+      <rect x="306" y="0" width="222" height="48" rx="8" fill="#171a1d" stroke="#2f343a"/>
+      <text x="417" y="31" text-anchor="middle" fill="#e06c75">no decorators</text>
 
-      <rect x="504" y="0" width="260" height="48" rx="24" fill="#f3f4f6"/>
-      <text x="528" y="31" fill="#111827">no reflect-metadata</text>
+      <rect x="548" y="0" width="286" height="48" rx="8" fill="#171a1d" stroke="#2f343a"/>
+      <text x="691" y="31" text-anchor="middle" fill="#ffcc66">no reflect-metadata</text>
 
-      <rect x="0" y="70" width="250" height="48" rx="24" fill="#f3f4f6"/>
-      <text x="24" y="101" fill="#111827">async dependencies</text>
+      <rect x="75" y="70" width="290" height="48" rx="8" fill="#171a1d" stroke="#2f343a"/>
+      <text x="220" y="101" text-anchor="middle" fill="#61afef">async dependencies</text>
 
-      <rect x="268" y="70" width="300" height="48" rx="24" fill="#f3f4f6"/>
-      <text x="292" y="101" fill="#111827">collection registrations</text>
+      <rect x="385" y="70" width="374" height="48" rx="8" fill="#171a1d" stroke="#2f343a"/>
+      <text x="572" y="101" text-anchor="middle" fill="#98c379">collection registrations</text>
     </g>
   </g>
 
-  <text x="700" y="448" text-anchor="middle" fill="#6b7280" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="34" font-weight="680" letter-spacing="0">Scopes are the primitive behind every lifetime.</text>
+  <text x="700" y="448" text-anchor="middle" fill="#9ca3af" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="34" font-weight="680" letter-spacing="0">Scopes are the primitive behind every lifetime.</text>
 </svg>

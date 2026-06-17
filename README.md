@@ -1,5 +1,3 @@
-<h1 align="center">scope-di</h1>
-
 <p align="center">
     <img src="./docs/assets/readme-banner.svg" alt="scope-di" width="100%" />
 </p>

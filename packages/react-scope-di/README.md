@@ -111,23 +111,18 @@ const Header = resolve
 
 export function App()
 {
-    return (
-        <DiScope>
-            <Header userId="42" />
-        </DiScope>
-    );
+    return <Header userId="42" />;
 }
 ```
 
 `Header` only accepts `HeaderProps`. The caller does not pass `appName` or `logger`; those are resolved from the DI scope.
 
-### IntelliSense Slot: HOC Props
+| HOC Props |
+|---|
 
-Use this slot for a GIF showing that `resolutionOptions<HeaderProps>()` makes the returned component require `userId`, while dependencies stay internal and typed.
+<img src="./docs/assets/react-intellisense-hoc-props.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
 
-```md
-<!-- GIF: docs/assets/react-intellisense-hoc-props.gif -->
-```
+##
 
 ## Create React DI Tools
 
@@ -196,14 +191,12 @@ Use `resolveAsync()` when dependencies should be awaited before rendering the co
 
 ```tsx
 const scope = configureRootScope()
-    .map("profile").asFactoryAsync
-    (
-        async () =>
-        ({
-            name: "Ada"
-        }),
-        DependencyLifetime.Singleton
-    )
+    .map("profile")
+        .asFactoryAsync
+        (
+            async () => ({ name: "Ada" }),
+            DependencyLifetime.Singleton
+        )
     .build();
 
 const { DiScope, resolveAsync, asyncResolutionOptions } = createReactDiTools(scope);
@@ -231,11 +224,7 @@ const Profile = resolveAsync
 
 function ProfilePage()
 {
-    return (
-        <DiScope>
-            <Profile userId="42" />
-        </DiScope>
-    );
+    return <Profile userId="42" />;
 }
 ```
 
@@ -243,13 +232,12 @@ function ProfilePage()
 
 Generated HOC components receive display names based on the renderer, such as `DiResolve(HeaderRenderer)` and `DiResolveAsync(ProfileRenderer)`.
 
-### IntelliSense Slot: Async HOC
+| Async HOC |
+|---|
 
-Use this slot for a GIF showing `resolveAsync()`, awaited dependency tuple inference, and typed component props.
+<img src="./docs/assets/react-intellisense-resolve-async.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
 
-```md
-<!-- GIF: docs/assets/react-intellisense-resolve-async.gif -->
-```
+##
 
 ## Error And Pending Fallbacks
 
@@ -374,6 +362,13 @@ function UserBadge()
 }
 ```
 
+| Hook resolution |
+|---|
+
+<img src="./docs/assets/react-intellisense-use-dependencies.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
+
+##
+
 ### useDependenciesAsync
 
 `useDependenciesAsync()` resolves dependencies asynchronously and returns an async result that can be rendered with `DiAwait`.
@@ -393,6 +388,13 @@ function Profile()
 }
 ```
 
+| Async Hook resolution |
+|---|
+
+<img src="./docs/assets/react-intellisense-use-dependencies-async.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
+
+##
+
 Wrap async hook consumers with React `Suspense` when you want a loading UI.
 
 ```tsx
@@ -408,14 +410,6 @@ function ProfilePage()
         </DiScope>
     );
 }
-```
-
-### IntelliSense Slot: Hook Resolution
-
-Use this slot for a GIF showing key autocomplete and tuple inference for hook-based resolution.
-
-```md
-<!-- GIF: docs/assets/react-intellisense-use-dependencies.gif -->
 ```
 
 ## Recommended Project Shape
