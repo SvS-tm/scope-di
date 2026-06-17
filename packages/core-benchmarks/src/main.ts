@@ -35,11 +35,6 @@ type BenchmarkGroup =
     modes?: BenchmarkMode[];
 };
 
-type JsonOutputCapture =
-{
-    restore(): string;
-};
-
 function createRuns
 (
     benchmarkName: string,
@@ -237,169 +232,6 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
             }
         }
     };
-}
-
-function createJsonOutputCapture(): JsonOutputCapture | undefined
-{
-    const runtime = globalThis as
-    {
-        process?: { stdout?: { write?: (...args: unknown[]) => unknown } };
-    };
-
-    const stdout = runtime.process?.stdout;
-
-    if(!stdout?.write)
-    {
-        const originalLog = console.log.bind(console);
-        const chunks: string[] = [];
-
-        console.log = (...messages: unknown[]) =>
-        {
-            chunks.push(`${messages.join(" ")}\n`);
-        };
-
-        return {
-            restore()
-            {
-                console.log = originalLog;
-
-                return chunks.join("");
-            }
-        };
-    }
-
-    const chunks: string[] = [];
-    const originalWrite = stdout.write.bind(stdout);
-    const originalLog = console.log.bind(console);
-
-    console.log = (...messages: unknown[]) =>
-    {
-        chunks.push(`${messages.join(" ")}\n`);
-    };
-
-    stdout.write = ((chunk: unknown, ...args: unknown[]) =>
-    {
-        if(typeof chunk === "string")
-            chunks.push(chunk);
-        else if(chunk instanceof Uint8Array)
-            chunks.push(new TextDecoder().decode(chunk));
-        else
-            chunks.push(String(chunk));
-
-        const callback = args.find((argument): argument is () => void => typeof argument === "function");
-        callback?.();
-
-        return true;
-    }) as typeof stdout.write;
-
-    return {
-        restore()
-        {
-            stdout.write = originalWrite;
-            console.log = originalLog;
-
-            return chunks.join("");
-        }
-    };
-}
-
-function findJsonObjectEnd(rawOutput: string, start: number)
-{
-    let depth = 0;
-    let escaped = false;
-    let inString = false;
-
-    for(let index = start; index < rawOutput.length; ++index)
-    {
-        const character = rawOutput[index];
-
-        if(inString)
-        {
-            if(escaped)
-            {
-                escaped = false;
-            }
-            else if(character === "\\")
-            {
-                escaped = true;
-            }
-            else if(character === "\"")
-            {
-                inString = false;
-            }
-
-            continue;
-        }
-
-        if(character === "\"")
-        {
-            inString = true;
-        }
-        else if(character === "{")
-        {
-            depth++;
-        }
-        else if(character === "}")
-        {
-            depth--;
-
-            if(depth === 0)
-                return index + 1;
-        }
-    }
-
-    return -1;
-}
-
-function isMitataJsonPayload(value: unknown)
-    : value is object
-{
-    return typeof value === "object"
-        && value !== null
-        && "layout" in value
-        && "benchmarks" in value;
-}
-
-function parseMitataJsonPayload(rawOutput: string)
-{
-    let jsonStart = rawOutput.indexOf("{");
-
-    while(jsonStart >= 0)
-    {
-        const jsonEnd = findJsonObjectEnd(rawOutput, jsonStart);
-
-        if(jsonEnd < 0)
-            return undefined;
-
-        try
-        {
-            const payload = JSON.parse(rawOutput.slice(jsonStart, jsonEnd)) as unknown;
-
-            if(isMitataJsonPayload(payload))
-                return payload;
-        }
-        catch
-        {
-        }
-
-        jsonStart = rawOutput.indexOf("{", jsonStart + 1);
-    }
-
-    return undefined;
-}
-
-function writeJsonOutputWithMetadata(rawOutput: string, metadata: ReturnType<typeof createBenchmarkMetadata>)
-{
-    const payload = parseMitataJsonPayload(rawOutput);
-
-    if(!payload)
-    {
-        console.log(rawOutput);
-
-        return;
-    }
-
-    console.log(JSON.stringify({ metadata, ...payload }));
 }
 
 const benchmarks = 
@@ -984,27 +816,25 @@ for(const { name, runs } of selectedBenchmarks)
 
 const outputFormat = getOutputFormat(runtimeArgs);
 const filter = getFilter(runtimeArgs);
-const runOptions = { colors: outputFormat !== "json", format: outputFormat } as const;
 const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
-const jsonOutputCapture = outputFormat === "json"
-    ? createJsonOutputCapture()
-    : undefined;
 
-let rawJsonOutput: string | undefined;
+if(outputFormat === "json")
+{
+    const result = await run
+    (
+        filter
+            ? { colors: false, format: "quiet", filter }
+            : { colors: false, format: "quiet" }
+    );
 
-try
+    console.log(JSON.stringify({ metadata, ...result }));
+}
+else
 {
     await run
     (
         filter
-            ? { ...runOptions, filter }
-            : runOptions
+            ? { colors: true, format: "mitata", filter }
+            : { colors: true, format: "mitata" }
     );
 }
-finally
-{
-    rawJsonOutput = jsonOutputCapture?.restore();
-}
-
-if(rawJsonOutput !== undefined)
-    writeJsonOutputWithMetadata(rawJsonOutput, metadata);

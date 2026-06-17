@@ -19,6 +19,7 @@
     "bench:bun:json": "pnpm --filter @svs-tm/core-benchmarks run bench:bun:json",
     "bench:bun:json:fast": "pnpm --filter @svs-tm/core-benchmarks run bench:bun:json:fast",
     "bench:bun:json:complete": "pnpm --filter @svs-tm/core-benchmarks run bench:bun:json:complete",
+    "bench:json:complete": "pnpm --filter @svs-tm/core-benchmarks run bench:json:complete",
     "build-all": "pnpm -r build",
     "pack-all": "pnpm -r pack",
     "test-all": "pnpm -r test"

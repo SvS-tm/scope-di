@@ -22,7 +22,9 @@
     "bench:bun:complete": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --mode=complete",
     "bench:bun:json": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --json",
     "bench:bun:json:fast": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --json --mode=fast",
-    "bench:bun:json:complete": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --json --mode=complete"
+    "bench:bun:json:complete": "bun --tsconfig-override ./tsconfig.build.json --expose-gc src/main.ts --json --mode=complete",
+    "bench:json:complete": "tsx --tsconfig ./tsconfig.build.json scripts/render-readme-results.ts --run-complete --out-dir results\\%COMPUTERNAME% --link-base .",
+    "report:readme": "tsx --tsconfig ./tsconfig.build.json scripts/render-readme-results.ts"
   },
   "author": "svs-tm",
   "license": "MIT",
