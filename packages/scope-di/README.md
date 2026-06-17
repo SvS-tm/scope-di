@@ -348,6 +348,13 @@ const [storedPromise] = await scope.resolveRangeAsync("storedPromise");
 //     ^? Promise<string>
 ```
 
+| Sync promise Inference |
+|---|
+
+<img src="./docs/assets/intellisense-sync-promise.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
+
+##
+
 ## Lifetimes
 
 Scopes are the primitive behind every lifetime. A singleton is a dependency stored in the root scope. A scoped dependency is stored in the current scope. An inherited scoped dependency can reuse a value from a parent scope. A transient dependency is created for each resolution.
