@@ -33,4 +33,4 @@
 
 | Runtime | Version | Machine | Mode | Iterations | Result file |
 | --- | --- | --- | --- | ---: | --- |
-| Bun | v24.3.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_bun_json_complete.json`](./results/ALIEN/bench_bun_json_complete.json) |
+| Bun | 1.3.14 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_bun_json_complete.json`](./bench_bun_json_complete.json) |

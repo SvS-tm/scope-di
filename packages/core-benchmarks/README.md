@@ -6,7 +6,7 @@
 
 Runtime and memory comparison report for `@svs-tm/scope-di`.
 
-This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: registration, warm resolution, cold resolution, transient graphs, cached graphs, speed, and memory.
+This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: warm resolution, cold resolution, transient graphs, cached graphs, registration, speed, and memory.
 
 ## Summary
 
@@ -14,15 +14,63 @@ This page is for developers evaluating whether `scope-di` is a good fit for an a
 
 Read this report as an adoption aid, not as a synthetic trophy board. The useful question is not whether one library wins every micro-case; it is whether the runtime cost is reasonable for the features and DX you get.
 
-The most important benchmark questions are:
+The short version from the current complete run:
 
-- How expensive is ordinary hot dependency resolution?
-- How does transient graph resolution compare with other DI containers?
-- How much memory is allocated during resolution?
-- How expensive is registration compared with runtime resolution?
-- Do wider and deeper dependency graphs change the ranking?
+- Tiny cached lookups are usually led by `typed-inject`.
+- `scope-di` is strongest on transient factory graphs with several dependencies.
+- Deep and wide transient graphs are the clearest speed win for `scope-di`.
+- Allocation behavior is especially good on transient class and factory graph paths.
+- Registration is middle of the pack and should be treated as lower priority than hot resolution for long-lived applications.
 
-Official release numbers should be read from the tables below once a locked benchmark run is published.
+## Published Results
+
+Each machine run is stored as raw JSON plus generated Markdown reports. Add new machines as separate rows instead of replacing older reports.
+
+| Machine | CPU / OS | Iterations | Node.js | Bun | Deno |
+| --- | --- | ---: | --- | --- | --- |
+| `ALIEN` | 13th Gen Intel(R) Core(TM) i9-13900HX / Windows 10.0.26200 x64 | 300 | [Report](./results/ALIEN/bench_node_json_complete.md) / [JSON](./results/ALIEN/bench_node_json_complete.json) | [Report](./results/ALIEN/bench_bun_json_complete.md) / [JSON](./results/ALIEN/bench_bun_json_complete.json) | [Report](./results/ALIEN/bench_deno_json_complete.md) / [JSON](./results/ALIEN/bench_deno_json_complete.json) |
+| `<machine>` | `<cpu> / <os>` | `<n>` | [Report](./results/<machine>/bench_node_json_complete.md) / [JSON](./results/<machine>/bench_node_json_complete.json) | [Report](./results/<machine>/bench_bun_json_complete.md) / [JSON](./results/<machine>/bench_bun_json_complete.json) | [Report](./results/<machine>/bench_deno_json_complete.md) / [JSON](./results/<machine>/bench_deno_json_complete.json) |
+
+### Current Reference Run
+
+The headline tables below use `ALIEN` as the current reference run. Future machines should be added to the published results index first, then promoted into the headline summary only when they become the preferred reference.
+
+Detailed generated reports and raw JSON artifacts:
+
+| Runtime | Version | Report | Raw JSON |
+| --- | --- | --- | --- |
+| Node.js | `v26.3.0` | [Node.js report](./results/ALIEN/bench_node_json_complete.md) | [JSON](./results/ALIEN/bench_node_json_complete.json) |
+| Bun | `1.3.14` | [Bun report](./results/ALIEN/bench_bun_json_complete.md) | [JSON](./results/ALIEN/bench_bun_json_complete.json) |
+| Deno | `2.8.3` | [Deno report](./results/ALIEN/bench_deno_json_complete.md) | [JSON](./results/ALIEN/bench_deno_json_complete.json) |
+
+### Headline Speed
+
+`scope-di` is not the fastest at the smallest cached lookup cases. Those are mostly won by `typed-inject`. The stronger result is dependency graph resolution: once factories have several dependencies, or the graph gets deep and wide, `scope-di` is consistently at or near the front.
+
+| Scenario | Node.js | Bun | Deno | Read |
+| --- | ---: | ---: | ---: | --- |
+| `warmResolveValue` | 4 / 7 | 4 / 7 | 4 / 7 | Tiny cached value lookup is not the main win. |
+| `warmResolveTransientClass` | 2 / 6 | 1 / 6 | 2 / 6 | Transient class creation is very competitive. |
+| `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 1 / 6 | 1 / 6 | Direct factory graph resolution is the strongest path. |
+| `warmResolveTransientFactoryWithSixDependencies` | 1 / 6 | 1 / 6 | 1 / 6 | Wider direct dependency lists stay strong. |
+| `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 1 / 6 | 1 / 6 | Deep and wide transient graph resolution is the clearest win. |
+| `warmResolveCachedFactoryWideGraph` | 3 / 6 | 3 / 6 | 3 / 6 | Cached wide graphs are competitive, but not leading. |
+
+### Headline Memory
+
+Allocation behavior is also strongest around transient dependency graphs. Bun reports near-zero allocation numbers for several cases, so compare memory across runtimes carefully rather than mixing them into one global ranking.
+
+| Scenario | Node.js | Bun | Deno | Read |
+| --- | ---: | ---: | ---: | --- |
+| `warmResolveTransientClass` | 1 / 6 | 1 / 6 | 1 / 6 | Lowest allocations for transient class creation. |
+| `warmResolveTransientFactory` | 2 / 6 | 1 / 6 | 2 / 6 | Essentially tied with the best on Node/Deno, winner on Bun. |
+| `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 1 / 6 | 1 / 6 | Lowest allocations for direct factory graphs. |
+| `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 3 / 6 | 1 / 6 | Strong on Node/Deno; Bun favors Awilix/Typed Inject here. |
+| `warmResolveCachedFactoryWideGraph` | 2 / 6 | 1 / 6 | 3 / 6 | Good allocation profile, but runtime-dependent. |
+
+### Registration
+
+Registration is not the primary optimization target for `scope-di`. In these runs, startup/configuration is generally middle of the pack, while `tsyringe`, `typed-inject`, or `needle-di` often win individual registration scenarios. That trade-off is acceptable for long-lived applications where scopes are configured once and resolved many times.
 
 ## Compared Libraries
 
@@ -52,47 +100,6 @@ Benchmarks are only meaningful when the compared behavior overlaps. These tests 
 | Async dependencies | Planned | Some libraries do not model this directly. |
 | Collection registrations | Planned separately | Not every library has an equivalent feature. |
 | Scope inheritance | No | `scope-di`-specific behavior, not a fair competitor case. |
-
-## Official Results
-
-Official numbers are pending the final published benchmark run. Once published, this section should be the first place readers look.
-
-### Speed Summary
-
-| Runtime | Mode | Scenario | scope-di place | scope-di | Winner | Winner result | Slowest | Slowest result |
-| --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |
-| Node.js | complete | `warmResolveValue` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveSingletonClass` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientClass` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveSingletonFactory` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactory` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactoryWithSixDependencies` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveCachedFactoryWideGraph` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `registrationClass` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `registrationValue` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `registrationFactory` | TBD | TBD | TBD | TBD | TBD | TBD |
-
-### Memory Summary
-
-| Runtime | Mode | Scenario | scope-di place | scope-di allocations | Winner | Winner allocations | Highest allocation library | Highest allocation result |
-| --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |
-| Node.js | complete | `warmResolveValue` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveSingletonClass` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientClass` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactory` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | TBD | TBD | TBD | TBD | TBD | TBD |
-| Node.js | complete | `warmResolveCachedFactoryWideGraph` | TBD | TBD | TBD | TBD | TBD | TBD |
-
-### Runtime Matrix
-
-| Runtime | Version | Machine | Mode | Iterations | Result file |
-| --- | --- | --- | --- | ---: | --- |
-| Node.js | TBD | TBD | complete | TBD | TBD |
-| Bun | TBD | TBD | complete | TBD | TBD |
-| Deno | TBD | TBD | complete | TBD | TBD |
 
 ## How To Read The Numbers
 

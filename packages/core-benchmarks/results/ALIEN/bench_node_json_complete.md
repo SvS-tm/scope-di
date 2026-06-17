@@ -33,4 +33,4 @@
 
 | Runtime | Version | Machine | Mode | Iterations | Result file |
 | --- | --- | --- | --- | ---: | --- |
-| Node.js | v26.3.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_node_json_complete.json`](./results/ALIEN/bench_node_json_complete.json) |
+| Node.js | v26.3.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_node_json_complete.json`](./bench_node_json_complete.json) |

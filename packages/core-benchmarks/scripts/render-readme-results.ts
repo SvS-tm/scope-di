@@ -349,6 +349,16 @@ function getRuntimeLabel(result: BenchmarkResult, filePath: string)
 function getRuntimeVersion(result: BenchmarkResult)
 {
     const metadataRuntime = result.metadata?.runtime;
+    const runtimeName = metadataRuntime?.name?.toLowerCase();
+
+    if(runtimeName === "node" && metadataRuntime?.node)
+        return sanitizeText(metadataRuntime.node);
+
+    if(runtimeName === "bun" && metadataRuntime?.bun)
+        return sanitizeText(metadataRuntime.bun);
+
+    if(runtimeName === "deno" && metadataRuntime?.deno?.deno)
+        return sanitizeText(metadataRuntime.deno.deno);
 
     if(metadataRuntime?.node)
         return sanitizeText(metadataRuntime.node);

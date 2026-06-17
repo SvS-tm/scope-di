@@ -33,4 +33,4 @@
 
 | Runtime | Version | Machine | Mode | Iterations | Result file |
 | --- | --- | --- | --- | ---: | --- |
-| Deno | v24.15.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_deno_json_complete.json`](./results/ALIEN/bench_deno_json_complete.json) |
+| Deno | 2.8.3 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_deno_json_complete.json`](./bench_deno_json_complete.json) |
