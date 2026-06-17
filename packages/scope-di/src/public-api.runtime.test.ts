@@ -59,6 +59,35 @@ describe
 
         it
         (
+            "resolveAsync wraps sync promise dependencies for singular resolution",
+            async () =>
+            {
+                const promiseValue = Promise.resolve("stored promise");
+                const scope = configureRootScope()
+                    .map("storedPromise").asValue(promiseValue)
+                    .map("items").asValue(Promise.resolve("old"))
+                    .map("items").asValue(Promise.resolve("new"))
+                    .build();
+
+                expect(scope.resolve("storedPromise")).toBe(promiseValue);
+
+                const resolved = await scope.resolveAsync("storedPromise");
+
+                expect(resolved.promise).toBe(promiseValue);
+                await expect(resolved.promise).resolves.toBe("stored promise");
+                await expect(scope.resolveRangeAsync("storedPromise")).resolves.toStrictEqual([promiseValue]);
+                await expect(scope.resolveAsync(["items"])).resolves.toStrictEqual
+                (
+                    [
+                        scope.resolve(["items"])[0],
+                        scope.resolve(["items"])[1]
+                    ]
+                );
+            }
+        );
+
+        it
+        (
             "map().asValue() registers a singleton value and marks the mapping as present",
             () =>
             {

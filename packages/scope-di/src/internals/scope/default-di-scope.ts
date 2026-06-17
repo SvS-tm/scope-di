@@ -3,6 +3,7 @@ import type { DiScope } from "../../abstractions/di-scope";
 import { UnknownDependencyLifetimeError } from "../../errors/unknown-dependency-lifetime-error";
 import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
 import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
+import { createBoxedPromiseDependency } from "../../helpers/internals/boxed-promise-dependency-helper";
 import type { AwaitedResolvedDependencies } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { AsyncClassDependencyDescriptor } from "../../types/async-class-dependency-descriptor";
@@ -72,7 +73,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         key: T_DependencyResolutionKey
     )
     {
-        return this.resolveAsyncDependencyByKey(key) as Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey>>;
+        return this.resolveAsyncDependencyByKey(key) as Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey, true>>;
     }
 
     public resolveRange
@@ -177,7 +178,12 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         const value = this.resolveByDescriptor(descriptorOrCollection);
 
         if (!isAsyncDescriptor(descriptorOrCollection))
+        {
+            if (value instanceof Promise)
+                return TrackedPromise.resolved(createBoxedPromiseDependency(value));
+
             return TrackedPromise.resolved(value);
+        }
         else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
             return TrackedPromise.resolved(value[TrackedPromise.value]);
         else

@@ -1,6 +1,7 @@
 export * from "./allowed-dependency-key";
 export * from "./async-class-dependency-descriptor";
 export * from "./async-factory-dependency-descriptor";
+export * from "./boxed-promise-dependency";
 export * from "./class-dependency-descriptor";
 export * from "./common-dependency-descriptor-data";
 export * from "./dependencies-collection-metadata";

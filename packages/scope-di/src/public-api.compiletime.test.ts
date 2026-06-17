@@ -1,5 +1,5 @@
 import { expectAssignable, expectError, expectType } from "tsd-lite";
-import { configureRootScope, DependencyLifetime } from ".";
+import { configureRootScope, DependencyLifetime, type BoxedPromiseDependency } from ".";
 
 // Shared fixtures
 class Dependency
@@ -35,6 +35,26 @@ expectType<Promise<"value">>(valueScope.resolveAsync("value"));
 expectError(valueScope.resolveRange("missing"));
 expectError(valueScope.resolve("missing"));
 expectError(valueScope.resolveAsync("missing"));
+
+// Sync promise values stay promises for sync/range resolution, but singular async resolution wraps them
+const promiseValueScope = configureRootScope()
+    .map("storedPromise").asValue(Promise.resolve("stored promise"))
+    .build();
+
+expectType<[Promise<string>]>(promiseValueScope.resolveRange("storedPromise"));
+expectType<Promise<string>>(promiseValueScope.resolve("storedPromise"));
+expectType<Promise<[Promise<string>]>>(promiseValueScope.resolveRangeAsync("storedPromise"));
+expectType<Promise<BoxedPromiseDependency<Promise<string>>>>(promiseValueScope.resolveAsync("storedPromise"));
+
+async function expectStoredPromiseValue(): Promise<void>
+{
+    const value = await promiseValueScope.resolveAsync("storedPromise");
+
+    expectType<BoxedPromiseDependency<Promise<string>>>(value);
+    expectType<Promise<string>>(value.promise);
+}
+
+void expectStoredPromiseValue;
 
 // Explicit abstraction generics intentionally widen concrete values
 const explicitValueScope = configureRootScope()
@@ -145,6 +165,17 @@ expectType<[[2, "first"]]>(collectionScope.resolveRange(["items"]));
 expectType<[2, "first"]>(collectionScope.resolve(["items"]));
 expectType<Promise<[[2, "first"]]>>(collectionScope.resolveRangeAsync(["items"]));
 expectType<Promise<[2, "first"]>>(collectionScope.resolveAsync(["items"]));
+
+// Sync promise values inside collections remain raw promises because the collection array is the awaited value
+const promiseCollectionScope = configureRootScope()
+    .map("items").asValue(Promise.resolve("first"))
+    .map("items").asValue(Promise.resolve(2))
+    .build();
+
+expectType<[[Promise<number>, Promise<string>]]>(promiseCollectionScope.resolveRange(["items"]));
+expectType<[Promise<number>, Promise<string>]>(promiseCollectionScope.resolve(["items"]));
+expectType<Promise<[[Promise<number>, Promise<string>]]>>(promiseCollectionScope.resolveRangeAsync(["items"]));
+expectType<Promise<[Promise<number>, Promise<string>]>>(promiseCollectionScope.resolveAsync(["items"]));
 
 // Dependent collection mappings inject the collection tuple
 const collectionDependencyScope = configureRootScope()

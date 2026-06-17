@@ -30,7 +30,7 @@ export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> =
         (
             key: T_DependencyResolutionKey
         )
-            : Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey>>;
+            : Promise<AwaitedResolutionResult<T_RegisteredDependencies, T_DependencyResolutionKey, true>>;
 
         resolveRange<T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
         (
