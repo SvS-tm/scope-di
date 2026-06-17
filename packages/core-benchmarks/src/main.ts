@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-sloppy-imports
 import os from "node:os";
+import { execFileSync } from "node:child_process";
 import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as scopeDiResolution from "./scope-di/resolution.ts";
 import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
@@ -187,6 +188,35 @@ function getBestEffortValue<T>(getValue: () => T, fallback: T)
     }
 }
 
+function getGitValue(args: string[])
+{
+    return execFileSync
+    (
+        "git",
+        args,
+        {
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"]
+        }
+    )
+        .trim();
+}
+
+function createSourceMetadata()
+{
+    const repository = getBestEffortValue(() => getGitValue(["remote", "get-url", "origin"]), undefined as string | undefined);
+    const commit = getBestEffortValue(() => getGitValue(["rev-parse", "HEAD"]), undefined as string | undefined);
+    const shortCommit = getBestEffortValue(() => getGitValue(["rev-parse", "--short", "HEAD"]), undefined as string | undefined);
+    const branch = getBestEffortValue(() => getGitValue(["rev-parse", "--abbrev-ref", "HEAD"]), undefined as string | undefined);
+
+    return {
+        repository,
+        commit,
+        shortCommit,
+        branch
+    };
+}
+
 function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined, outputFormat: "json" | "mitata", iterations: number)
 {
     const runtime = globalThis as
@@ -207,6 +237,7 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
             outputFormat,
             timestamp: new Date().toISOString()
         },
+        source: createSourceMetadata(),
         runtime: {
             name: getRuntimeName(),
             node: runtime.process?.version,

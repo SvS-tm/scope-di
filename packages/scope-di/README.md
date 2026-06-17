@@ -29,13 +29,15 @@ class ConsoleLogger implements Logger
 }
 
 const scope = configureRootScope()
-    .map("logger").asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
-    .map("serviceName").asValue("users")
+    .map("logger")
+        .asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
+    .map("serviceName")
+        .asValue("users")
     .build();
 
 const [logger, serviceName] = scope.resolveRange("logger", "serviceName");
 //     ^? Logger
-//             ^? "users"
+//     ^? "users"
 
 logger.info(`Starting ${serviceName}`);
 ```
@@ -108,9 +110,12 @@ class UsersService
 }
 
 const scope = configureRootScope()
-    .map("logger").asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
-    .map("serviceName").asValue("users")
-    .map("usersService").asDependent("logger", "serviceName")
+    .map("logger")
+        .asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
+    .map("serviceName")
+        .asValue("users")
+    .map("usersService")
+        .asDependent("logger", "serviceName")
         .class(UsersService, DependencyLifetime.Singleton)
     .build();
 
@@ -132,7 +137,8 @@ usersService.start();
 
 ```ts
 const scope = configureRootScope()
-    .map("mode").asValue("production")
+    .map("mode")
+        .asValue("production")
     .build();
 
 const mode = scope.resolve("mode");
@@ -143,7 +149,8 @@ When you want to register under a wider abstraction, pass a generic.
 
 ```ts
 const scope = configureRootScope()
-    .map("mode").asValue<string>("production")
+    .map("mode")
+        .asValue<string>("production")
     .build();
 
 const mode = scope.resolve("mode");
@@ -162,7 +169,8 @@ class HttpClient
 }
 
 const scope = configureRootScope()
-    .map("httpClient").asClass(HttpClient, DependencyLifetime.Singleton)
+    .map("httpClient")
+        .asClass(HttpClient, DependencyLifetime.Singleton)
     .build();
 
 const httpClient = scope.resolve("httpClient");
@@ -172,7 +180,8 @@ const httpClient = scope.resolve("httpClient");
 
 ```ts
 const scope = configureRootScope()
-    .map("createdAt").asFactory(() => new Date(), DependencyLifetime.Transient)
+    .map("createdAt")
+        .asFactory(() => new Date(), DependencyLifetime.Transient)
     .build();
 
 const first = scope.resolve("createdAt");
@@ -196,9 +205,12 @@ class UsersService
 }
 
 const scope = configureRootScope()
-    .map("logger").asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
-    .map("httpClient").asClass(HttpClient, DependencyLifetime.Singleton)
-    .map("usersService").asDependent("logger", "httpClient")
+    .map("logger")
+        .asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
+    .map("httpClient")
+        .asClass(HttpClient, DependencyLifetime.Singleton)
+    .map("usersService")
+        .asDependent("logger", "httpClient")
         .class(UsersService, DependencyLifetime.Scoped)
     .build();
 
@@ -209,9 +221,12 @@ Factories get the same typed dependency parameters.
 
 ```ts
 const scope = configureRootScope()
-    .map("baseUrl").asValue("https://api.example.com")
-    .map("httpClient").asClass(HttpClient, DependencyLifetime.Singleton)
-    .map("usersApi").asDependent("baseUrl", "httpClient")
+    .map("baseUrl")
+        .asValue("https://api.example.com")
+    .map("httpClient")
+        .asClass(HttpClient, DependencyLifetime.Singleton)
+    .map("usersApi")
+        .asDependent("baseUrl", "httpClient")
         .factory((baseUrl, httpClient) => ({ baseUrl, httpClient }), DependencyLifetime.Singleton)
     .build();
 
@@ -257,9 +272,12 @@ Multiple registrations under the same key create a collection. Singular resoluti
 
 ```ts
 const scope = configureRootScope()
-    .map("middleware").asValue("auth")
-    .map("middleware").asValue("logging")
-    .map("middleware").asValue("metrics")
+    .map("middleware")
+        .asValue("auth")
+    .map("middleware")
+        .asValue("logging")
+    .map("middleware")
+        .asValue("metrics")
     .build();
 
 const latest = scope.resolve("middleware");
@@ -280,9 +298,12 @@ Collections can be injected into dependent factories and classes.
 
 ```ts
 const scope = configureRootScope()
-    .map("processor").asValue("normalize")
-    .map("processor").asValue("validate")
-    .map("pipeline").asDependent(["processor"])
+    .map("processor")
+        .asValue("normalize")
+    .map("processor")
+        .asValue("validate")
+    .map("pipeline")
+        .asDependent(["processor"])
         .factory((processors) => processors, DependencyLifetime.Singleton)
     .build();
 

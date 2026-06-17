@@ -31,6 +31,13 @@ type BenchmarkResult =
             mode?: string;
             iterations?: number;
         };
+        source?:
+        {
+            repository?: string;
+            commit?: string;
+            shortCommit?: string;
+            branch?: string;
+        };
         runtime?:
         {
             name?: string;
@@ -388,6 +395,43 @@ function getIterations(result: BenchmarkResult)
         ?? "not recorded";
 }
 
+function getCommit(result: BenchmarkResult)
+{
+    const source = result.metadata?.source;
+
+    if(!source?.commit)
+        return "not recorded";
+
+    const commit = sanitizeText(source.commit);
+    const commitUrl = getCommitUrl(source.repository, commit);
+
+    return commitUrl
+        ? `[${commit}](${commitUrl})`
+        : commit;
+}
+
+function getCommitUrl(repository: string | undefined, commit: string)
+{
+    if(!repository)
+        return undefined;
+
+    const repositoryUrl = sanitizeText(repository)
+        .replace(/^git@github\.com:/, "https://github.com/")
+        .replace(/\.git$/, "");
+
+    if(!repositoryUrl.startsWith("https://github.com/"))
+        return undefined;
+
+    return `${repositoryUrl}/commit/${commit}`;
+}
+
+function getBranch(result: BenchmarkResult)
+{
+    return result.metadata?.source?.branch
+        ? sanitizeText(result.metadata.source.branch)
+        : "not recorded";
+}
+
 function getMachine(result: BenchmarkResult)
 {
     const machine = result.metadata?.machine;
@@ -518,6 +562,14 @@ function renderMatrixRows(resultView: ResultView)
     return `| ${resultView.runtime} | ${getRuntimeVersion(resultView.result)} | ${getMachine(resultView.result)} | ${getMode(resultView.result)} | ${getIterations(resultView.result)} | [\`${resultView.file}\`](${resultView.link}) |`;
 }
 
+function renderSourceRows(resultView: ResultView)
+{
+    return [
+        `| Commit | ${getCommit(resultView.result)} |`,
+        `| Branch | ${getBranch(resultView.result)} |`
+    ].join("\n");
+}
+
 function renderReport(resultView: ResultView)
 {
     return [
@@ -540,6 +592,12 @@ function renderReport(resultView: ResultView)
         "| Runtime | Version | Machine | Mode | Iterations | Result file |",
         "| --- | --- | --- | --- | ---: | --- |",
         renderMatrixRows(resultView),
+        "",
+        "## Source",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        renderSourceRows(resultView),
         ""
     ].join("\n");
 }

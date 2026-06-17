@@ -27,8 +27,10 @@ class UsersApi
 }
 
 const scope = configureRootScope()
-    .map("usersApi").asClass(UsersApi, DependencyLifetime.Singleton)
-    .map("title").asValue("Users")
+    .map("usersApi")
+        .asClass(UsersApi, DependencyLifetime.Singleton)
+    .map("title")
+        .asValue("Users")
     .build();
 
 export const di = createReactDiTools(scope);
@@ -86,8 +88,10 @@ class ConsoleLogger implements Logger
 }
 
 const scope = configureRootScope()
-    .map("logger").asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
-    .map("appName").asValue("Scope DI")
+    .map("logger")
+        .asClass<Logger>(ConsoleLogger, DependencyLifetime.Singleton)
+    .map("appName")
+        .asValue("Scope DI")
     .build();
 
 const { DiScope, resolve, resolutionOptions } = createReactDiTools(scope);
@@ -319,9 +323,12 @@ Collection dependencies keep the same typed newest-to-oldest order as the core p
 
 ```tsx
 const scope = configureRootScope()
-    .map("toolbarAction").asValue("save")
-    .map("toolbarAction").asValue("refresh")
-    .map("toolbarAction").asValue("export")
+    .map("toolbarAction")
+        .asValue("save")
+    .map("toolbarAction")
+        .asValue("refresh")
+    .map("toolbarAction")
+        .asValue("export")
     .build();
 
 const { resolve, resolutionOptions } = createReactDiTools(scope);

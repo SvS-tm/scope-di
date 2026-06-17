@@ -34,3 +34,10 @@
 | Runtime | Version | Machine | Mode | Iterations | Result file |
 | --- | --- | --- | --- | ---: | --- |
 | Bun | 1.3.14 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_bun_json_complete.json`](./bench_bun_json_complete.json) |
+
+## Source
+
+| Field | Value |
+| --- | --- |
+| Commit | [f1ad04e0d5b701982b02a770292b4e0a7947fc85](https://github.com/SvS-tm/scope-di/commit/f1ad04e0d5b701982b02a770292b4e0a7947fc85) |
+| Branch | develop |
