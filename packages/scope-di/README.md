@@ -319,9 +319,15 @@ const config = await scope.resolveAsync("config");
 
 `resolve()` returns the raw runtime value. For async dependencies, that value is a promise. `resolveAsync()` awaits dependencies that were registered as async dependencies.
 
-Sync dependencies are allowed to be promises too, and `scope-di` preserves that distinction.
+### Stored Promises
+
+Sync dependencies are allowed to be promises too. In that case the promise is the dependency value, not async work that `scope-di` owns.
+
+For singular `resolveAsync()` calls, `scope-di` boxes a sync promise dependency so JavaScript does not automatically unwrap it through native promise assimilation. The public box type is `BoxedPromiseDependency<TPromise>`.
 
 ```ts
+import { configureRootScope } from "@svs-tm/scope-di";
+
 const promiseValue = Promise.resolve("stored promise");
 
 const scope = configureRootScope()
@@ -329,8 +335,17 @@ const scope = configureRootScope()
         .asValue(promiseValue)
     .build();
 
-const value = await scope.resolveAsync("storedPromise");
-// value is still the stored Promise instance, not its inner string.
+const boxed = await scope.resolveAsync("storedPromise");
+//    ^? BoxedPromiseDependency<Promise<string>>
+
+boxed.promise === promiseValue;
+```
+
+Collection and range resolution already return arrays, so stored promises inside those arrays stay raw promise values.
+
+```ts
+const [storedPromise] = await scope.resolveRangeAsync("storedPromise");
+//     ^? Promise<string>
 ```
 
 ## Lifetimes
