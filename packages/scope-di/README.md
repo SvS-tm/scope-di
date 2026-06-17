@@ -119,15 +119,12 @@ const usersService = scope.resolve("usersService");
 usersService.start();
 ```
 
-### IntelliSense Slot: First Resolution
+| Typed Configuration |
+|---|
 
-Use this slot for a GIF showing key autocomplete and inferred return types for `resolve()` and `resolveRange()`.
+<img src="./docs/assets/intellisense-basic-resolution.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
 
-```md
-<!-- GIF: docs/assets/intellisense-basic-resolution.gif -->
-```
-
-## Typed Configuration
+##
 
 ### Values
 
@@ -221,15 +218,14 @@ const scope = configureRootScope()
 const usersApi = scope.resolve("usersApi");
 ```
 
-### IntelliSense Slot: Dependent Factory Inference
+| Dependent Factory Inference |
+|---|
 
-Use this slot for a GIF showing that factory parameters are inferred from the keys passed to `asDependent()`.
+<img src="./docs/assets/intellisense-dependent-factory.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
 
-```md
-<!-- GIF: docs/assets/intellisense-dependent-factory.gif -->
-```
+##
 
-## Resolution
+### Resolution
 
 Use `resolve()` for one dependency.
 
@@ -273,6 +269,13 @@ const middleware = scope.resolve(["middleware"]);
 //    ^? ["metrics", "logging", "auth"]
 ```
 
+| Collections Inference |
+|---|
+
+<img src="./docs/assets/intellisense-collections.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
+
+##
+
 Collections can be injected into dependent factories and classes.
 
 ```ts
@@ -286,28 +289,18 @@ const scope = configureRootScope()
 const pipeline = scope.resolve("pipeline");
 ```
 
-### IntelliSense Slot: Collections
-
-Use this slot for a GIF showing the difference between `resolve("middleware")` and `resolve(["middleware"])`.
-
-```md
-<!-- GIF: docs/assets/intellisense-collections.gif -->
-```
-
 ## Async Dependencies
 
 Async dependencies can be registered with `asFactoryAsync()` or `asClassAsync()`.
 
 ```ts
 const scope = configureRootScope()
-    .map("config").asFactoryAsync
-    (
-        async () =>
-        ({
-            apiUrl: "https://api.example.com"
-        }),
-        DependencyLifetime.Singleton
-    )
+    .map("config")
+        .asFactoryAsync
+        (
+            async () => ({ apiUrl: "https://api.example.com" }),
+            DependencyLifetime.Singleton
+        )
     .build();
 
 const pendingConfig = scope.resolve("config");
@@ -317,6 +310,13 @@ const config = await scope.resolveAsync("config");
 //    ^? { readonly apiUrl: "https://api.example.com" }
 ```
 
+| Async Inference |
+|---|
+
+<img src="./docs/assets/intellisense-async.gif" alt="scope-di IntelliSense showing typed dependency resolution" width="100%" />
+
+##
+
 `resolve()` returns the raw runtime value. For async dependencies, that value is a promise. `resolveAsync()` awaits dependencies that were registered as async dependencies.
 
 Sync dependencies are allowed to be promises too, and `scope-di` preserves that distinction.
@@ -325,7 +325,8 @@ Sync dependencies are allowed to be promises too, and `scope-di` preserves that 
 const promiseValue = Promise.resolve("stored promise");
 
 const scope = configureRootScope()
-    .map("storedPromise").asValue(promiseValue)
+    .map("storedPromise")
+        .asValue(promiseValue)
     .build();
 
 const value = await scope.resolveAsync("storedPromise");
@@ -340,10 +341,14 @@ Every class or factory registration accepts a `DependencyLifetime`.
 
 ```ts
 configureRootScope()
-    .map("singleton").asClass(Service, DependencyLifetime.Singleton)
-    .map("scoped").asClass(Service, DependencyLifetime.Scoped)
-    .map("scopedInherited").asClass(Service, DependencyLifetime.ScopedInherited)
-    .map("transient").asClass(Service, DependencyLifetime.Transient);
+    .map("singleton")
+        .asClass(Service, DependencyLifetime.Singleton)
+    .map("scoped")
+        .asClass(Service, DependencyLifetime.Scoped)
+    .map("scopedInherited")
+        .asClass(Service, DependencyLifetime.ScopedInherited)
+    .map("transient")
+        .asClass(Service, DependencyLifetime.Transient);
 ```
 
 | Lifetime | Behavior |
@@ -359,7 +364,8 @@ Scopes can create child scopes for request, job, component tree, or operation li
 
 ```ts
 const rootScope = configureRootScope()
-    .map("requestId").asFactory(() => crypto.randomUUID(), DependencyLifetime.Scoped)
+    .map("requestId")
+        .asFactory(() => crypto.randomUUID(), DependencyLifetime.Scoped)
     .build();
 
 const requestScope = rootScope.createChildScope();
@@ -379,7 +385,8 @@ class Connection implements Disposable
 }
 
 const scope = configureRootScope()
-    .map("connection").asClass(Connection, DependencyLifetime.Scoped)
+    .map("connection")
+        .asClass(Connection, DependencyLifetime.Scoped)
     .build();
 
 scope.resolve("connection");
@@ -394,10 +401,14 @@ For async cleanup, use `await scope[Symbol.asyncDispose]()`.
 
 ```ts
 const builder = configureRootScope()
-    .map("a").asValue("a");
+    .map("a")
+        .asValue("a");
 
 const firstScope = builder.build();
-const nextBuilder = builder.map("b").asValue("b");
+const nextBuilder = builder
+    .map("b")
+        .asValue("b");
+        
 const secondScope = nextBuilder.build();
 
 firstScope.resolve("a");
