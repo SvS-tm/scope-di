@@ -2,6 +2,7 @@
 .rollup.cache
 *.tsbuildinfo
 coverage
+test-results
 src
 tests-setup.ts
 *.test.ts

@@ -29,6 +29,7 @@ ehthumbs.db
 
 # Test output
 coverage/
+test-results/
 *.log
 
 # Env files

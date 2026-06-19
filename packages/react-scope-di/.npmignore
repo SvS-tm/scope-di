@@ -4,6 +4,7 @@
 coverage
 coverage-react-18
 coverage-react-19
+test-results
 src
 tests-setup.ts
 tests-setup.after-env.ts

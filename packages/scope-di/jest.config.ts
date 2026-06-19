@@ -5,6 +5,17 @@ const config: Config =
     collectCoverage: true,
     coverageDirectory: "coverage",
     coverageProvider: "v8",
+    reporters:
+    [
+        "default",
+        [
+            "jest-junit",
+            {
+                outputDirectory: "test-results",
+                outputName: "junit.xml"
+            }
+        ]
+    ],
     projects:
     [
         {
