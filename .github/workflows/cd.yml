@@ -1,0 +1,21 @@
+on:
+  pull_request:
+    types: [closed]
+    branches: ['release**']
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+    cd:
+        if: ${{ github.event.pull_request.merged == true }}
+        uses: svs-tm/ci-cd/.github/workflows/typescript.library.cd.yml@main
+        secrets:
+            NPM_REGISTRIES_CONFIG: >-
+                [
+                    {
+                        "registry": "https://npm.pkg.github.com/",
+                        "token": "${{ secrets.GITHUB_TOKEN }}"
+                    }
+                ]
