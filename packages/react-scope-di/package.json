@@ -5,6 +5,11 @@
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SvS-tm/scope-di.git",
+        "directory": "packages/react-scope-di"
+    },
     "sideEffects": false,
     "exports": {
         ".": {

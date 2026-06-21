@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
   packages: write
 
 jobs:
@@ -15,6 +16,7 @@ jobs:
             NPM_REGISTRIES_CONFIG: >-
                 [
                     {
+                        "mode": "AuthToken",
                         "registry": "https://npm.pkg.github.com/",
                         "token": "${{ secrets.GITHUB_TOKEN }}"
                     }
