@@ -1,42 +1,47 @@
 {
-  "name": "@svs-tm/system",
-  "version": "1.0.0",
-  "description": "System helpers collection",
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+    "name": "@svs-tm/system",
+    "version": "1.0.0",
+    "description": "System helpers collection",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SvS-tm/scope-di.git",
+        "directory": "packages/system"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+        "test": "jest"
+    },
+    "keywords": [],
+    "author": "svs-tm",
+    "license": "MIT",
+    "devDependencies": {
+        "@jest/globals": "^30.0.5",
+        "@rollup/plugin-commonjs": "^28.0.6",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-typescript": "^12.1.4",
+        "@tsd/typescript": "^5.9.2",
+        "@types/node": "^24.1.0",
+        "jest": "^30.0.5",
+        "jest-junit": "^17.0.0",
+        "jest-runner-tsd": "^6.0.0",
+        "rimraf": "^6.0.1",
+        "rollup": "^4.46.2",
+        "rollup-plugin-dts": "^6.2.1",
+        "ts-jest": "^29.4.0",
+        "ts-node": "^10.9.2",
+        "tsd-lite": "^0.9.0",
+        "tslib": "^2.8.1",
+        "typescript": "^5.9.2"
     }
-  },
-  "scripts": {
-    "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
-    "test": "jest"
-  },
-  "keywords": [],
-  "author": "svs-tm",
-  "license": "MIT",
-  "devDependencies": {
-    "@jest/globals": "^30.0.5",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.4",
-    "@tsd/typescript": "^5.9.2",
-    "@types/node": "^24.1.0",
-    "jest": "^30.0.5",
-    "jest-junit": "^17.0.0",
-    "jest-runner-tsd": "^6.0.0",
-    "rimraf": "^6.0.1",
-    "rollup": "^4.46.2",
-    "rollup-plugin-dts": "^6.2.1",
-    "ts-jest": "^29.4.0",
-    "ts-node": "^10.9.2",
-    "tsd-lite": "^0.9.0",
-    "tslib": "^2.8.1",
-    "typescript": "^5.9.2"
-  }
 }
