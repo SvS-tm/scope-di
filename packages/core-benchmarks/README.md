@@ -125,18 +125,6 @@ The public comparison uses idiomatic APIs for each library where possible. Some 
 
 Public charts should compare only equivalent scenarios. `scope-di`-specific features such as inherited scopes and typed collection inference should be documented as library features, not benchmarked as competitor cases unless another library exposes a direct equivalent.
 
-## Reporting Requirements
-
-Every published result should include:
-
-- CPU and operating system.
-- Runtime name and version.
-- Benchmark mode.
-- Iteration count.
-- Exact commit or package version.
-- Whether the row measures speed or memory.
-- Whether the scenario is warm resolution, cold resolution, registration, or diagnostics.
-
 ## Actual Runs
 
 ### 13th Gen Intel(R) Core(TM) i9-13900HX, Windows 10.0.26200 x64, 300 Iterations
