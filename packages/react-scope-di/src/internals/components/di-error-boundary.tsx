@@ -3,7 +3,7 @@ import { ResolutionErrorFallback } from "../../types";
 import { DiFallback } from "./di-fallback";
 import { Delegate } from "@svs-tm/system";
 
-export type DiErrorBoundaryProps = PropsWithChildren<{ onError?: Delegate<[error: unknown, errorInfo: ErrorInfo]>; fallback: ResolutionErrorFallback; }>;
+export type DiErrorBoundaryProps = PropsWithChildren<{ onError?: Delegate<[error: unknown, errorInfo: ErrorInfo]>; fallback?: ResolutionErrorFallback | undefined; }>;
 
 type DiErrorBoundaryState = 
 (
@@ -34,7 +34,7 @@ export class DiErrorBoundary extends Component<DiErrorBoundaryProps, DiErrorBoun
     public override render()
     {
         if (this.state.hasError)
-            return <DiFallback element={this.props.fallback} props={{ error: this.state.error }} />;
+            return <DiFallback fallback={this.props.fallback} props={{ error: this.state.error }} />;
 
         return <>{this.props.children}</>;
     }

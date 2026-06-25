@@ -111,12 +111,12 @@ describe
                     resolutionOptions
                     (
                         { 
-                            error: ({ error }) =>  
+                            error: { component: ({ error }) =>  
                             {
                                 errorSpy(error);
 
                                 return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
-                            }
+                            } }
                         }
                     ),
                     ({ dependencies: [dependency1] }) =>
@@ -162,12 +162,12 @@ describe
                 (
                     scope,
                     {
-                        error: ({ error }) =>
+                        error: { component: ({ error }) =>
                         {
                             globalErrorSpy(error);
 
                             return <span data-testid={globalErrorId}>Global error</span>;
-                        }
+                        } }
                     }
                 );
 
@@ -177,12 +177,12 @@ describe
                     resolutionOptions
                     (
                         {
-                            error: ({ error }) =>
+                            error: { component: ({ error }) =>
                             {
                                 localErrorSpy(error);
 
                                 return <span data-testid={localErrorId}>Local error</span>;
-                            }
+                            } }
                         }
                     ),
                     ({ dependencies: [dependency1] }) => <span>{dependency1.value}</span>

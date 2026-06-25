@@ -5,6 +5,13 @@
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
+    "files": [
+        "dist/index.cjs",
+        "dist/index.cjs.map",
+        "dist/index.d.ts",
+        "dist/index.mjs",
+        "dist/index.mjs.map"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/SvS-tm/scope-di.git",

@@ -19,7 +19,7 @@ describe
                     return <span data-testid={id}>Custom</span>;
                 };
 
-                act(() => render(<DiFallback element={<CustomComponent />} props={{}} />));
+                act(() => render(<DiFallback fallback={{ node: <CustomComponent /> }} props={{}} />));
 
                 expect(screen.queryByTestId(id)).toBeInTheDocument();
             }
@@ -32,7 +32,7 @@ describe
             {
                 const text = "Test text";
 
-                act(() => render(<DiFallback element={text} props={{}} />));
+                act(() => render(<DiFallback fallback={{ node: text }} props={{}} />));
 
                 expect(screen.queryByText(text)).toBeInTheDocument();
             }
@@ -45,7 +45,7 @@ describe
             {
                 const number = 1;
 
-                act(() => render(<DiFallback element={number} props={{}} />));
+                act(() => render(<DiFallback fallback={{ node: number }} props={{}} />));
 
                 expect(screen.queryByText(number)).toBeInTheDocument();
             }
@@ -64,7 +64,7 @@ describe
                     return <span data-testid={id}>{text}</span>;
                 };
 
-                act(() => render(<DiFallback element={CustomComponent} props={{ text }} />));
+                act(() => render(<DiFallback fallback={{ component: CustomComponent }} props={{ text }} />));
 
                 const element = screen.queryByTestId(id);
 
