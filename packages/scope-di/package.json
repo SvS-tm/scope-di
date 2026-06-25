@@ -20,7 +20,9 @@
     },
     "scripts": {
         "build": "tsc --project tsconfig.build.json && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
-        "test": "jest"
+        "test": "pnpm run test:runtime && pnpm run test:types",
+        "test:runtime": "jest",
+        "test:types": "tsd --files \"src/**/*.compiletime.test.ts\""
     },
     "keywords": [
         "di",
@@ -37,17 +39,16 @@
         "@rollup/plugin-commonjs": "^28.0.9",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.3.0",
-        "@tsd/typescript": "5.9.2",
+        "@swc/core": "^1.15.21",
+        "@swc/jest": "^0.2.39",
         "@types/node": "^24.1.0",
+        "esbuild-register": "^3.6.0",
         "jest": "^30.2.0",
         "jest-junit": "^17.0.0",
-        "jest-runner-tsd": "^6.0.0",
         "rimraf": "^6.1.3",
         "rollup": "^4.62.0",
         "rollup-plugin-dts": "^6.2.3",
-        "ts-jest": "^29.4.5",
-        "ts-node": "^10.9.2",
-        "tsd-lite": "^0.9.0",
+        "tsd": "^0.33.0",
         "typescript": "^5.9.2"
     }
 }

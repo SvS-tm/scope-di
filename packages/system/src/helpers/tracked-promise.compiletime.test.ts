@@ -1,5 +1,5 @@
-import { expectAssignable, expectType } from "tsd-lite";
-import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
+import { expectAssignable, expectType } from "tsd";
+import { TrackedPromise, TrackedPromiseStatus } from "../index";
 
 const resolved = TrackedPromise.resolved("value");
 

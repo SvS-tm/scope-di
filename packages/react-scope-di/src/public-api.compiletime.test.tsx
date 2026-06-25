@@ -1,5 +1,5 @@
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
-import { expectAssignable, expectError, expectType } from "tsd-lite";
+import { expectAssignable, expectError, expectType } from "tsd";
 import { createReactDiTools } from ".";
 
 class Dependency

@@ -1,3 +1,4 @@
+/** @jest-config-loader esbuild-register */
 import type { Config } from 'jest';
 
 const config: Config = {
@@ -18,19 +19,27 @@ const config: Config = {
     {
       displayName: "runtime",
       clearMocks: true,
-      preset: "ts-jest",
       testMatch: [
         "<rootDir>/src/**/*.runtime.test.ts"
       ],
+      transform: {
+        "^.+\\.tsx?$": [
+          "@swc/jest",
+          {
+            jsc: {
+              parser: {
+                syntax: "typescript"
+              },
+              target: "es2022"
+            },
+            module: {
+              type: "commonjs"
+            }
+          }
+        ]
+      },
       setupFiles: [
         "<rootDir>/src/tests-setup.ts"
-      ]
-    },
-    {
-      displayName: "compiletime",
-      runner: "jest-runner-tsd",
-      testMatch: [
-        "<rootDir>/src/**/*.compiletime.test.ts"
       ]
     }
   ]

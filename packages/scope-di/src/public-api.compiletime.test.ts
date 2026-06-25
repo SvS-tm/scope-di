@@ -1,4 +1,4 @@
-import { expectAssignable, expectError, expectType } from "tsd-lite";
+import { expectAssignable, expectError, expectType } from "tsd";
 import { configureRootScope, DependencyLifetime, type BoxedPromiseDependency } from ".";
 
 // Shared fixtures
