@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/react-scope-di",
-    "version": "1.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "Scope DI library for React",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
