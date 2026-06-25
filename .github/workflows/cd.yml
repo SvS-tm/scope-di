@@ -17,6 +17,11 @@ jobs:
             NPM_REGISTRIES_CONFIG: >-
                 [
                     {
+                        "mode": "TrustedPublishing",
+                        "registry": "https://registry.npmjs.org/",
+                        "access": "public"
+                    },
+                    {
                         "mode": "AuthToken",
                         "registry": "https://npm.pkg.github.com/",
                         "token": "${{ secrets.GITHUB_TOKEN }}"
