@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/scope-di",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.1",
     "description": "Scope DI core library",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
