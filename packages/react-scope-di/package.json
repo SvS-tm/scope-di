@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/react-scope-di",
-    "version": "1.0.0-alpha.1",
+    "version": "1.0.0-alpha.2",
     "description": "Scope DI library for React",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -47,9 +47,9 @@
         "@rollup/plugin-commonjs": "^28.0.9",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.3.0",
+        "@svs-tm/scope-di": "workspace:*",
         "@swc/core": "^1.15.21",
         "@swc/jest": "^0.2.39",
-        "@svs-tm/scope-di": "workspace:*",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^6.6.4",
         "@testing-library/react": "^16.3.0",
