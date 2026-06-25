@@ -1,5 +1,5 @@
-import { expectType } from "tsd-lite";
-import { ChancyValue } from "@svs-tm/system";
+import { expectType } from "tsd";
+import { ChancyValue } from "../index";
 
 const value = ChancyValue.success<string | null>("value");
 

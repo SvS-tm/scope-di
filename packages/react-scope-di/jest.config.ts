@@ -1,3 +1,4 @@
+/** @jest-config-loader esbuild-register */
 import type { Config } from "jest";
 
 const config: Config = {
@@ -29,7 +30,6 @@ const config: Config = {
             testMatch: ["<rootDir>/src/**/*.runtime.test.ts?(x)"],
             testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
-            preset: "ts-jest",
             moduleNameMapper: 
             {
                 "^react$": "react18",
@@ -41,18 +41,31 @@ const config: Config = {
             {
                 "^.+\\.tsx?$": 
                 [
-                    "ts-jest", 
+                    "@swc/jest", 
                     { 
-                        useESM: true, 
-                        tsconfig: "<rootDir>/tsconfig.react18.json" 
+                        jsc:
+                        {
+                            parser:
+                            {
+                                syntax: "typescript",
+                                tsx: true
+                            },
+                            transform:
+                            {
+                                react:
+                                {
+                                    runtime: "automatic"
+                                }
+                            },
+                            target: "es2022"
+                        },
+                        module:
+                        {
+                            type: "commonjs"
+                        }
                     }
                 ]
             }
-        },
-        {
-            displayName: "react-18-compiletime",
-            runner: "jest-runner-tsd",
-            testMatch: ["<rootDir>/src/**/*.compiletime.test.ts?(x)"]
         },
         {
             displayName: "react-19-runtime",
@@ -67,7 +80,6 @@ const config: Config = {
             testMatch: ["<rootDir>/src/**/*.runtime.test.ts?(x)"],
             testPathIgnorePatterns: ['<rootDir>/.rollup.cache', '<rootDir>/dist'],
             testEnvironment: "jsdom",
-            preset: "ts-jest",
             moduleNameMapper: 
             {
                 "^react$": "react19",
@@ -79,18 +91,31 @@ const config: Config = {
             {
                 "^.+\\.tsx?$": 
                 [
-                    "ts-jest", 
+                    "@swc/jest", 
                     { 
-                        useESM: true, 
-                        tsconfig: "<rootDir>/tsconfig.react19.json" 
+                        jsc:
+                        {
+                            parser:
+                            {
+                                syntax: "typescript",
+                                tsx: true
+                            },
+                            transform:
+                            {
+                                react:
+                                {
+                                    runtime: "automatic"
+                                }
+                            },
+                            target: "es2022"
+                        },
+                        module:
+                        {
+                            type: "commonjs"
+                        }
                     }
                 ]
             }
-        },
-        {
-            displayName: "react-19-compiletime",
-            runner: "jest-runner-tsd",
-            testMatch: ["<rootDir>/src/**/*.compiletime.test.ts?(x)"]
         }
     ]
 };
