@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/system",
-    "version": "1.0.0",
+    "version": "1.0.0-alpha.0",
     "description": "System helpers collection",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
