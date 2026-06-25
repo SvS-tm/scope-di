@@ -7,6 +7,18 @@ peerDependencyRules:
   allowedVersions:
     'react-dom@18.3.1>react': 19.2.0
 
+overrides:
+  '@babel/core@7.28.5': 7.29.6
+  brace-expansion@1.1.12: 1.1.13
+  brace-expansion@2.0.2: 2.0.3
+  glob@10.4.5: 10.5.0
+  js-yaml@3.14.1: 4.2.0
+  minimatch@3.1.2: 3.1.4
+  minimatch@9.0.5: 9.0.7
+  picomatch@2.3.1: 2.3.2
+  picomatch@4.0.3: 4.0.4
+  ws@8.18.3: 8.21.0
+
 allowBuilds:
   '@swc/core': true
   core-js: true
