@@ -1,7 +1,7 @@
 {
     "name": "@svs-tm/react-scope-di",
-    "version": "1.0.0-alpha.2",
-    "description": "Scope DI library for React",
+    "version": "1.0.0-alpha.3",
+    "description": "React bindings for Scope DI with typed injection and async dependency support",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -32,10 +32,13 @@
         "test:types": "tsd --files \"src/**/*.compiletime.test.tsx\""
     },
     "keywords": [
+        "react",
+        "dependency-injection",
         "di",
-        "dependency injection",
-        "scopes",
-        "react"
+        "ioc",
+        "typescript",
+        "suspense",
+        "hooks"
     ],
     "author": "svs-tm",
     "license": "MIT",
@@ -76,7 +79,7 @@
         "typescript": "^5.9.2"
     },
     "peerDependencies": {
-        "@svs-tm/scope-di": ">=1 <2",
+        "@svs-tm/scope-di": "^1.0.0-alpha.0 || >=1 <2",
         "react": ">=18 <20"
     },
     "engines": {
