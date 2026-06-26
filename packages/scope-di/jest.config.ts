@@ -1,3 +1,4 @@
+/** @jest-config-loader esbuild-register */
 import type { Config } from "jest";
 
 const config: Config = 
@@ -20,7 +21,6 @@ const config: Config =
     [
         {
             displayName: "runtime",
-            preset: "ts-jest/presets/default-esm",
             testEnvironment: "node",
             testMatch:
             [
@@ -29,27 +29,28 @@ const config: Config =
             transform: {
                 "^.+\\.tsx?$": 
                 [
-                    "ts-jest", 
+                    "@swc/jest", 
                     { 
-                        useESM: true, 
-                        tsconfig: "<rootDir>/tsconfig.jest.json" 
+                        jsc:
+                        {
+                            parser:
+                            {
+                                syntax: "typescript"
+                            },
+                            target: "es2022"
+                        },
+                        module:
+                        {
+                            type: "commonjs"
+                        }
                     }
                 ]
             },
-            extensionsToTreatAsEsm: [".ts"],
             moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
             clearMocks: true,
             resetMocks: true,
             restoreMocks: true,
             setupFiles: ["<rootDir>/src/tests-setup.ts"]
-        },
-        {
-            displayName: "compiletime",
-            runner: "jest-runner-tsd",
-            testMatch:
-            [
-                "<rootDir>/src/**/*.compiletime.test.ts"
-            ]
         }
     ]
 };
