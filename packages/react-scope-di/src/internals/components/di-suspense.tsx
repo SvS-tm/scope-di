@@ -7,7 +7,7 @@ export type DiSuspenseProps =
     Omit<SuspenseProps, "fallback">
         &
     {
-        fallback: ResolutionPendingFallback;
+        fallback?: ResolutionPendingFallback | undefined;
     }
 );
 
@@ -18,7 +18,7 @@ export function DiSuspense({ fallback, ...rest }: DiSuspenseProps)
     return (
         <Suspense 
             {...rest} 
-            fallback={<DiFallback element={fallback} props={empty} />} 
+            fallback={<DiFallback fallback={fallback} props={empty} />} 
         />
     );
 };

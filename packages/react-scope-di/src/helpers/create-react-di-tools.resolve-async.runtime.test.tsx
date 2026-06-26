@@ -111,12 +111,12 @@ describe
                     asyncResolutionOptions
                     (
                         { 
-                            error: ({ error }) =>
+                            error: { component: ({ error }) =>
                             {
                                 errorSpy(error);
 
                                 return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
-                            }
+                            } }
                         }
                     ),
                     ({ dependencies: [dependency1] }) =>
@@ -166,7 +166,7 @@ describe
                     asyncResolutionOptions
                     (
                         { 
-                            pending: <span role="progressbar">{loaderText}</span>
+                            pending: { node: <span role="progressbar">{loaderText}</span> }
                         }
                     ),
                     ({ dependencies: [dependency1] }) =>
@@ -240,13 +240,13 @@ describe
                     asyncResolutionOptions
                     (
                         {
-                            pending: <span role="progressbar">{loaderText}</span>,
-                            error: ({ error }) =>
+                            pending: { node: <span role="progressbar">{loaderText}</span> },
+                            error: { component: ({ error }) =>
                             {
                                 errorSpy(error);
 
                                 return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
-                            }
+                            } }
                         }
                     ),
                     ({ dependencies: [dependency1] }) =>
@@ -307,12 +307,12 @@ describe
                 (
                     scope,
                     {
-                        error: ({ error }) =>
+                        error: { component: ({ error }) =>
                         {
                             errorSpy(error);
 
                             return <span data-testid={errorSpanId}>{errorSpanContent}</span>;
-                        }
+                        } }
                     }
                 );
 
@@ -322,7 +322,7 @@ describe
                     asyncResolutionOptions
                     (
                         {
-                            pending: <span role="progressbar">{loaderText}</span>
+                            pending: { node: <span role="progressbar">{loaderText}</span> }
                         }
                     ),
                     ({ dependencies: [dependency1] }) => <span data-testid={dependency1.value}>{dependency1.value}</span>

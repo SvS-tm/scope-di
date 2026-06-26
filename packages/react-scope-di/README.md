@@ -216,8 +216,8 @@ const Profile = resolveAsync
     asyncResolutionOptions<ProfileProps>
     (
         {
-            pending: <span>Loading profile...</span>,
-            error: ({ error }) => <span>Failed to load profile</span>
+            pending: { node: <span>Loading profile...</span> },
+            error: { component: ({ error }) => <span>Failed to load profile</span> }
         }
     ),
     ({ props, dependencies: [profile] }) =>
@@ -252,7 +252,7 @@ const di = createReactDiTools
 (
     scope,
     {
-        error: ({ error }) => <span>Something went wrong</span>
+        error: { component: ({ error }) => <span>Something went wrong</span> }
     }
 );
 ```
@@ -266,8 +266,8 @@ const Profile = di.resolveAsync
     di.asyncResolutionOptions
     (
         {
-            pending: <span>Loading...</span>,
-            error: ({ error }) => <span>Could not load profile</span>
+            pending: { node: <span>Loading...</span> },
+            error: { component: ({ error }) => <span>Could not load profile</span> }
         }
     ),
     ({ dependencies: [profile] }) => <h2>{profile.name}</h2>

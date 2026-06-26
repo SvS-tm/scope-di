@@ -25,7 +25,7 @@ describe
                 (
                     () => render
                     (
-                        <DiErrorBoundary fallback={fallbackText}>
+                        <DiErrorBoundary fallback={{ node: fallbackText }}>
                             <Component />
                         </DiErrorBoundary>
                     )
@@ -55,7 +55,7 @@ describe
                     {
                         render
                         (
-                            <DiErrorBoundary fallback={"Error"} onError={onError}>
+                            <DiErrorBoundary fallback={{ node: "Error" }} onError={onError}>
                                 <Component />
                             </DiErrorBoundary>
                         );
@@ -90,7 +90,7 @@ describe
                     {
                         render
                         (
-                            <DiErrorBoundary fallback={ErrorHandler}>
+                            <DiErrorBoundary fallback={{ component: ErrorHandler }}>
                                 <Component />
                             </DiErrorBoundary>
                         );

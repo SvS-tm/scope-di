@@ -28,7 +28,7 @@ describe
                     {
                         render
                         (
-                            <DiSuspense fallback={<span data-testid={loaderId}>Loading...</span>}>
+                            <DiSuspense fallback={{ node: <span data-testid={loaderId}>Loading...</span> }}>
                                 <Component />
                             </DiSuspense>
                         );

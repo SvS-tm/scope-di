@@ -1,10 +1,17 @@
 {
     "name": "@svs-tm/system",
-    "version": "1.0.0-alpha.1",
+    "version": "1.0.0-alpha.2",
     "description": "System helpers collection",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
+    "files": [
+        "dist/index.cjs",
+        "dist/index.cjs.map",
+        "dist/index.d.ts",
+        "dist/index.mjs",
+        "dist/index.mjs.map"
+    ],
     "sideEffects": false,
     "repository": {
         "type": "git",
