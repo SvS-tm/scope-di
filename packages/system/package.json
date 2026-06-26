@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/system",
-    "version": "1.0.0-alpha.2",
+    "version": "1.0.0-alpha.3",
     "description": "Runtime and type utilities used by the Scope DI packages",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
