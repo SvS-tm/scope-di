@@ -1,7 +1,7 @@
 {
     "name": "@svs-tm/scope-di",
     "version": "1.0.0-alpha.2",
-    "description": "Scope DI core library",
+    "description": "Type-safe dependency injection for TypeScript without decorators or reflect-metadata",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -32,9 +32,13 @@
         "test:types": "tsd --files \"src/**/*.compiletime.test.ts\""
     },
     "keywords": [
+        "dependency-injection",
         "di",
-        "dependency injection",
-        "scopes"
+        "ioc",
+        "typescript",
+        "type-safe",
+        "no-decorators",
+        "react"
     ],
     "author": "svs-tm",
     "license": "MIT",
