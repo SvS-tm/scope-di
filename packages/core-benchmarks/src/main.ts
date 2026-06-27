@@ -236,7 +236,7 @@ function assertGitAvailable()
             [
                 "Benchmark sanity check failed: git is required before running benchmarks.",
                 "Install Git and make sure the `git` executable is available on PATH.",
-                "When running with Deno, also make sure the command includes `--allow-run=git`."
+                "When running with Deno, also make sure the command includes `--allow-env --allow-run=git`."
             ],
             "git --version",
             error
