@@ -4,40 +4,40 @@
 
 | Runtime | Mode | Scenario | scope-di place | scope-di | Winner | Winner result | Slowest | Slowest result |
 | --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |
-| Node.js | complete | `warmResolveValue` | 4 / 7 | 20.1 ns | typed-inject | 3.2 ns | tsyringe | 98.2 ns |
-| Node.js | complete | `warmResolveSingletonClass` | 3 / 7 | 20.8 ns | typed-inject | 4.8 ns | tsyringe | 102.3 ns |
-| Node.js | complete | `warmResolveTransientClass` | 2 / 6 | 23.8 ns | typed-inject | 22.2 ns | typedi | 144.4 ns |
-| Node.js | complete | `warmResolveSingletonFactory` | 3 / 7 | 20.6 ns | typed-inject | 5.1 ns | tsyringe | 101.1 ns |
-| Node.js | complete | `warmResolveTransientFactory` | 3 / 6 | 32.6 ns | typed-inject | 21.9 ns | tsyringe | 104.0 ns |
-| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 150.3 ns | scope-di | 150.3 ns | typedi | 731.1 ns |
-| Node.js | complete | `warmResolveTransientFactoryWithSixDependencies` | 1 / 6 | 251.0 ns | scope-di | 251.0 ns | typedi | 881.2 ns |
-| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 1.02 us | scope-di | 1.02 us | typedi | 4.68 us |
-| Node.js | complete | `warmResolveCachedFactoryWideGraph` | 3 / 6 | 241.3 ns | typed-inject | 140.6 ns | tsyringe | 716.4 ns |
-| Node.js | complete | `registrationClass` | 3 / 7 | 274.38 us | typed-inject | 206.80 us | inversify | 1.80 ms |
-| Node.js | complete | `registrationValue` | 4 / 7 | 139.50 us | tsyringe | 28.68 us | inversify | 1.70 ms |
-| Node.js | complete | `registrationFactory` | 3 / 7 | 135.69 us | tsyringe | 113.94 us | inversify | 1.81 ms |
+| Node.js | complete | `warmResolveValue` | 4 / 7 | 16.8 ns | typed-inject | 6.4 ns | tsyringe | 94.8 ns |
+| Node.js | complete | `warmResolveSingletonClass` | 3 / 7 | 18.3 ns | typed-inject | 5.2 ns | tsyringe | 92.8 ns |
+| Node.js | complete | `warmResolveTransientClass` | 1 / 6 | 23.5 ns | scope-di | 23.5 ns | typedi | 151.2 ns |
+| Node.js | complete | `warmResolveSingletonFactory` | 3 / 7 | 20.8 ns | typed-inject | 4.9 ns | tsyringe | 102.7 ns |
+| Node.js | complete | `warmResolveTransientFactory` | 2 / 6 | 25.3 ns | typedi | 21.7 ns | tsyringe | 104.1 ns |
+| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 147.6 ns | scope-di | 147.6 ns | typedi | 776.0 ns |
+| Node.js | complete | `warmResolveTransientFactoryWithSixDependencies` | 1 / 6 | 237.1 ns | scope-di | 237.1 ns | typedi | 911.7 ns |
+| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 1.00 us | scope-di | 1.00 us | typedi | 4.84 us |
+| Node.js | complete | `warmResolveCachedFactoryWideGraph` | 3 / 6 | 221.8 ns | typed-inject | 153.1 ns | tsyringe | 755.9 ns |
+| Node.js | complete | `registrationClass` | 1 / 7 | 203.23 us | scope-di | 203.23 us | inversify | 1.88 ms |
+| Node.js | complete | `registrationValue` | 4 / 7 | 140.99 us | tsyringe | 29.74 us | inversify | 1.61 ms |
+| Node.js | complete | `registrationFactory` | 3 / 7 | 145.59 us | typed-inject | 123.57 us | inversify | 1.69 ms |
 
 ## Memory Summary
 
 | Runtime | Mode | Scenario | scope-di place | scope-di allocations | Winner | Winner allocations | Highest allocation library | Highest allocation result |
 | --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |
-| Node.js | complete | `warmResolveValue` | 3 / 7 | 5 B | typed-inject | 0 B | inversify | 306 B |
-| Node.js | complete | `warmResolveSingletonClass` | 3 / 7 | 5 B | typed-inject | 0 B | inversify | 309 B |
-| Node.js | complete | `warmResolveTransientClass` | 1 / 6 | 31 B | scope-di | 31 B | typedi | 491 B |
-| Node.js | complete | `warmResolveTransientFactory` | 2 / 6 | 64 B | typedi | 60 B | inversify | 367 B |
-| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 231 B | scope-di | 231 B | typedi | 2.34 KB |
-| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 2.23 KB | scope-di | 2.23 KB | typed-inject | 6.58 KB |
-| Node.js | complete | `warmResolveCachedFactoryWideGraph` | 2 / 6 | 322 B | typedi | 139 B | inversify | 3.49 KB |
+| Node.js | complete | `warmResolveValue` | 2 / 7 | 6 B | typed-inject | 1 B | inversify | 257 B |
+| Node.js | complete | `warmResolveSingletonClass` | 3 / 7 | 5 B | typed-inject | 1 B | inversify | 309 B |
+| Node.js | complete | `warmResolveTransientClass` | 1 / 6 | 32 B | scope-di | 32 B | typedi | 477 B |
+| Node.js | complete | `warmResolveTransientFactory` | 1 / 6 | 64 B | scope-di | 64 B | inversify | 369 B |
+| Node.js | complete | `warmResolveTransientFactoryWithFiveDependencies` | 1 / 6 | 217 B | scope-di | 217 B | typedi | 2.34 KB |
+| Node.js | complete | `warmResolveTransientFactoryDeepWideGraph` | 1 / 6 | 2.23 KB | scope-di | 2.23 KB | typedi | 11.77 KB |
+| Node.js | complete | `warmResolveCachedFactoryWideGraph` | 2 / 6 | 319 B | typedi | 141 B | inversify | 3.49 KB |
 
 ## Runtime Matrix
 
 | Runtime | Version | Machine | Mode | Iterations | Result file |
 | --- | --- | --- | --- | ---: | --- |
-| Node.js | v26.3.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_node_json_complete.json`](./bench_node_json_complete.json) |
+| Node.js | v24.18.0 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26200 x64 | complete | 300 | [`bench_node_json_complete.json`](./bench_node_json_complete.json) |
 
 ## Source
 
 | Field | Value |
 | --- | --- |
-| Commit | [f1ad04e0d5b701982b02a770292b4e0a7947fc85](https://github.com/SvS-tm/scope-di/commit/f1ad04e0d5b701982b02a770292b4e0a7947fc85) |
-| Branch | develop |
+| Commit | [37df01e132e8953a806c3330fd104433739ebda9](https://github.com/SvS-tm/scope-di/commit/37df01e132e8953a806c3330fd104433739ebda9) |
+| Branch | chore/benchmarks |
