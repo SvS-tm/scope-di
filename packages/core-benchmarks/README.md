@@ -129,7 +129,7 @@ Public charts should compare only equivalent scenarios. `scope-di`-specific feat
 
 ### 13th Gen Intel(R) Core(TM) i9-13900HX, Windows 10.0.26200 x64, 300 Iterations
 
-Commit: [f1ad04e0d5b701982b02a770292b4e0a7947fc85](https://github.com/SvS-tm/scope-di/commit/f1ad04e0d5b701982b02a770292b4e0a7947fc85)
+Commit: [37df01e132e8953a806c3330fd104433739ebda9](https://github.com/SvS-tm/scope-di/commit/37df01e132e8953a806c3330fd104433739ebda9)
 
 Statistics:
 
@@ -137,13 +137,31 @@ Statistics:
 - `scope-di` is strongest on transient factory graphs with several dependencies.
 - Deep and wide transient graphs are the clearest speed win for `scope-di`.
 - Allocation behavior is especially good on transient class and factory graph paths.
-- Registration is middle of the pack and should be treated as lower priority than hot resolution for long-lived applications.
+- Registration is runtime-sensitive: `scope-di` wins Node.js class registration here, while `tsyringe` and `typed-inject` often lead the other registration cases.
 
 | Runtime | Version | Report |
 | --- | --- | --- |
-| Node.js | `v26.3.0` | [Node.js report](./results/ALIEN/bench_node_json_complete.md) |
+| Node.js | `v24.18.0` | [Node.js report](./results/ALIEN/bench_node_json_complete.md) |
 | Bun | `1.3.14` | [Bun report](./results/ALIEN/bench_bun_json_complete.md) |
-| Deno | `2.8.3` | [Deno report](./results/ALIEN/bench_deno_json_complete.md) |
+| Deno | `2.9.0` | [Deno report](./results/ALIEN/bench_deno_json_complete.md) |
+
+### AMD Ryzen 7 3800X 8-Core Processor, Windows 10.0.22631 x64, 300 Iterations
+
+Commit: [d71b5796a374cc67fd6a2d166e6eb521cb064fd9](https://github.com/SvS-tm/scope-di/commit/d71b5796a374cc67fd6a2d166e6eb521cb064fd9)
+
+Statistics:
+
+- Tiny cached lookups are usually led by `typed-inject`.
+- `scope-di` remains strongest on transient factory graphs with several dependencies.
+- Deep and wide transient graphs are the clearest speed win for `scope-di` across Node.js, Bun, and Deno.
+- Allocation behavior is especially good on Node.js and Deno transient graph paths.
+- Bun allocation measurements are very small in absolute terms, so rank changes should be read with extra care.
+
+| Runtime | Version | Report |
+| --- | --- | --- |
+| Node.js | `v24.18.0` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
+| Bun | `1.3.14` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
+| Deno | `2.9.0` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
 
 ## License
 
