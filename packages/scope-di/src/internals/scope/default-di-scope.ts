@@ -78,7 +78,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public resolveRange
     <
-        T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+        const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
     (
         ...keys: T_DependencyResolutionKeys
@@ -89,7 +89,7 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     public resolveRangeAsync
     <
-        T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+        const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
     (
         ...keys: T_DependencyResolutionKeys

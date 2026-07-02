@@ -2,7 +2,7 @@ import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependenc
 
 export type UseDependenciesHook<T_RegisteredDependencies extends RegisteredDependencies> =
 {
-    <T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    <const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
