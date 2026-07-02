@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/react-scope-di",
-    "version": "1.0.0-alpha.3",
+    "version": "1.0.0-alpha.4",
     "description": "React bindings for Scope DI with typed injection and async dependency support",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
