@@ -78,7 +78,7 @@ export type DiMappingBuilder
             >
         >;
 
-    asDependent<T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    asDependent<const T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_Keys
     )

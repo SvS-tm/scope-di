@@ -1,5 +1,5 @@
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
-import { expectAssignable, expectError, expectType } from "tsd";
+import { expectAssignable, expectError, expectNotType, expectType } from "tsd";
 import { createReactDiTools } from ".";
 
 class Dependency
@@ -32,6 +32,7 @@ function UseDependenciesConsumer()
 {
     const dependencies = tools.useDependencies("value", "dependency", ["items"]);
 
+    expectNotType<any>(dependencies);
     expectType<["value", DependencyAbstraction, [2, "first"]]>(dependencies);
 
     return null;
@@ -44,6 +45,8 @@ function UseDependenciesAsyncConsumer()
 {
     const result = tools.useDependenciesAsync("value", "asyncDependency", ["items"]);
 
+    expectNotType<any>(result);
+    expectNotType<any>(null as unknown as Awaited<typeof result>);
     expectAssignable<Promise<["value", { readonly value: "async"; }, [2, "first"]]>>(result);
     expectType<["value", { readonly value: "async"; }, [2, "first"]]>(null as unknown as Awaited<typeof result>);
 

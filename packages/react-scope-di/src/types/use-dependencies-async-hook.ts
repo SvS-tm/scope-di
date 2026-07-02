@@ -3,7 +3,7 @@ import type { AsyncResolutionResult } from "./async-resolution-result";
 
 export type UseDependenciesAsyncHook<T_RegisteredDependencies extends RegisteredDependencies> =
 {
-    <T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
+    <const T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]>
     (
         ...keys: T_DependencyResolutionKeys
     )
