@@ -153,7 +153,7 @@ export class DefaultDiMappingBuilder
 
     public asDependent
     <
-        T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+        const T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
     >
     (...keys: T_Keys)
     {

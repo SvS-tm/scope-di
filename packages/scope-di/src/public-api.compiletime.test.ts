@@ -1,4 +1,4 @@
-import { expectAssignable, expectError, expectType } from "tsd";
+import { expectAssignable, expectError, expectNotType, expectType } from "tsd";
 import { configureRootScope, DependencyLifetime, type BoxedPromiseDependency } from ".";
 
 // Shared fixtures
@@ -28,6 +28,11 @@ const valueScope = configureRootScope()
     .map("value").asValue("value")
     .build();
 
+const valueRange = valueScope.resolveRange("value");
+const valueRangeAsync = valueScope.resolveRangeAsync("value");
+
+expectNotType<any>(valueRange);
+expectNotType<any>(valueRangeAsync);
 expectType<["value"]>(valueScope.resolveRange("value"));
 expectType<"value">(valueScope.resolve("value"));
 expectType<Promise<["value"]>>(valueScope.resolveRangeAsync("value"));
@@ -138,9 +143,23 @@ const dependentFactoryScope = configureRootScope()
     .map("value").asValue("value")
     .map("dependency").asClass(Dependency, DependencyLifetime.Singleton)
     .map("parent").asDependent("value", "dependency")
-    .factory((value, dependency) => ({ value, dependency }), DependencyLifetime.Singleton)
+    .factory
+    (
+        (value, dependency) => 
+        {
+            expectNotType<any>(value);
+            expectNotType<any>(dependency);
+            expectType<"value">(value);
+            expectType<Dependency>(dependency);
+
+            return { value, dependency };
+        }, 
+        DependencyLifetime.Singleton
+    )
     .build();
 
+expectNotType<any>(dependentFactoryScope);
+expectNotType<any>(dependentFactoryScope.resolve("parent"));
 expectType<[{ readonly value: "value"; readonly dependency: Dependency; }]>(dependentFactoryScope.resolveRange("parent"));
 
 // Dependent async factory mappings await async dependencies

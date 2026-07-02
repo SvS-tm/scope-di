@@ -202,6 +202,98 @@ function getGitValue(args: string[])
         .trim();
 }
 
+function getSanityCheckDetails(command: string, details: unknown)
+{
+    const detailMessage = details instanceof Error
+        ? details.message
+        : String(details);
+
+    return `${command}: ${detailMessage}`;
+}
+
+function throwSanityCheckError(messages: string[], command: string, details: unknown)
+    : never
+{
+    throw new Error
+    (
+        [
+            ...messages,
+            getSanityCheckDetails(command, details)
+        ].join("\n")
+    );
+}
+
+function assertGitAvailable()
+{
+    try
+    {
+        getGitValue(["--version"]);
+    }
+    catch(error)
+    {
+        throwSanityCheckError
+        (
+            [
+                "Benchmark sanity check failed: git is required before running benchmarks.",
+                "Install Git and make sure the `git` executable is available on PATH.",
+                "When running with Deno, also make sure the command includes `--allow-env --allow-run=git`."
+            ],
+            "git --version",
+            error
+        );
+    }
+}
+
+function assertGitRepository()
+{
+    try
+    {
+        const isInsideWorkTree = getGitValue(["rev-parse", "--is-inside-work-tree"]);
+
+        if(isInsideWorkTree !== "true")
+            throw new Error(`Expected true, received ${isInsideWorkTree}`);
+    }
+    catch(error)
+    {
+        throwSanityCheckError
+        (
+            [
+                "Benchmark sanity check failed: benchmarks must run from inside a Git work tree.",
+                "Run the benchmark from the repository checkout so source metadata can be recorded."
+            ],
+            "git rev-parse --is-inside-work-tree",
+            error
+        );
+    }
+}
+
+function assertGitCommitReadable()
+{
+    try
+    {
+        getGitValue(["rev-parse", "--verify", "HEAD"]);
+    }
+    catch(error)
+    {
+        throwSanityCheckError
+        (
+            [
+                "Benchmark sanity check failed: current Git commit could not be read.",
+                "Make sure the checkout has a valid HEAD before running benchmarks."
+            ],
+            "git rev-parse --verify HEAD",
+            error
+        );
+    }
+}
+
+function assertBenchmarkSanityChecks()
+{
+    assertGitAvailable();
+    assertGitRepository();
+    assertGitCommitReadable();
+}
+
 function createSourceMetadata()
 {
     const repository = getBestEffortValue(() => getGitValue(["remote", "get-url", "origin"]), undefined as string | undefined);
@@ -802,6 +894,7 @@ const benchmarks =
 ] satisfies BenchmarkGroup[];
 
 const runtimeArgs = getRuntimeArgs();
+assertBenchmarkSanityChecks();
 const mode = getMode(runtimeArgs);
 const iterations = [getIterations(runtimeArgs)];
 const selectedBenchmarks = benchmarks.filter
