@@ -1,0 +1,9 @@
+{
+    "$schema": "https://tstyche.org/schemas/config-7.0.json",
+    "target": "5.9 || 6.0",
+    "checkSuppressedErrors": false,
+    "testFileMatch": [
+        "src/**/*.compiletime.test.ts"
+    ],
+    "tsconfig": "./tsconfig.tstyche.json"
+}

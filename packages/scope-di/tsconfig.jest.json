@@ -14,8 +14,8 @@
         "noEmit": true
     },
     "include": [
-        "src/**/*.ts",
-        "src/**/*.test.ts"
+        "src/**/*.runtime.test.ts",
+        "src/tests-setup.ts"
     ],
     "exclude": []
 }
