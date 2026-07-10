@@ -2,6 +2,9 @@ on:
   pull_request: 
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
     ci:
         uses: svs-tm/ci-cd/.github/workflows/typescript.library.ci.yml@main
