@@ -6,6 +6,12 @@ Type-safe dependency injection for TypeScript and extensions for it without deco
 
 This repository contains the core DI package, extension packages, and benchmark reports for developers evaluating whether `scope-di` fits their application.
 
+## Compatibility
+
+`scope-di` packages support TypeScript 5 and TypeScript 6. Compile-time public API tests run against the latest supported TypeScript 5.x and 6.x compiler versions.
+
+`@svs-tm/react-scope-di` supports React 18 and React 19.
+
 ## Packages
 
 | Package | Purpose | Docs |

@@ -52,6 +52,10 @@ yarn add @svs-tm/scope-di @svs-tm/react-scope-di
 
 `@svs-tm/react-scope-di` supports React 18 and React 19.
 
+## Compatibility
+
+`@svs-tm/react-scope-di` supports TypeScript 5 and TypeScript 6. Compile-time public API tests run against the latest supported TypeScript 5.x and 6.x compiler versions.
+
 ## Why HOCs First
 
 `resolve()` and `resolveAsync()` create stable component wrappers around dependency resolution. They own the scope boundary behavior, preserve public component props, handle local fallbacks, and avoid the common hook trap where scope construction changes during render.

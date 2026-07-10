@@ -73,6 +73,10 @@ npm install @svs-tm/scope-di
 yarn add @svs-tm/scope-di
 ```
 
+## Compatibility
+
+`@svs-tm/scope-di` supports TypeScript 5 and TypeScript 6. Compile-time public API tests run against the latest supported TypeScript 5.x and 6.x compiler versions.
+
 ## Quick Start
 
 Register dependencies with `configureRootScope()`, then call `build()` to create a scope. Use `asDependent()` when a dependency needs other dependencies injected.
