@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/scope-di",
-    "version": "1.0.0-alpha.4",
+    "version": "1.0.0",
     "description": "Type-safe dependency injection for TypeScript without decorators or reflect-metadata",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -45,6 +45,14 @@
     "dependencies": {
         "@svs-tm/system": "workspace:*"
     },
+    "peerDependencies": {
+        "typescript": ">=5 <7"
+    },
+    "peerDependenciesMeta": {
+        "typescript": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@jest/globals": "^30.0.5",
         "@rollup/plugin-commonjs": "^28.0.9",
@@ -60,6 +68,6 @@
         "rollup": "^4.62.0",
         "rollup-plugin-dts": "^6.2.3",
         "tstyche": "^7.2.1",
-        "typescript": "^5.9.2"
+        "typescript": "^6.0.3"
     }
 }
