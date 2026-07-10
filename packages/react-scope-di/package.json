@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/react-scope-di",
-    "version": "1.0.0-alpha.4",
+    "version": "1.0.0",
     "description": "React bindings for Scope DI with typed injection and async dependency support",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -29,7 +29,7 @@
         "build": "tsc --project tsconfig.build.json && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
         "test": "pnpm run test:runtime && pnpm run test:types",
         "test:runtime": "jest",
-        "test:types": "tsd --files \"src/**/*.compiletime.test.tsx\""
+        "test:types": "tstyche"
     },
     "keywords": [
         "react",
@@ -75,12 +75,18 @@
         "rimraf": "^6.1.3",
         "rollup": "^4.62.0",
         "rollup-plugin-dts": "^6.2.3",
-        "tsd": "^0.33.0",
-        "typescript": "^5.9.2"
+        "tstyche": "^7.2.1",
+        "typescript": "^6.0.3"
     },
     "peerDependencies": {
         "@svs-tm/scope-di": "^1.0.0-alpha.0 || >=1 <2",
-        "react": ">=18 <20"
+        "react": ">=18 <20",
+        "typescript": ">=5 <7"
+    },
+    "peerDependenciesMeta": {
+        "typescript": {
+            "optional": true
+        }
     },
     "engines": {
         "node": ">=18"

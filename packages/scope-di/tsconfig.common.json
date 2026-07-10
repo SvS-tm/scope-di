@@ -21,7 +21,10 @@
         "skipLibCheck": true,
         "exactOptionalPropertyTypes": true,
         "useDefineForClassFields": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "types": [
+            "node"
+        ]
     },
     "include": [
         "src/**/*"

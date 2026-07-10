@@ -121,7 +121,12 @@ function getFilter(runtimeArgs: string[])
     if (!filterArgument)
         return undefined;
 
-    return new RegExp(filterArgument.slice("--filter=".length));
+    return new RegExp(escapeRegExp(filterArgument.slice("--filter=".length)));
+}
+
+function escapeRegExp(value: string)
+{
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function getIterations(runtimeArgs: string[])

@@ -1,5 +1,6 @@
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
-import { expectAssignable, expectError, expectNotType, expectType } from "tsd";
+import type { ReactElement } from "react";
+import { expect } from "tstyche";
 import { createReactDiTools } from ".";
 
 class Dependency
@@ -32,30 +33,30 @@ function UseDependenciesConsumer()
 {
     const dependencies = tools.useDependencies("value", "dependency", ["items"]);
 
-    expectNotType<any>(dependencies);
-    expectType<["value", DependencyAbstraction, [2, "first"]]>(dependencies);
+    expect(dependencies).type.not.toBe<any>();
+    expect(dependencies).type.toBe<["value", DependencyAbstraction, [2, "first"]]>();
 
     return null;
 }
 
-expectAssignable<JSX.Element>(<UseDependenciesConsumer />);
+expect(<UseDependenciesConsumer />).type.toBeAssignableTo<ReactElement>();
 
 // Async hook results stay promise-like, and awaited tuples preserve awaited dependency types.
 function UseDependenciesAsyncConsumer()
 {
     const result = tools.useDependenciesAsync("value", "asyncDependency", ["items"]);
 
-    expectNotType<any>(result);
-    expectNotType<any>(null as unknown as Awaited<typeof result>);
-    expectAssignable<Promise<["value", { readonly value: "async"; }, [2, "first"]]>>(result);
-    expectType<["value", { readonly value: "async"; }, [2, "first"]]>(null as unknown as Awaited<typeof result>);
+    expect(result).type.not.toBe<any>();
+    expect(null as unknown as Awaited<typeof result>).type.not.toBe<any>();
+    expect(result).type.toBeAssignableTo<Promise<["value", { readonly value: "async"; }, [2, "first"]]>>();
+    expect(null as unknown as Awaited<typeof result>).type.toBe<["value", { readonly value: "async"; }, [2, "first"]]>();
 
     return (
         <tools.DiAwait result={result}>
         {
             (dependencies) =>
             {
-                expectType<["value", { readonly value: "async"; }, [2, "first"]]>(dependencies);
+                expect(dependencies).type.toBe<["value", { readonly value: "async"; }, [2, "first"]]>();
 
                 return null;
             }
@@ -64,7 +65,7 @@ function UseDependenciesAsyncConsumer()
     );
 }
 
-expectAssignable<JSX.Element>(<UseDependenciesAsyncConsumer />);
+expect(<UseDependenciesAsyncConsumer />).type.toBeAssignableTo<ReactElement>();
 
 // resolve() injects dependency tuples while preserving the public component props.
 const ResolvedConsumer = tools.resolve
@@ -73,16 +74,18 @@ const ResolvedConsumer = tools.resolve
     tools.resolutionOptions<ConsumerProps>(),
     ({ props, dependencies }) =>
     {
-        expectType<ConsumerProps>(props);
-        expectType<["value", DependencyAbstraction]>(dependencies);
+        expect(props).type.toBe<ConsumerProps>();
+        expect(dependencies).type.toBe<["value", DependencyAbstraction]>();
 
         return null;
     }
 );
 
-expectAssignable<JSX.Element>(<ResolvedConsumer id="consumer" />);
-expectError(<ResolvedConsumer />);
-expectError(<ResolvedConsumer id="consumer" extra="extra" />);
+expect(<ResolvedConsumer id="consumer" />).type.toBeAssignableTo<ReactElement>();
+// @ts-expect-error
+<ResolvedConsumer />;
+// @ts-expect-error
+<ResolvedConsumer id="consumer" extra="extra" />;
 
 // resolveAsync() injects awaited dependency tuples and preserves component props.
 const ResolvedAsyncConsumer = tools.resolveAsync
@@ -91,24 +94,24 @@ const ResolvedAsyncConsumer = tools.resolveAsync
     tools.asyncResolutionOptions<ConsumerProps>(),
     ({ props, dependencies }) =>
     {
-        expectType<ConsumerProps>(props);
-        expectType<[{ readonly value: "async"; }, [2, "first"]]>(dependencies);
+        expect(props).type.toBe<ConsumerProps>();
+        expect(dependencies).type.toBe<[{ readonly value: "async"; }, [2, "first"]]>();
 
         return null;
     }
 );
 
-expectAssignable<JSX.Element>(<ResolvedAsyncConsumer id="consumer" />);
-expectError(<ResolvedAsyncConsumer />);
+expect(<ResolvedAsyncConsumer id="consumer" />).type.toBeAssignableTo<ReactElement>();
+// @ts-expect-error
+<ResolvedAsyncConsumer />;
 
 // Registered keys are enforced by hooks and HOCs.
-expectError(tools.useDependencies("missing"));
-expectError
+// @ts-expect-error
+tools.useDependencies("missing");
+tools.resolve
 (
-    tools.resolve
-    (
-        ["missing"],
-        tools.resolutionOptions<ConsumerProps>(),
-        () => null
-    )
+    // @ts-expect-error
+    ["missing"],
+    tools.resolutionOptions<ConsumerProps>(),
+    () => null
 );

@@ -6,6 +6,7 @@
         "moduleResolution": "bundler",
         "declaration": true,
         "emitDeclarationOnly": true,
+        "rootDir": "src",
         "outDir": "dist",
         "declarationDir": "dist/.types",
         "strict": true,
@@ -22,7 +23,10 @@
         "skipLibCheck": true,
         "exactOptionalPropertyTypes": true,
         "useDefineForClassFields": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "types": [
+            "node"
+        ]
     },
     "include": [
         "src/**/*"

@@ -1,6 +1,6 @@
 {
     "name": "@svs-tm/scope-di",
-    "version": "1.0.0-alpha.4",
+    "version": "1.0.0",
     "description": "Type-safe dependency injection for TypeScript without decorators or reflect-metadata",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -29,7 +29,7 @@
         "build": "tsc --project tsconfig.build.json && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
         "test": "pnpm run test:runtime && pnpm run test:types",
         "test:runtime": "jest",
-        "test:types": "tsd --files \"src/**/*.compiletime.test.ts\""
+        "test:types": "tstyche"
     },
     "keywords": [
         "dependency-injection",
@@ -45,6 +45,14 @@
     "dependencies": {
         "@svs-tm/system": "workspace:*"
     },
+    "peerDependencies": {
+        "typescript": ">=5 <7"
+    },
+    "peerDependenciesMeta": {
+        "typescript": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@jest/globals": "^30.0.5",
         "@rollup/plugin-commonjs": "^28.0.9",
@@ -59,7 +67,7 @@
         "rimraf": "^6.1.3",
         "rollup": "^4.62.0",
         "rollup-plugin-dts": "^6.2.3",
-        "tsd": "^0.33.0",
-        "typescript": "^5.9.2"
+        "tstyche": "^7.2.1",
+        "typescript": "^6.0.3"
     }
 }
