@@ -1,6 +1,7 @@
 # Node
 node_modules/
 .pnpm/
+.pnpm-store/
 .pnpm-debug.log*
 
 # Output

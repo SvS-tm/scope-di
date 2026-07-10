@@ -1,4 +1,4 @@
-import { expectAssignable, expectError, expectNotType, expectType } from "tsd";
+import { expect } from "tstyche";
 import { configureRootScope, DependencyLifetime, type BoxedPromiseDependency } from ".";
 
 // Shared fixtures
@@ -31,32 +31,35 @@ const valueScope = configureRootScope()
 const valueRange = valueScope.resolveRange("value");
 const valueRangeAsync = valueScope.resolveRangeAsync("value");
 
-expectNotType<any>(valueRange);
-expectNotType<any>(valueRangeAsync);
-expectType<["value"]>(valueScope.resolveRange("value"));
-expectType<"value">(valueScope.resolve("value"));
-expectType<Promise<["value"]>>(valueScope.resolveRangeAsync("value"));
-expectType<Promise<"value">>(valueScope.resolveAsync("value"));
-expectError(valueScope.resolveRange("missing"));
-expectError(valueScope.resolve("missing"));
-expectError(valueScope.resolveAsync("missing"));
+expect(valueRange).type.not.toBe<any>();
+expect(valueRangeAsync).type.not.toBe<any>();
+expect(valueScope.resolveRange("value")).type.toBe<["value"]>();
+expect(valueScope.resolve("value")).type.toBe<"value">();
+expect(valueScope.resolveRangeAsync("value")).type.toBe<Promise<["value"]>>();
+expect(valueScope.resolveAsync("value")).type.toBe<Promise<"value">>();
+// @ts-expect-error
+valueScope.resolveRange("missing");
+// @ts-expect-error
+valueScope.resolve("missing");
+// @ts-expect-error
+valueScope.resolveAsync("missing");
 
 // Sync promise values stay promises for sync/range resolution, but singular async resolution wraps them
 const promiseValueScope = configureRootScope()
     .map("storedPromise").asValue(Promise.resolve("stored promise"))
     .build();
 
-expectType<[Promise<string>]>(promiseValueScope.resolveRange("storedPromise"));
-expectType<Promise<string>>(promiseValueScope.resolve("storedPromise"));
-expectType<Promise<[Promise<string>]>>(promiseValueScope.resolveRangeAsync("storedPromise"));
-expectType<Promise<BoxedPromiseDependency<Promise<string>>>>(promiseValueScope.resolveAsync("storedPromise"));
+expect(promiseValueScope.resolveRange("storedPromise")).type.toBe<[Promise<string>]>();
+expect(promiseValueScope.resolve("storedPromise")).type.toBe<Promise<string>>();
+expect(promiseValueScope.resolveRangeAsync("storedPromise")).type.toBe<Promise<[Promise<string>]>>();
+expect(promiseValueScope.resolveAsync("storedPromise")).type.toBe<Promise<BoxedPromiseDependency<Promise<string>>>>();
 
 async function expectStoredPromiseValue(): Promise<void>
 {
     const value = await promiseValueScope.resolveAsync("storedPromise");
 
-    expectType<BoxedPromiseDependency<Promise<string>>>(value);
-    expectType<Promise<string>>(value.promise);
+    expect(value).type.toBe<BoxedPromiseDependency<Promise<string>>>();
+    expect(value.promise).type.toBe<Promise<string>>();
 }
 
 void expectStoredPromiseValue;
@@ -66,19 +69,19 @@ const explicitValueScope = configureRootScope()
     .map("value").asValue<string>("value")
     .build();
 
-expectType<[string]>(explicitValueScope.resolveRange("value"));
+expect(explicitValueScope.resolveRange("value")).type.toBe<[string]>();
 
 const explicitClassScope = configureRootScope()
     .map("dependency").asClass<DependencyAbstraction>(Dependency, DependencyLifetime.Singleton)
     .build();
 
-expectType<[DependencyAbstraction]>(explicitClassScope.resolveRange("dependency"));
+expect(explicitClassScope.resolveRange("dependency")).type.toBe<[DependencyAbstraction]>();
 
 const explicitFactoryScope = configureRootScope()
     .map("dependency").asFactory<DependencyAbstraction>(() => new Dependency(), DependencyLifetime.Singleton)
     .build();
 
-expectType<[DependencyAbstraction]>(explicitFactoryScope.resolveRange("dependency"));
+expect(explicitFactoryScope.resolveRange("dependency")).type.toBe<[DependencyAbstraction]>();
 
 const explicitDependentScope = configureRootScope()
     .map("value").asValue<string>("value")
@@ -87,15 +90,15 @@ const explicitDependentScope = configureRootScope()
     .factory((value, dependency) => ({ value, dependency } as const), DependencyLifetime.Singleton)
     .build();
 
-expectType<[{ readonly value: string; readonly dependency: DependencyAbstraction; }]>(explicitDependentScope.resolveRange("parent"));
+expect(explicitDependentScope.resolveRange("parent")).type.toBe<[{ readonly value: string; readonly dependency: DependencyAbstraction; }]>();
 
 // Class mappings
 const classScope = configureRootScope()
     .map("dependency").asClass(Dependency, DependencyLifetime.Singleton)
     .build();
 
-expectType<[Dependency]>(classScope.resolveRange("dependency"));
-expectType<Promise<[Dependency]>>(classScope.resolveRangeAsync("dependency"));
+expect(classScope.resolveRange("dependency")).type.toBe<[Dependency]>();
+expect(classScope.resolveRangeAsync("dependency")).type.toBe<Promise<[Dependency]>>();
 
 // Factory mappings
 const factoryScope = configureRootScope()
@@ -103,8 +106,8 @@ const factoryScope = configureRootScope()
     .map("literal").asFactory(() => ({ value: "factory" }), DependencyLifetime.Singleton)
     .build();
 
-expectType<[Dependency]>(factoryScope.resolveRange("dependency"));
-expectType<[{ readonly value: "factory"; }]>(factoryScope.resolveRange("literal"));
+expect(factoryScope.resolveRange("dependency")).type.toBe<[Dependency]>();
+expect(factoryScope.resolveRange("literal")).type.toBe<[{ readonly value: "factory"; }]>();
 
 // Async factory mappings
 const asyncFactoryScope = configureRootScope()
@@ -112,21 +115,21 @@ const asyncFactoryScope = configureRootScope()
     .map("literal").asFactoryAsync(async () => ({ value: "async-factory" }), DependencyLifetime.Singleton)
     .build();
 
-expectType<[Promise<Dependency>]>(asyncFactoryScope.resolveRange("dependency"));
-expectType<Promise<[Dependency]>>(asyncFactoryScope.resolveRangeAsync("dependency"));
-expectType<Promise<Dependency>>(asyncFactoryScope.resolveAsync("dependency"));
-expectType<[Promise<{ readonly value: "async-factory"; }>]>(asyncFactoryScope.resolveRange("literal"));
-expectType<Promise<[{ readonly value: "async-factory"; }]>>(asyncFactoryScope.resolveRangeAsync("literal"));
-expectType<Promise<{ readonly value: "async-factory"; }>>(asyncFactoryScope.resolveAsync("literal"));
+expect(asyncFactoryScope.resolveRange("dependency")).type.toBe<[Promise<Dependency>]>();
+expect(asyncFactoryScope.resolveRangeAsync("dependency")).type.toBe<Promise<[Dependency]>>();
+expect(asyncFactoryScope.resolveAsync("dependency")).type.toBe<Promise<Dependency>>();
+expect(asyncFactoryScope.resolveRange("literal")).type.toBe<[Promise<{ readonly value: "async-factory"; }>]>();
+expect(asyncFactoryScope.resolveRangeAsync("literal")).type.toBe<Promise<[{ readonly value: "async-factory"; }]>>();
+expect(asyncFactoryScope.resolveAsync("literal")).type.toBe<Promise<{ readonly value: "async-factory"; }>>();
 
 // Async class mappings await dependencies, not constructor return values
 const asyncClassScope = configureRootScope()
     .map("dependency").asClassAsync(Dependency, DependencyLifetime.Singleton)
     .build();
 
-expectType<[Promise<Dependency>]>(asyncClassScope.resolveRange("dependency"));
-expectType<Promise<[Dependency]>>(asyncClassScope.resolveRangeAsync("dependency"));
-expectType<Promise<Dependency>>(asyncClassScope.resolveAsync("dependency"));
+expect(asyncClassScope.resolveRange("dependency")).type.toBe<[Promise<Dependency>]>();
+expect(asyncClassScope.resolveRangeAsync("dependency")).type.toBe<Promise<[Dependency]>>();
+expect(asyncClassScope.resolveAsync("dependency")).type.toBe<Promise<Dependency>>();
 
 // Dependent class mappings
 const dependentClassScope = configureRootScope()
@@ -136,7 +139,7 @@ const dependentClassScope = configureRootScope()
     .class(ParentDependency, DependencyLifetime.Singleton)
     .build();
 
-expectType<[ParentDependency]>(dependentClassScope.resolveRange("parent"));
+expect(dependentClassScope.resolveRange("parent")).type.toBe<[ParentDependency]>();
 
 // Dependent factory mappings
 const dependentFactoryScope = configureRootScope()
@@ -147,10 +150,10 @@ const dependentFactoryScope = configureRootScope()
     (
         (value, dependency) => 
         {
-            expectNotType<any>(value);
-            expectNotType<any>(dependency);
-            expectType<"value">(value);
-            expectType<Dependency>(dependency);
+            expect(value).type.not.toBe<any>();
+            expect(dependency).type.not.toBe<any>();
+            expect(value).type.toBe<"value">();
+            expect(dependency).type.toBe<Dependency>();
 
             return { value, dependency };
         }, 
@@ -158,9 +161,9 @@ const dependentFactoryScope = configureRootScope()
     )
     .build();
 
-expectNotType<any>(dependentFactoryScope);
-expectNotType<any>(dependentFactoryScope.resolve("parent"));
-expectType<[{ readonly value: "value"; readonly dependency: Dependency; }]>(dependentFactoryScope.resolveRange("parent"));
+expect(dependentFactoryScope).type.not.toBe<any>();
+expect(dependentFactoryScope.resolve("parent")).type.not.toBe<any>();
+expect(dependentFactoryScope.resolveRange("parent")).type.toBe<[{ readonly value: "value"; readonly dependency: Dependency; }]>();
 
 // Dependent async factory mappings await async dependencies
 const dependentAsyncFactoryScope = configureRootScope()
@@ -170,8 +173,8 @@ const dependentAsyncFactoryScope = configureRootScope()
     .factoryAsync(async (value, dependency) => ({ value, dependency }), DependencyLifetime.Singleton)
     .build();
 
-expectType<[Promise<{ readonly value: "value"; readonly dependency: Dependency; }>]>(dependentAsyncFactoryScope.resolveRange("parent"));
-expectType<Promise<[{ readonly value: "value"; readonly dependency: Dependency; }]>>(dependentAsyncFactoryScope.resolveRangeAsync("parent"));
+expect(dependentAsyncFactoryScope.resolveRange("parent")).type.toBe<[Promise<{ readonly value: "value"; readonly dependency: Dependency; }>]>();
+expect(dependentAsyncFactoryScope.resolveRangeAsync("parent")).type.toBe<Promise<[{ readonly value: "value"; readonly dependency: Dependency; }]>>();
 
 // Collection mappings preserve newest-to-oldest tuple order
 const collectionScope = configureRootScope()
@@ -179,11 +182,11 @@ const collectionScope = configureRootScope()
     .map("items").asValue(2)
     .build();
 
-expectType<[2]>(collectionScope.resolveRange("items"));
-expectType<[[2, "first"]]>(collectionScope.resolveRange(["items"]));
-expectType<[2, "first"]>(collectionScope.resolve(["items"]));
-expectType<Promise<[[2, "first"]]>>(collectionScope.resolveRangeAsync(["items"]));
-expectType<Promise<[2, "first"]>>(collectionScope.resolveAsync(["items"]));
+expect(collectionScope.resolveRange("items")).type.toBe<[2]>();
+expect(collectionScope.resolveRange(["items"])).type.toBe<[[2, "first"]]>();
+expect(collectionScope.resolve(["items"])).type.toBe<[2, "first"]>();
+expect(collectionScope.resolveRangeAsync(["items"])).type.toBe<Promise<[[2, "first"]]>>();
+expect(collectionScope.resolveAsync(["items"])).type.toBe<Promise<[2, "first"]>>();
 
 // Sync promise values inside collections remain raw promises because the collection array is the awaited value
 const promiseCollectionScope = configureRootScope()
@@ -191,10 +194,10 @@ const promiseCollectionScope = configureRootScope()
     .map("items").asValue(Promise.resolve(2))
     .build();
 
-expectType<[[Promise<number>, Promise<string>]]>(promiseCollectionScope.resolveRange(["items"]));
-expectType<[Promise<number>, Promise<string>]>(promiseCollectionScope.resolve(["items"]));
-expectType<Promise<[[Promise<number>, Promise<string>]]>>(promiseCollectionScope.resolveRangeAsync(["items"]));
-expectType<Promise<[Promise<number>, Promise<string>]>>(promiseCollectionScope.resolveAsync(["items"]));
+expect(promiseCollectionScope.resolveRange(["items"])).type.toBe<[[Promise<number>, Promise<string>]]>();
+expect(promiseCollectionScope.resolve(["items"])).type.toBe<[Promise<number>, Promise<string>]>();
+expect(promiseCollectionScope.resolveRangeAsync(["items"])).type.toBe<Promise<[[Promise<number>, Promise<string>]]>>();
+expect(promiseCollectionScope.resolveAsync(["items"])).type.toBe<Promise<[Promise<number>, Promise<string>]>>();
 
 // Dependent collection mappings inject the collection tuple
 const collectionDependencyScope = configureRootScope()
@@ -204,7 +207,7 @@ const collectionDependencyScope = configureRootScope()
     .factory((items) => items, DependencyLifetime.Singleton)
     .build();
 
-expectType<[[2, "first"]]>(collectionDependencyScope.resolveRange("parent"));
+expect(collectionDependencyScope.resolveRange("parent")).type.toBe<[[2, "first"]]>();
 
 // Removed mappings are not resolvable
 const removedScope = configureRootScope()
@@ -212,20 +215,20 @@ const removedScope = configureRootScope()
     .removeMapping("value")
     .build();
 
-expectError(removedScope.resolveRange("value"));
+// @ts-expect-error
+removedScope.resolveRange("value");
 
 // Dependencies must be registered before asDependent can reference them
-expectError
-(
-    configureRootScope()
-        .map("parent")
-        .asDependent("missing")
-);
+configureRootScope()
+    .map("parent")
+    // @ts-expect-error
+    .asDependent("missing");
 
 // hasMapping remains available for any allowed key
-expectAssignable<boolean>
+expect
 (
     configureRootScope()
         .map("value").asValue("value")
         .hasMapping("value")
-);
+)
+    .type.toBeAssignableTo<boolean>();

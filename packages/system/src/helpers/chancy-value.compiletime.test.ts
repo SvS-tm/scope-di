@@ -1,13 +1,13 @@
-import { expectType } from "tsd";
+import { expect } from "tstyche";
 import { ChancyValue } from "../index";
 
 const value = ChancyValue.success<string | null>("value");
 
 if (ChancyValue.isSuccess(value))
 {
-    expectType<string | null>(ChancyValue.get(value));
+    expect(ChancyValue.get(value)).type.toBe<string | null>();
 }
 
 const failed = ChancyValue.failure<string>();
 
-expectType<boolean>(ChancyValue.isSuccess(failed));
+expect(ChancyValue.isSuccess(failed)).type.toBe<boolean>();
