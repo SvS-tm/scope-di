@@ -29,11 +29,11 @@
   "author": "svs-tm",
   "license": "MIT",
   "dependencies": {
-    "@needle-di/core": "^1.1.2",
+    "@needle-di/core": "^1.2.1",
     "@svs-tm/scope-di": "workspace:*",
     "@svs-tm/system": "workspace:*",
     "awilix": "^13.0.4",
-    "inversify": "^8.1.0",
+    "inversify": "^8.2.3",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
     "typed-inject": "^5.0.0",

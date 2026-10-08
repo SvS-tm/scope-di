@@ -2,9 +2,9 @@
   "imports": {
     "@svs-tm/system": "./node_modules/@svs-tm/system/dist/index.mjs",
     "@svs-tm/scope-di": "./node_modules/@svs-tm/scope-di/dist/index.mjs",
-    "@needle-di/core": "npm:@needle-di/core@^1.1.2",
+    "@needle-di/core": "npm:@needle-di/core@^1.2.1",
     "awilix": "npm:awilix@^13.0.4",
-    "inversify": "npm:inversify@^8.1.0",
+    "inversify": "npm:inversify@^8.2.3",
     "mitata": "./node_modules/mitata/src/main.mjs",
     "reflect-metadata": "npm:reflect-metadata@^0.2.2",
     "tsyringe": "npm:tsyringe@^4.10.0",
