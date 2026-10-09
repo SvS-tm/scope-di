@@ -4,6 +4,12 @@
 
 This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: warm resolution, cold resolution, transient graphs, cached graphs, registration, speed, and memory.
 
+## Runtime Setup
+
+Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versions and pnpm, which downloads the required runtimes automatically during installation. This keeps benchmark runs consistent across machines without relying on globally installed runtime versions.
+
+Each machine has its own JSON results and Markdown reports, including the runtime versions used for that run. Updating the pinned runtimes does not change existing results; reports are refreshed when benchmarks are rerun on that machine.
+
 ## Compared Libraries
 
 | Library | Package | Primary style |
