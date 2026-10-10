@@ -12,6 +12,12 @@ Each machine has its own JSON results and Markdown reports, including the runtim
 
 ## Compared Libraries
 
+Each library is measured by Mitata in its own process, with only that library's adapters loaded. Processes run sequentially so they do not compete for CPU. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
+
+`pnpm bench:json:complete` runs every library on Node.js, Bun, and Deno. Alongside each runtime's combined JSON and Markdown report, a matching directory contains the individual library JSON files. The report links to these raw results.
+
+For a single library, the runtime scripts accept an explicit selection, for example `pnpm bench:tsx:fast --library=inversify`. The same `--library` option works with the Bun and Deno scripts. An optional `--filter=warmResolveValue` narrows the scenarios being measured.
+
 | Library | Package | Primary style |
 | --- | --- | --- |
 | scope-di | `@svs-tm/scope-di` | Explicit typed builder, key-based resolution. |
@@ -153,21 +159,22 @@ Statistics:
 
 ### AMD Ryzen 7 3800X 8-Core Processor, Windows 10.0.22631 x64, 300 Iterations
 
-Commit: [d71b5796a374cc67fd6a2d166e6eb521cb064fd9](https://github.com/SvS-tm/scope-di/commit/d71b5796a374cc67fd6a2d166e6eb521cb064fd9)
+Commit: [62c9932873f4a5e62ef769f0447f40caffb6baee](https://github.com/SvS-tm/scope-di/commit/62c9932873f4a5e62ef769f0447f40caffb6baee)
 
 Statistics:
 
 - Tiny cached lookups are usually led by `typed-inject`.
-- `scope-di` remains strongest on transient factory graphs with several dependencies.
-- Deep and wide transient graphs are the clearest speed win for `scope-di` across Node.js, Bun, and Deno.
-- Allocation behavior is especially good on Node.js and Deno transient graph paths.
-- Bun allocation measurements are very small in absolute terms, so rank changes should be read with extra care.
+- `inversify` leads the five- and six-dependency transient factory scenarios across all three runtimes; `scope-di` places second or third.
+- `scope-di` wins the deep and wide transient factory graph on Bun and places second behind `inversify` on Node.js and Deno.
+- `scope-di` has the lowest measured allocations for transient classes and five-dependency transient factories on Node.js and Deno.
+- Registration varies by runtime: `scope-di` wins Node.js class registration, while `tsyringe` leads all three Deno registration scenarios.
+- Bun allocation measurements are often rounded to 0 B, so the displayed ranks should not be interpreted as meaningful allocation differences in those cases.
 
 | Runtime | Version | Report |
 | --- | --- | --- |
-| Node.js | `v24.18.0` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
-| Bun | `1.3.14` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
-| Deno | `2.9.0` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
+| Node.js | `v26.11.1` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
+| Bun | `1.4.2` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
+| Deno | `2.9.6` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
 
 ## License
 

@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { libraryNames } from "../src/libraries.ts";
 
 type BenchmarkStats =
 {
@@ -30,6 +31,8 @@ type BenchmarkResult =
         {
             mode?: string;
             iterations?: number;
+            isolation?: "library-process";
+            library?: string;
         };
         source?:
         {
@@ -62,6 +65,7 @@ type BenchmarkResult =
         cpu?: { name?: string };
     };
     benchmarks: Benchmark[];
+    libraryResults?: { library: string; file: string }[];
 };
 
 type BenchmarkEntry =
@@ -85,6 +89,7 @@ type ScriptArguments =
     linkBase: string;
     outDir: string;
     runComplete: boolean;
+    filter: string | undefined;
 };
 
 type PackageJson =
@@ -150,6 +155,7 @@ function parseArguments(argv: string[])
     let linkBase = process.cwd();
     let outDir: string | undefined;
     let runComplete = false;
+    let filter: string | undefined;
 
     for(let index = 0; index < argv.length; ++index)
     {
@@ -164,6 +170,16 @@ function parseArguments(argv: string[])
         if(argument === "--run-complete")
         {
             runComplete = true;
+            continue;
+        }
+
+        if(argument.startsWith("--filter="))
+        {
+            filter = argument.slice("--filter=".length);
+
+            if(!/^[A-Za-z0-9:_-]+$/.test(filter))
+                throw new Error("--filter must contain only letters, digits, colons, underscores, or hyphens.");
+
             continue;
         }
 
@@ -240,7 +256,8 @@ function parseArguments(argv: string[])
         files,
         linkBase,
         outDir,
-        runComplete
+        runComplete,
+        filter
     };
 }
 
@@ -249,6 +266,7 @@ function printUsage()
     console.log("Usage:");
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --out-dir <reports-directory> --link-base <readme-directory> --file <result.json> [--file <result.json> ...]");
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --run-complete --out-dir <reports-directory> --link-base <readme-directory>");
+    console.log("  Add --filter=<scenario> to run only matching scenarios in each library process.");
     console.log();
     console.log("Files can also be passed positionally:");
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --out-dir reports/laptop --link-base . results/laptop/node.json results/laptop/bun.json");
@@ -280,7 +298,7 @@ function readPackageJson()
     return JSON.parse(readFileSync(path.join(packageDirectory, "package.json"), "utf8")) as PackageJson;
 }
 
-function runCompleteBenchmarks(outDir: string)
+function runCompleteBenchmarks(outDir: string, filter: string | undefined)
 {
     const packageJson = readPackageJson();
     const outputFiles: string[] = [];
@@ -298,27 +316,74 @@ function runCompleteBenchmarks(outDir: string)
 
         console.error(`Running ${benchmark.script}...`);
 
-        const result = spawnSync
-        (
-            command,
+        const libraryDirectory = path.join(outDir, path.basename(benchmark.outputFile, ".json"));
+        mkdirSync(libraryDirectory, { recursive: true });
+        const libraryResults: { library: string; file: string }[] = [];
+        const combinedBenchmarks: Benchmark[] = [];
+        let firstResult: BenchmarkResult | undefined;
+
+        for(const library of libraryNames)
+        {
+            console.error(`Running ${benchmark.script} for ${library}...`);
+
+            const child = spawnSync
+            (
+                `${command} --library=${library}${filter ? ` --filter=${filter}` : ""}`,
+                {
+                    cwd: packageDirectory,
+                    shell: true,
+                    encoding: "utf8",
+                    maxBuffer: 1024 * 1024 * 1024
+                }
+            );
+
+            if(child.stderr)
+                console.error(child.stderr);
+
+            if(child.error)
+                throw child.error;
+
+            if(child.status !== 0)
+                throw new Error(`${benchmark.script} (${library}) failed with exit code ${child.status ?? "unknown"}.`);
+
+            const result = JSON.parse(child.stdout) as BenchmarkResult;
+
+            if(result.metadata?.benchmark?.library !== library || result.benchmarks.length === 0)
+                throw new Error(`Missing or unexpected benchmark results for ${library}.`);
+
+            for(const measuredBenchmark of result.benchmarks)
             {
-                cwd: packageDirectory,
-                shell: true,
-                encoding: "utf8",
-                maxBuffer: 1024 * 1024 * 1024
+                const alias = measuredBenchmark.alias;
+                const belongsToLibrary = alias?.startsWith(`${library}:`)
+                    || (library === "scope-di" && alias?.startsWith("diagnostics:scope-di:"));
+
+                if(!belongsToLibrary || measuredBenchmark.runs.length === 0)
+                    throw new Error(`Unexpected benchmark in ${library} results: ${alias}`);
+
+                for(const measuredRun of measuredBenchmark.runs)
+                {
+                    if(!Number.isFinite(measuredRun.stats?.avg))
+                        throw new Error(`Benchmark failed to produce a timing: ${alias}`);
+                }
             }
-        );
 
-        if(result.stderr)
-            console.error(result.stderr);
+            const libraryFile = path.join(libraryDirectory, `${library}.json`);
+            writeFileSync(libraryFile, child.stdout);
+            libraryResults.push({ library, file: path.relative(outDir, libraryFile).replace(/\\/g, "/") });
+            combinedBenchmarks.push(...result.benchmarks);
+            firstResult ??= result;
+        }
 
-        if(result.error)
-            throw result.error;
+        if(!firstResult)
+            throw new Error(`No results for ${benchmark.script}.`);
 
-        if(result.status !== 0)
-            throw new Error(`${benchmark.script} failed with exit code ${result.status ?? "unknown"}.`);
+        const metadata = firstResult.metadata;
 
-        writeFileSync(outputFile, result.stdout);
+        if(metadata?.benchmark)
+            delete metadata.benchmark.library;
+
+        // This is a report input assembled from independent runs, not a Mitata session.
+        writeFileSync(outputFile, JSON.stringify({ metadata, libraryResults, benchmarks: combinedBenchmarks }));
         outputFiles.push(outputFile);
     }
 
@@ -575,6 +640,17 @@ function renderReport(resultView: ResultView)
     return [
         `# ${resultView.runtime} Benchmark Report`,
         "",
+        ...(resultView.result.libraryResults
+            ? [
+                "Each library was measured in a separate process. Rankings compare independent Mitata runs.",
+                "",
+                ...resultView.result.libraryResults.map
+                (
+                    ({ library, file }) => `- [${library} raw results](${path.posix.join(path.posix.dirname(resultView.link), file)})`
+                ),
+                ""
+            ]
+            : []),
         "## Speed Summary",
         "",
         "| Runtime | Mode | Scenario | scope-di place | scope-di | Winner | Winner result | Slowest | Slowest result |",
@@ -612,7 +688,7 @@ function getReportFilePath(resultView: ResultView, outDir: string)
 
 const scriptArguments = parseArguments(process.argv.slice(2));
 const generatedFiles = scriptArguments.runComplete
-    ? runCompleteBenchmarks(scriptArguments.outDir)
+    ? runCompleteBenchmarks(scriptArguments.outDir, scriptArguments.filter)
     : [];
 
 const inputFiles =
