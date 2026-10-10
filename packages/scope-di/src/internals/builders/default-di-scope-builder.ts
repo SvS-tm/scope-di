@@ -1,13 +1,13 @@
+import type { DiScopeBuilder } from "../../abstractions";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
-import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
+import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
-import type { DiScopeBuilder } from "../../abstractions";
-import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
-import { DefaultDiScope } from "../scope/default-di-scope";
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
+import { DefaultDiScope } from "../scope/default-di-scope";
+import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
 
 export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScopeBuilder<T_RegisteredDependencies>
@@ -57,19 +57,9 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 
     public build()
     {
-        const descriptorsSnapshot = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
-
-        for(const [key, descriptorOrCollection] of this.descriptors)
-        {
-            descriptorsSnapshot.set
-            (
-                key,
-                Array.isArray(descriptorOrCollection)
-                    ? descriptorOrCollection.slice()
-                    : descriptorOrCollection
-            );
-        }
-
-        return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptorsSnapshot));
+        return new DefaultDiScope<T_RegisteredDependencies>
+        (
+            new DefaultDiDependenciesRegistry(this.descriptors)
+        );
     }
 }

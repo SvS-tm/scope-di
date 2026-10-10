@@ -2,12 +2,69 @@ import { describe, expect, it } from "@jest/globals";
 import { DependencyNotRegisteredError } from "../../errors";
 import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
 import { DefaultDiDependenciesRegistry } from "./default-di-dependencies-registry";
+import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 
 describe
 (
     "default-di-dependencies-registry",
     () =>
     {
+        it
+        (
+            "lookup indexes preserve snapshot order and support one-item and empty collections",
+            () =>
+            {
+                const descriptor1: DependencyDescriptor =
+                {
+                    key: "collection",
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: 1
+                };
+                const descriptor2: DependencyDescriptor = { ...descriptor1, value: 2 };
+                const descriptor3: DependencyDescriptor = { ...descriptor1, key: "singular", value: 3 };
+                const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
+                    .set("collection", [descriptor1, descriptor2])
+                    .set("empty", [])
+                    .set("singular", descriptor3);
+                const registry = new DefaultDiDependenciesRegistry(registrations);
+
+                expect(registry.resolveSingularDescriptorByKey("collection")).toBe(descriptor1);
+                expect(registry.resolveCollectionDescriptorsByKey("singular")).toStrictEqual([descriptor3]);
+                expect(registry.resolveCollectionDescriptorsByKey("empty")).toStrictEqual([]);
+                expect(registry.getDescriptors()).toStrictEqual([descriptor1, descriptor2, descriptor3]);
+                expect(registry.resolveCollectionDescriptorsByKey("singular"))
+                    .toBe(registry.resolveCollectionDescriptorsByKey("singular"));
+            }
+        );
+
+        it
+        (
+            "input mutations and enumeration result mutations do not change the registration snapshot",
+            () =>
+            {
+                const descriptor: DependencyDescriptor =
+                {
+                    key: "key",
+                    type: DependencyDescriptorType.Value,
+                    lifetime: DependencyLifetime.Singleton,
+                    value: 1
+                };
+                const bucket = [descriptor];
+                const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
+                    .set("key", bucket);
+                const registry = new DefaultDiDependenciesRegistry(registrations);
+
+                bucket.length = 0;
+                registrations.clear();
+                registry.getDescriptors().length = 0;
+
+                expect(registry.resolveSingularDescriptorByKey("key")).toBe(descriptor);
+                expect(registry.resolveCollectionDescriptorsByKey("key")).toStrictEqual([descriptor]);
+                expect(registry.getDescriptors()).toStrictEqual([descriptor]);
+            }
+        );
+
         it
         (
             "getDescriptors includes descriptors backed by direct storage",
@@ -126,7 +183,7 @@ describe
 
         it
         (
-            "resolveDescriptorsByKey lazily wraps direct descriptor storage for collection mapping keys",
+            "resolveDescriptorsByKey reuses the one-item bucket for collection mapping keys",
             () =>
             {
                 const key = "key";
