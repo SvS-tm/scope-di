@@ -110,20 +110,26 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private resolveDependencyByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
     {
-        const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
-
-        if (Array.isArray(descriptorOrCollection))
+        if (Array.isArray(key))
         {
-            const descriptorsLength = descriptorOrCollection.length;
+            const [mappingKey] = key;
+
+            const descriptorsCollection = this.registry.resolveCollectionDescriptorsByKey(mappingKey);
+
+            const descriptorsLength = descriptorsCollection.length;
             const collection = new Array(descriptorsLength);
 
             for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
-                collection[descriptorIndex] = this.resolveByDescriptor(descriptorOrCollection[descriptorIndex]);
+                collection[descriptorIndex] = this.resolveByDescriptor(descriptorsCollection[descriptorIndex]);
 
             return collection;
         }
+        else
+        {
+            const decsriptor = this.registry.resolveSingularDescriptorByKey(key);
 
-        return this.resolveByDescriptor(descriptorOrCollection);
+            return this.resolveByDescriptor(decsriptor);
+        }
     }
 
     private resolveDependencies(keys: ArrayLike<DependencyResolutionKey<AllowedDependencyKey>>)
@@ -143,17 +149,18 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
     private resolveAsyncDependencyByKey(key: DependencyResolutionKey<AllowedDependencyKey>)
     {
-        const descriptorOrCollection = this.registry.resolveDescriptorsByKey(key);
-
-        if (Array.isArray(descriptorOrCollection))
+        if (Array.isArray(key))
         {
-            const descriptorsLength = descriptorOrCollection.length;
+            const [mappingKey] = key;
+            const descriptorsCollection = this.registry.resolveCollectionDescriptorsByKey(mappingKey);
+
+            const descriptorsLength = descriptorsCollection.length;
             const collection = new Array(descriptorsLength);
             const asyncDependencies: Promise<any>[] = [];
 
             for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
             {
-                const descriptor = descriptorOrCollection[descriptorIndex];
+                const descriptor = descriptorsCollection[descriptorIndex];
                 const value = this.resolveByDescriptor(descriptor);
 
                 if (!isAsyncDescriptor(descriptor))
@@ -174,20 +181,23 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
             return TrackedPromise.resolved(collection);
         }
-
-        const value = this.resolveByDescriptor(descriptorOrCollection);
-
-        if (!isAsyncDescriptor(descriptorOrCollection))
-        {
-            if (value instanceof Promise)
-                return TrackedPromise.resolved(createBoxedPromiseDependency(value));
-
-            return TrackedPromise.resolved(value);
-        }
-        else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
-            return TrackedPromise.resolved(value[TrackedPromise.value]);
         else
-            return value as Promise<unknown>;
+        {
+            const descriptor = this.registry.resolveSingularDescriptorByKey(key);
+            const value = this.resolveByDescriptor(descriptor);
+
+            if (!isAsyncDescriptor(descriptor))
+            {
+                if (value instanceof Promise)
+                    return TrackedPromise.resolved(createBoxedPromiseDependency(value));
+
+                return TrackedPromise.resolved(value);
+            }
+            else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
+                return TrackedPromise.resolved(value[TrackedPromise.value]);
+            else
+                return value as Promise<unknown>;
+        }
     }
 
     private resolveAsyncDependencies(keys?: DependencyResolutionKey<AllowedDependencyKey>[])
@@ -202,16 +212,20 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
 
         for (let index = 0; index < keysLength; ++index)
         {
-            const descriptorOrCollection = this.registry.resolveDescriptorsByKey(keys[index]);
+            const key = keys[index];
 
-            if (Array.isArray(descriptorOrCollection))
+            if (Array.isArray(key))
             {
-                const descriptorsLength = descriptorOrCollection.length;
+                const [mappingKey] = key;
+
+                const descriptorsCollection = this.registry.resolveCollectionDescriptorsByKey(mappingKey);
+
+                const descriptorsLength = descriptorsCollection.length;
                 const collection = new Array(descriptorsLength);
 
                 for (let descriptorIndex = 0; descriptorIndex < descriptorsLength; ++descriptorIndex)
                 {
-                    const descriptor = descriptorOrCollection[descriptorIndex];
+                    const descriptor = descriptorsCollection[descriptorIndex];
 
                     const value = this.resolveByDescriptor(descriptor);
 
@@ -232,9 +246,11 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             }
             else
             {
-                const value = this.resolveByDescriptor(descriptorOrCollection);
+                const descriptor = this.registry.resolveSingularDescriptorByKey(key);
 
-                if (!isAsyncDescriptor(descriptorOrCollection))
+                const value = this.resolveByDescriptor(descriptor);
+
+                if (!isAsyncDescriptor(descriptor))
                     results[index] = value;
                 else if (TrackedPromise.isTracked(value) && value[TrackedPromise.status] === TrackedPromiseStatus.Success)
                     results[index] = value[TrackedPromise.value];
