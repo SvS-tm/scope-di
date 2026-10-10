@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 import { DependencyNotRegisteredError } from "../../errors";
-import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
+import { AllowedDependencyKey, DependencyDescriptorType, DependencyLifetime } from "../../types";
+import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
+import { compileTestDescriptor } from "../instantiation-strategies/compilation.test-helpers";
 import { DefaultDiDependenciesRegistry } from "./default-di-dependencies-registry";
-import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
+import type { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
 
 describe
 (
@@ -14,16 +16,19 @@ describe
             "lookup indexes preserve snapshot order and support one-item and empty collections",
             () =>
             {
-                const descriptor1: DependencyDescriptor =
-                {
-                    key: "collection",
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
-                const descriptor2: DependencyDescriptor = { ...descriptor1, value: 2 };
-                const descriptor3: DependencyDescriptor = { ...descriptor1, key: "singular", value: 3 };
-                const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
+                const descriptor1: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key: "collection",
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
+                const descriptor2 = compileTestDescriptor({ key: "collection", type: DependencyDescriptorType.Value, lifetime: DependencyLifetime.Singleton, value: 2 });
+                const descriptor3 = compileTestDescriptor({ key: "singular", type: DependencyDescriptorType.Value, lifetime: DependencyLifetime.Singleton, value: 3 });
+                const registrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>()
                     .set("collection", [descriptor1, descriptor2])
                     .set("empty", [])
                     .set("singular", descriptor3);
@@ -43,15 +48,18 @@ describe
             "input mutations and enumeration result mutations do not change the registration snapshot",
             () =>
             {
-                const descriptor: DependencyDescriptor =
-                {
-                    key: "key",
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
+                const descriptor: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key: "key",
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
                 const bucket = [descriptor];
-                const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
+                const registrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>()
                     .set("key", bucket);
                 const registry = new DefaultDiDependenciesRegistry(registrations);
 
@@ -71,17 +79,20 @@ describe
             () =>
             {
                 const key = "key";
-                const descriptor: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
+                const descriptor: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
                         .set(key, descriptor)
                 );
 
@@ -95,24 +106,30 @@ describe
             () =>
             {
                 const key = "key";
-                const descriptor1: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
-                const descriptor2: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 2
-                };
+                const descriptor1: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
+                const descriptor2: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 2
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set(key, [descriptor1, descriptor2])
                 );
 
@@ -128,24 +145,30 @@ describe
             () =>
             {
                 const key = "key";
-                const descriptor1: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
-                const descriptor2: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 2
-                };
+                const descriptor1: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
+                const descriptor2: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 2
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set(key, [descriptor1, descriptor2])
                 );
 
@@ -161,17 +184,20 @@ describe
             () =>
             {
                 const key = "key";
-                const descriptor: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
+                const descriptor: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
                         .set(key, descriptor)
                 );
 
@@ -187,17 +213,20 @@ describe
             () =>
             {
                 const key = "key";
-                const descriptor: DependencyDescriptor =
-                {
-                    key,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
+                const descriptor: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
                         .set(key, descriptor)
                 );
 
@@ -216,31 +245,40 @@ describe
             {
                 const key1 = "key1";
                 const key2 = "key2";
-                const descriptor1: DependencyDescriptor =
-                {
-                    key: key1,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 1
-                };
-                const descriptor2: DependencyDescriptor =
-                {
-                    key: key2,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 2
-                };
-                const descriptor3: DependencyDescriptor =
-                {
-                    key: key2,
-                    type: DependencyDescriptorType.Value,
-                    lifetime: DependencyLifetime.Singleton,
-                    value: 3
-                };
+                const descriptor1: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key: key1,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 1
+                    }
+                );
+                const descriptor2: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key: key2,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 2
+                    }
+                );
+                const descriptor3: RuntimeDependencyDescriptor =
+                compileTestDescriptor
+                (
+                    {
+                        key: key2,
+                        type: DependencyDescriptorType.Value,
+                        lifetime: DependencyLifetime.Singleton,
+                        value: 3
+                    }
+                );
 
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set(key1, [descriptor1])
                         .set(key2, [descriptor2, descriptor3])
                 );
@@ -272,17 +310,20 @@ describe
                 const key = "key";
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set
                         (
                             key,
                             [
-                                {
-                                    key,
-                                    type: DependencyDescriptorType.FactoryAsync,
-                                    lifetime: DependencyLifetime.Singleton,
-                                    factory: async () => ({})
-                                }
+                                compileTestDescriptor
+                                (
+                                    {
+                                        key,
+                                        type: DependencyDescriptorType.FactoryAsync,
+                                        lifetime: DependencyLifetime.Singleton,
+                                        factory: async () => ({})
+                                    }
+                                )
                             ]
                         )
                 );
@@ -301,23 +342,29 @@ describe
                 const key = "key";
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set
                         (
                             key,
                             [
-                                {
-                                    key,
-                                    type: DependencyDescriptorType.Value,
-                                    lifetime: DependencyLifetime.Singleton,
-                                    value: {}
-                                },
-                                {
-                                    key,
-                                    type: DependencyDescriptorType.ClassAsync,
-                                    lifetime: DependencyLifetime.Singleton,
-                                    constructor: class {}
-                                }
+                                compileTestDescriptor
+                                (
+                                    {
+                                        key,
+                                        type: DependencyDescriptorType.Value,
+                                        lifetime: DependencyLifetime.Singleton,
+                                        value: {}
+                                    }
+                                ),
+                                compileTestDescriptor
+                                (
+                                    {
+                                        key,
+                                        type: DependencyDescriptorType.ClassAsync,
+                                        lifetime: DependencyLifetime.Singleton,
+                                        constructor: class {}
+                                    }
+                                )
                             ]
                         )
                 );
@@ -336,17 +383,20 @@ describe
                 const key = "key";
                 const registry = new DefaultDiDependenciesRegistry
                 (
-                    new Map<AllowedDependencyKey, DependencyDescriptor[]>()
+                    new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set
                         (
                             key,
                             [
-                                {
-                                    key,
-                                    type: DependencyDescriptorType.Value,
-                                    lifetime: DependencyLifetime.Singleton,
-                                    value: {}
-                                }
+                                compileTestDescriptor
+                                (
+                                    {
+                                        key,
+                                        type: DependencyDescriptorType.Value,
+                                        lifetime: DependencyLifetime.Singleton,
+                                        value: {}
+                                    }
+                                )
                             ]
                         )
                 );

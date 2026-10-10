@@ -6,6 +6,178 @@ describe
     "public API: runtime",
     () =>
     {
+        it.each([undefined, false, true])
+        (
+            "builds and resolves when code generation is blocked and the flag is %s",
+            allowRuntimeCodeGeneration =>
+            {
+                class ArgumentList
+                {
+                    public constructor(public readonly scoped: object, ...values: unknown[])
+                    {
+                        this.values = values;
+                    }
+
+                    public readonly values: unknown[];
+                }
+
+                const builder = configureRootScope()
+                    .map("scoped").asFactory(() => ({}), DependencyLifetime.Scoped)
+                    .map("one").asValue(1)
+                    .map("two").asValue(2)
+                    .map("three").asValue(3)
+                    .map("four").asValue(4)
+                    .map("collection").asValue("first")
+                    .map("collection").asValue("second")
+                    .map("class").asDependent("scoped", "one", "two", "three", "four", ["collection"])
+                        .class(ArgumentList, DependencyLifetime.Transient)
+                    .map("factory").asDependent("scoped", "one", "two", "three", "four", ["collection"])
+                        .factory((scoped, ...values) => new ArgumentList(scoped, ...values), DependencyLifetime.Transient);
+
+                if (allowRuntimeCodeGeneration !== undefined)
+                    builder.setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
+
+                const generation = jest.spyOn(globalThis, "Function").mockImplementation
+                (
+                    () =>
+                    {
+                        throw new EvalError("Runtime code generation is blocked");
+                    }
+                );
+
+                try
+                {
+                    const root = builder.build();
+                    const firstScope = root.createChildScope();
+                    const secondScope = root.createChildScope();
+
+                    for (const key of ["class", "factory"] as const)
+                    {
+                        const first = firstScope.resolve(key);
+                        const next = firstScope.resolve(key);
+                        const second = secondScope.resolve(key);
+
+                        expect(first.values).toEqual([1, 2, 3, 4, ["second", "first"]]);
+                        expect(next.values).toEqual(first.values);
+                        expect(first.scoped).toBe(firstScope.resolve("scoped"));
+                        expect(next.scoped).toBe(first.scoped);
+                        expect(second.scoped).toBe(secondScope.resolve("scoped"));
+                        expect(second.scoped).not.toBe(first.scoped);
+                        expect(next).not.toBe(first);
+                    }
+
+                    expect(generation).toHaveBeenCalledTimes(allowRuntimeCodeGeneration === true ? 2 : 0);
+                }
+                finally
+                {
+                    generation.mockRestore();
+                }
+            }
+        );
+
+        it
+        (
+            "async fallback waits for pending dependencies and works again after they settle",
+            async () =>
+            {
+                class ArgumentList
+                {
+                    public readonly values: unknown[];
+
+                    public constructor(...values: unknown[])
+                    {
+                        this.values = values;
+                    }
+                }
+
+                const dependency = jest.fn(async () => 0);
+                const builder = configureRootScope()
+                    .setAllowRuntimeCodeGeneration()
+                    .map("pending").asFactoryAsync(dependency, DependencyLifetime.Singleton)
+                    .map("one").asValue(1)
+                    .map("two").asValue(2)
+                    .map("three").asValue(3)
+                    .map("four").asValue(4)
+                    .map("five").asValue(5)
+                    .map("class").asDependent("pending", "one", "two", "three", "four", "five")
+                        .classAsync(ArgumentList, DependencyLifetime.Transient)
+                    .map("factory").asDependent("pending", "one", "two", "three", "four", "five")
+                        .factoryAsync(async (...values) => new ArgumentList(...values), DependencyLifetime.Transient);
+                const generation = jest.spyOn(globalThis, "Function").mockImplementation
+                (
+                    () =>
+                    {
+                        throw new EvalError("Runtime code generation is blocked");
+                    }
+                );
+
+                try
+                {
+                    const scope = builder.build();
+                    const first = await Promise.all([scope.resolveAsync("class"), scope.resolveAsync("factory")]);
+
+                    for (const result of first)
+                        expect(result.values).toEqual([0, 1, 2, 3, 4, 5]);
+
+                    for (const key of ["class", "factory"] as const)
+                        expect((await scope.resolveAsync(key)).values).toEqual([0, 1, 2, 3, 4, 5]);
+
+                    expect(dependency).toHaveBeenCalledTimes(1);
+                    expect(generation).toHaveBeenCalledTimes(2);
+                }
+                finally
+                {
+                    generation.mockRestore();
+                }
+            }
+        );
+
+        it
+        (
+            "fallback propagates factory failures without retrying construction",
+            async () =>
+            {
+                const error = new Error("Factory failed");
+                const syncFactory = jest.fn(() =>
+                {
+                    throw error;
+                });
+                const asyncFactory = jest.fn(async () =>
+                {
+                    throw error;
+                });
+                const builder = configureRootScope()
+                    .setAllowRuntimeCodeGeneration()
+                    .map("value").asValue(42)
+                    .map("sync").asDependent("value", "value", "value", "value", "value", "value")
+                        .factory(syncFactory, DependencyLifetime.Transient)
+                    .map("async").asDependent("value", "value", "value", "value", "value", "value")
+                        .factoryAsync(asyncFactory, DependencyLifetime.Transient);
+                const generation = jest.spyOn(globalThis, "Function").mockImplementation
+                (
+                    () =>
+                    {
+                        throw new EvalError("Runtime code generation is blocked");
+                    }
+                );
+
+                try
+                {
+                    const scope = builder.build();
+
+                    expect(() => scope.resolve("sync")).toThrow(error);
+                    await expect(scope.resolveAsync("async")).rejects.toBe(error);
+                    expect(syncFactory).toHaveBeenCalledTimes(1);
+                    expect(asyncFactory).toHaveBeenCalledTimes(1);
+                    expect(generation).toHaveBeenCalledTimes(2);
+                }
+                finally
+                {
+                    generation.mockRestore();
+                }
+            }
+        );
+
         it
         (
             "configureRootScope builds a usable empty scope",

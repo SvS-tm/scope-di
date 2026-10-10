@@ -2,18 +2,19 @@ import { isSafeReference } from "@svs-tm/system";
 import type { DiDependenciesRegistry } from "../../abstractions/di-dependencies-registry";
 import { DependencyNotRegisteredError } from "../../errors";
 import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
-import type { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../../types";
-import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
+import type { AllowedDependencyKey, DependencyResolutionKey } from "../../types";
+import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
+import { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
 
 export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
 {
-    private readonly descriptorsSnapshot: DependencyDescriptor[] = [];
-    private readonly singularRegistrations = new Map<AllowedDependencyKey, DependencyDescriptor>();
-    private readonly collectionRegistrations = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
+    private readonly descriptorsSnapshot: RuntimeDependencyDescriptor[] = [];
+    private readonly singularRegistrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>();
+    private readonly collectionRegistrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>();
 
     public constructor
     (
-        registrations: ReadonlyMap<AllowedDependencyKey, DependencyDescriptorsBucket>
+        registrations: ReadonlyMap<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>
     )
     {
         for (const [key, descriptorOrCollection] of registrations)

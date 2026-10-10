@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
 import { DependencyNotRegisteredError } from "../../errors/dependency-not-registered-error";
-import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType } from "../../types/dependency-descriptor-type";
@@ -61,46 +60,6 @@ describe
                 const scope = createDefaultDiScope();
 
                 expect(() => scope.resolveRange(["key"] as never)).toThrow(DependencyNotRegisteredError);
-            }
-        );
-
-        it
-        (
-            "Unknown descriptor type: resolving dependency with a descriptor of an invalid type throws UnknownDependencyTypeError", 
-            () => 
-            {
-                const key = "Key";
-
-                class Dependency {}
-
-                const descriptors = new Map<AllowedDependencyKey, DependencyDescriptor[]>()
-                    .set
-                    (
-                        key,
-                        [
-                            {
-                                key: key,
-                                type: -1 as DependencyDescriptorType,
-                                lifetime: DependencyLifetime.Singleton,
-                                constructor: Dependency
-                            } as DependencyDescriptor
-                        ]
-                    );
-
-                const scope = createDefaultDiScope(descriptors);
-
-                expect(() => scope.resolveRange(key as never)).toThrow(UnknownDependencyTypeError);
-
-                try
-                {
-                    scope.resolveRange(key as never);
-                }
-                catch (error)
-                {
-                    expect(error).toBeInstanceOf(UnknownDependencyTypeError);
-                    expect((error as Error).message).toBe(`Can not resolve dependency by key ${key} as its type is unknown: -1!`);
-                    expect((error as Error).cause).toStrictEqual({ key, type: -1 });
-                }
             }
         );
 
