@@ -122,33 +122,6 @@ const completeBenchmarks =
     }
 ] satisfies CompleteBenchmark[];
 
-const speedScenarios =
-[
-    "warmResolveValue",
-    "warmResolveSingletonClass",
-    "warmResolveTransientClass",
-    "warmResolveSingletonFactory",
-    "warmResolveTransientFactory",
-    "warmResolveTransientFactoryWithFiveDependencies",
-    "warmResolveTransientFactoryWithSixDependencies",
-    "warmResolveTransientFactoryDeepWideGraph",
-    "warmResolveCachedFactoryWideGraph",
-    "registrationClass",
-    "registrationValue",
-    "registrationFactory"
-];
-
-const memoryScenarios =
-[
-    "warmResolveValue",
-    "warmResolveSingletonClass",
-    "warmResolveTransientClass",
-    "warmResolveTransientFactory",
-    "warmResolveTransientFactoryWithFiveDependencies",
-    "warmResolveTransientFactoryDeepWideGraph",
-    "warmResolveCachedFactoryWideGraph"
-];
-
 function parseArguments(argv: string[])
 {
     const files: string[] = [];
@@ -544,9 +517,19 @@ function getEntries(result: BenchmarkResult, scenario: string)
         );
 }
 
-function getPlace(entries: BenchmarkEntry[], library: string)
+function getScenarios(result: BenchmarkResult)
 {
-    return entries.findIndex((entry) => entry.library === library) + 1;
+    const scenarios = new Set<string>();
+
+    for (const benchmark of result.benchmarks)
+    {
+        const [library, scenario] = benchmark.alias?.split(":") ?? [];
+
+        if (scenario && library !== "diagnostics")
+            scenarios.add(scenario);
+    }
+
+    return [...scenarios];
 }
 
 function formatDuration(nanoseconds: number)
@@ -578,21 +561,21 @@ function isRenderedRow(row: string | undefined): row is string
 
 function renderSpeedRows(resultView: ResultView)
 {
-    return speedScenarios
+    return getScenarios(resultView.result)
         .map
         (
             (scenario) =>
             {
                 const entries = getEntries(resultView.result, scenario).sort((a, b) => a.avg - b.avg);
-                const scopeDi = entries.find((entry) => entry.library === "scope-di");
 
-                if(entries.length === 0 || !scopeDi)
+                if(entries.length === 0)
                     return undefined;
 
-                const winner = entries[0]!;
-                const slowest = entries[entries.length - 1]!;
-
-                return `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${getPlace(entries, "scope-di")} / ${entries.length} | ${formatDuration(scopeDi.avg)} | ${winner.library} | ${formatDuration(winner.avg)} | ${slowest.library} | ${formatDuration(slowest.avg)} |`;
+                return entries.map
+                (
+                    (entry, index) =>
+                        `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${entry.library} | ${index + 1} / ${entries.length} | ${Number.isFinite(entry.avg) ? formatDuration(entry.avg) : "-"} |`
+                ).join("\n");
             }
         )
         .filter(isRenderedRow)
@@ -601,21 +584,21 @@ function renderSpeedRows(resultView: ResultView)
 
 function renderMemoryRows(resultView: ResultView)
 {
-    return memoryScenarios
+    return getScenarios(resultView.result)
         .map
         (
             (scenario) =>
             {
                 const entries = getEntries(resultView.result, scenario).sort((a, b) => a.heap - b.heap);
-                const scopeDi = entries.find((entry) => entry.library === "scope-di");
 
-                if(entries.length === 0 || !scopeDi)
+                if(entries.length === 0)
                     return undefined;
 
-                const winner = entries[0]!;
-                const highest = entries[entries.length - 1]!;
-
-                return `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${getPlace(entries, "scope-di")} / ${entries.length} | ${formatBytes(scopeDi.heap)} | ${winner.library} | ${formatBytes(winner.heap)} | ${highest.library} | ${formatBytes(highest.heap)} |`;
+                return entries.map
+                (
+                    (entry, index) =>
+                        `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${entry.library} | ${index + 1} / ${entries.length} | ${Number.isFinite(entry.heap) ? formatBytes(entry.heap) : "-"} |`
+                ).join("\n");
             }
         )
         .filter(isRenderedRow)
@@ -653,14 +636,14 @@ function renderReport(resultView: ResultView)
             : []),
         "## Speed Summary",
         "",
-        "| Runtime | Mode | Scenario | scope-di place | scope-di | Winner | Winner result | Slowest | Slowest result |",
-        "| --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |",
+        "| Runtime | Mode | Scenario | Library / configuration | Place | Time |",
+        "| --- | --- | --- | --- | ---: | ---: |",
         renderSpeedRows(resultView),
         "",
         "## Memory Summary",
         "",
-        "| Runtime | Mode | Scenario | scope-di place | scope-di allocations | Winner | Winner allocations | Highest allocation library | Highest allocation result |",
-        "| --- | --- | --- | ---: | ---: | --- | ---: | --- | ---: |",
+        "| Runtime | Mode | Scenario | Library / configuration | Place | Allocations |",
+        "| --- | --- | --- | --- | ---: | ---: |",
         renderMemoryRows(resultView),
         "",
         "## Runtime Matrix",

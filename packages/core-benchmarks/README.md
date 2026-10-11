@@ -10,6 +10,8 @@ Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versio
 
 Each machine has its own JSON results and Markdown reports, including the runtime versions used for that run. Updating the pinned runtimes does not change existing results; reports are refreshed when benchmarks are rerun on that machine.
 
+Each benchmark case runs in a fresh process: one scenario, one library, and one code-generation setting. Workers run sequentially to avoid competing for machine resources. Fast, filtered, and complete runs use the same isolation, and their measurements are combined into the usual JSON and Markdown reports. Console results show average and median times together. Isolation prevents earlier cases from influencing the engine's optimization history; it does not eliminate variation from warmup, garbage collection, or machine load.
+
 ## Compared Libraries
 
 Each library is measured by Mitata in its own process, with only that library's adapters loaded. Processes run sequentially so they do not compete for CPU. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
@@ -27,6 +29,10 @@ For a single library, the runtime scripts accept an explicit selection, for exam
 | TypeDI | `typedi` | Decorator/metadata-oriented container. |
 | Typed Inject | `typed-inject` | Token-based typed injection. |
 | Needle DI | `@needle-di/core` | Token/provider-based injection. |
+
+Each comparison includes `scope-di` with runtime code generation disabled and `scope-di-codegen` with it enabled. Inversify runs as `inversify` with JIT disabled (`jitless: true`) and `inversify-jit` with JIT enabled (`jitless: false`). A shared Mitata `codeGeneration` parameter selects the configuration for registration and both warm and cold resolution cases. Complete runs include both settings automatically. JSON results contain separate entries, and generated Markdown reports show every library and configuration in the regular speed and allocation tables.
+
+The other libraries use their existing configurations; their installed public APIs expose no equivalent code-generation toggle. Enabling a flag does not guarantee that a particular scenario uses generated code. Some scenarios exercise cached values or strategies that do not use code generation. Inversify's JIT option controls its generated resolution machinery, while scope-di currently generates instantiation strategies, so these are library-specific optimizations rather than identical mechanisms.
 
 ## Feature Context
 
