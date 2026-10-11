@@ -10,11 +10,15 @@ Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versio
 
 Each machine has its own JSON results and Markdown reports, including the runtime versions used for that run. Updating the pinned runtimes does not change existing results; reports are refreshed when benchmarks are rerun on that machine.
 
-Each benchmark case runs in a fresh process: one scenario, one library, and one code-generation setting. Workers run sequentially to avoid competing for machine resources. Fast, filtered, and complete runs use the same isolation, and their measurements are combined into the usual JSON and Markdown reports. Console results show average and median times together. Isolation prevents earlier cases from influencing the engine's optimization history; it does not eliminate variation from warmup, garbage collection, or machine load.
+Each benchmark case runs in a fresh process: one scenario, one library, and one code-generation setting. Five independent processes measure each case by default; `--repetitions=N` changes that count. Workers run sequentially, reversing case order on alternate rounds. Complete runs show total completed worker runs across all runtimes and libraries, alongside the current library counter and elapsed time. Resuming counts reused batches as completed; elapsed time starts from the new command. Fast, filtered, and complete runs use the same isolation. Console and Markdown comparisons use the median of process medians and show their range; allocations use the median of process allocation averages. JSON retains every process measurement. Isolation prevents earlier cases from influencing the engine's optimization history; it does not eliminate variation from warmup, garbage collection, or machine load.
+
+After an interrupted complete run, `pnpm bench:json:complete --resume` reuses completed library JSON files in the output directory. Use it only when benchmark code, dependencies, and runtime versions are unchanged; a normal run always measures everything again.
+
+Raw worker results are also saved incrementally under `dist/isolated-runs`, so completed measurements remain available if a run is interrupted. For example, `pnpm bench:tsx:fast --filter=warmResolveTransientFactoryWith --repetitions=5` repeats the five-, six-, and ten-dependency scenarios.
 
 ## Compared Libraries
 
-Each library is measured by Mitata in its own process, with only that library's adapters loaded. Processes run sequentially so they do not compete for CPU. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
+Each worker measures only its selected case. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
 
 `pnpm bench:json:complete` runs every library on Node.js, Bun, and Deno. Alongside each runtime's combined JSON and Markdown report, a matching directory contains the individual library JSON files. The report links to these raw results.
 
@@ -80,8 +84,8 @@ Warm resolution measures dependency resolution after the container or scope has 
 | `warmResolveTransientFactoryDeepChain` | Resolve a deeper transient factory chain. |
 | `warmResolveTransientFactoryWithTenDependencies` | Resolve a transient factory with ten direct dependencies. |
 | `warmResolveTransientFactoryDeepWideGraph` | Resolve a graph that is both deeper and wider. |
-| `warmResolveCachedFactoryWideGraph` | Resolve a cached wide factory graph. |
-| `warmResolveCachedFactoryDeepWideGraph` | Resolve a cached graph that is both deeper and wider. |
+| `warmResolveCachedFactoryWideGraph` | Create a transient root factory with ten cached singleton class dependencies. |
+| `warmResolveCachedFactoryDeepWideGraph` | Create transient root and intermediate factories with cached singleton class leaves. |
 
 ### Cold Resolution
 
@@ -139,7 +143,9 @@ Diagnostics are internal `scope-di` measurements. They are useful for explaining
 
 ## Fairness Notes
 
-The public comparison uses idiomatic APIs for each library where possible. Some libraries resolve by token, some by string key, some through metadata, and some through factory functions. The benchmark names describe the behavior being measured rather than claiming identical internal mechanics.
+The public comparison uses idiomatic APIs for each library where possible. Some libraries resolve by token, some by string key, some through metadata, and some through factory functions. The benchmark names describe the behavior being measured rather than claiming identical internal mechanics. Graph leaves use class providers consistently; graph parents use factories. Scope DI, Inversify, and Typed Inject declare factory dependencies explicitly. TSyringe and TypeDI factories perform container lookups, while Awilix uses its default proxy injection mode. These API differences are part of the measured resolution cost.
+
+Needle DI participates only in registration, value resolution, and singleton resolution: its installed API does not provide an equivalent transient lifetime. TypeDI uses standalone container instances so repeated setup does not accumulate globally retained containers. Registration includes each library's normal setup work, including Scope DI's build step; work deferred until first resolution is measured by cold resolution instead. Warm resolution performs one initial resolution before timing.
 
 Public charts should compare only equivalent scenarios. `scope-di`-specific features such as inherited scopes and typed collection inference should be documented as library features, not benchmarked as competitor cases unless another library exposes a direct equivalent.
 

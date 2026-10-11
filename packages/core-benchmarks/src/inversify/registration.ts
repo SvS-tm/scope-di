@@ -57,7 +57,7 @@ export function *registrationFactory(state: k_state)
         {
             container
                 .bind(keys[index])
-                .toDynamicValue(() => ({}))
+                .toResolvedValue(() => ({}))
                 .inSingletonScope();
         }
     };

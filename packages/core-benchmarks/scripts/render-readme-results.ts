@@ -1,8 +1,9 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { libraryNames } from "../src/libraries.ts";
+import { getRepetitions, type ProcessSummary } from "../src/isolated-runner.ts";
 
 type BenchmarkStats =
 {
@@ -21,6 +22,7 @@ type Benchmark =
     alias?: string;
     args?: { iterations?: number[] };
     runs: BenchmarkRun[];
+    summary?: ProcessSummary;
 };
 
 type BenchmarkResult =
@@ -31,7 +33,9 @@ type BenchmarkResult =
         {
             mode?: string;
             iterations?: number;
-            isolation?: "library-process";
+            isolation?: "library-process" | "case";
+            repetitions?: number;
+            filter?: string;
             library?: string;
         };
         source?:
@@ -73,6 +77,7 @@ type BenchmarkEntry =
     library: string;
     avg: number;
     heap: number;
+    medianRange: string;
 };
 
 type ResultView =
@@ -89,7 +94,9 @@ type ScriptArguments =
     linkBase: string;
     outDir: string;
     runComplete: boolean;
+    resume: boolean;
     filter: string | undefined;
+    repetitions: number;
 };
 
 type PackageJson =
@@ -128,7 +135,9 @@ function parseArguments(argv: string[])
     let linkBase = process.cwd();
     let outDir: string | undefined;
     let runComplete = false;
+    const resume = argv.includes("--resume");
     let filter: string | undefined;
+    const repetitions = getRepetitions(argv);
 
     for(let index = 0; index < argv.length; ++index)
     {
@@ -145,6 +154,12 @@ function parseArguments(argv: string[])
             runComplete = true;
             continue;
         }
+
+        if(argument === "--resume")
+            continue;
+
+        if(argument.startsWith("--repetitions="))
+            continue;
 
         if(argument.startsWith("--filter="))
         {
@@ -230,7 +245,9 @@ function parseArguments(argv: string[])
         linkBase,
         outDir,
         runComplete,
-        filter
+        resume,
+        filter,
+        repetitions
     };
 }
 
@@ -240,6 +257,8 @@ function printUsage()
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --out-dir <reports-directory> --link-base <readme-directory> --file <result.json> [--file <result.json> ...]");
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --run-complete --out-dir <reports-directory> --link-base <readme-directory>");
     console.log("  Add --filter=<scenario> to run only matching scenarios in each library process.");
+    console.log("  Add --repetitions=<count> to select fresh processes per case (default: 5).");
+    console.log("  Add --resume to reuse completed library JSON files from an interrupted run with unchanged benchmark code.");
     console.log();
     console.log("Files can also be passed positionally:");
     console.log("  pnpm --filter @svs-tm/core-benchmarks run report:readme -- --out-dir reports/laptop --link-base . results/laptop/node.json results/laptop/bun.json");
@@ -271,10 +290,34 @@ function readPackageJson()
     return JSON.parse(readFileSync(path.join(packageDirectory, "package.json"), "utf8")) as PackageJson;
 }
 
-function runCompleteBenchmarks(outDir: string, filter: string | undefined)
+function runCompleteBenchmarks(outDir: string, filter: string | undefined, repetitions: number, resume: boolean)
 {
     const packageJson = readPackageJson();
     const outputFiles: string[] = [];
+    const startedAt = Date.now();
+    const listCommand = packageJson.scripts?.[completeBenchmarks[0]!.script];
+
+    if(!listCommand)
+        throw new Error("Missing benchmark script for progress planning.");
+
+    const listedCases = spawnSync(`${listCommand} --list-cases${filter ? " --filter=" + filter : ""}`,
+        { cwd: packageDirectory, shell: true, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
+
+    if(listedCases.error)
+        throw listedCases.error;
+    if(listedCases.status !== 0)
+        throw new Error("Could not list benchmark cases for total progress.");
+
+    const names = JSON.parse(listedCases.stdout) as string[];
+    const total = names.length * repetitions * completeBenchmarks.length;
+    let completed = 0;
+
+    const reportProgress = () =>
+    {
+        const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+        const elapsed = `${Math.floor(elapsedSeconds / 3600).toString().padStart(2, "0")}:${Math.floor(elapsedSeconds / 60 % 60).toString().padStart(2, "0")}:${(elapsedSeconds % 60).toString().padStart(2, "0")}`;
+        console.error(`[total ${completed}/${total} ${(100 * completed / total).toFixed(1)}% | elapsed ${elapsed}]`);
+    };
 
     mkdirSync(outDir, { recursive: true });
 
@@ -297,18 +340,35 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined)
 
         for(const library of libraryNames)
         {
+            const expectedNames = names.filter(name => name.startsWith(library + ":")
+                || name.startsWith(library + "-codegen:")
+                || (library === "inversify" && name.startsWith("inversify-jit:"))
+                || (library === "scope-di" && name.startsWith("diagnostics:scope-di:")));
+
+            if(expectedNames.length === 0)
+                continue;
+
+            const runtime = benchmark.outputFile.match(/^bench_([^_]+)/)?.[1];
             console.error(`Running ${benchmark.script} for ${library}...`);
 
-            const child = spawnSync
+            const libraryFile = path.join(libraryDirectory, `${library}.json`);
+            const savedOutput = resume && existsSync(libraryFile) ? readFileSync(libraryFile, "utf8") : undefined;
+
+            if(savedOutput)
+                console.error(`Reusing completed results: ${libraryFile}`);
+
+            const child = savedOutput === undefined ? spawnSync
             (
-                `${command} --library=${library}${filter ? ` --filter=${filter}` : ""}`,
+                `${command} --library=${library} --repetitions=${repetitions}${filter ? ` --filter=${filter}` : ""} --progress-offset=${completed} --progress-total=${total} --progress-started-at=${startedAt} --progress-runtime=${runtime}`,
                 {
                     cwd: packageDirectory,
                     shell: true,
                     encoding: "utf8",
+                    // Stream case progress immediately while keeping stdout available for JSON parsing.
+                    stdio: ["ignore", "pipe", "inherit"],
                     maxBuffer: 1024 * 1024 * 1024
                 }
-            );
+            ) : { stdout: savedOutput, stderr: "", status: 0, error: undefined };
 
             if(child.stderr)
                 console.error(child.stderr);
@@ -321,16 +381,29 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined)
 
             const result = JSON.parse(child.stdout) as BenchmarkResult;
 
-            if(result.metadata?.benchmark?.library !== library || result.benchmarks.length === 0)
+            if(result.metadata?.benchmark?.library !== library || result.benchmarks.length !== expectedNames.length
+                || !expectedNames.every(name => result.benchmarks.some(benchmark => benchmark.alias === name)))
                 throw new Error(`Missing or unexpected benchmark results for ${library}.`);
+
+            if(savedOutput)
+            {
+                const expectedRuntime = benchmark.outputFile.match(/^bench_([^_]+)/)?.[1];
+                const settings = result.metadata?.benchmark;
+
+                if(result.metadata?.runtime?.name !== expectedRuntime || settings?.mode !== "complete"
+                    || settings.repetitions !== repetitions || settings.filter !== filter || settings.iterations !== 300)
+                    throw new Error(`Saved results have incompatible run settings: ${libraryFile}`);
+            }
 
             for(const measuredBenchmark of result.benchmarks)
             {
                 const alias = measuredBenchmark.alias;
                 const belongsToLibrary = alias?.startsWith(`${library}:`)
+                    || alias?.startsWith(`${library}-codegen:`)
+                    || (library === "inversify" && alias?.startsWith("inversify-jit:"))
                     || (library === "scope-di" && alias?.startsWith("diagnostics:scope-di:"));
 
-                if(!belongsToLibrary || measuredBenchmark.runs.length === 0)
+                if(!belongsToLibrary || measuredBenchmark.runs.length !== repetitions)
                     throw new Error(`Unexpected benchmark in ${library} results: ${alias}`);
 
                 for(const measuredRun of measuredBenchmark.runs)
@@ -340,11 +413,12 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined)
                 }
             }
 
-            const libraryFile = path.join(libraryDirectory, `${library}.json`);
             writeFileSync(libraryFile, child.stdout);
             libraryResults.push({ library, file: path.relative(outDir, libraryFile).replace(/\\/g, "/") });
             combinedBenchmarks.push(...result.benchmarks);
             firstResult ??= result;
+            completed += result.benchmarks.reduce((count, benchmark) => count + benchmark.runs.length, 0);
+            reportProgress();
         }
 
         if(!firstResult)
@@ -510,8 +584,11 @@ function getEntries(result: BenchmarkResult, scenario: string)
 
                 return {
                     library,
-                    avg: stats?.avg ?? Number.POSITIVE_INFINITY,
-                    heap: stats?.heap?.avg ?? Number.POSITIVE_INFINITY
+                    avg: benchmark.summary?.median ?? stats?.avg ?? Number.POSITIVE_INFINITY,
+                    heap: benchmark.summary ? benchmark.summary.allocations ?? Number.POSITIVE_INFINITY : stats?.heap?.avg ?? Number.POSITIVE_INFINITY,
+                    medianRange: benchmark.summary
+                        ? `${formatDuration(benchmark.summary.minimumMedian)} - ${formatDuration(benchmark.summary.maximumMedian)}`
+                        : "-"
                 };
             }
         );
@@ -574,7 +651,7 @@ function renderSpeedRows(resultView: ResultView)
                 return entries.map
                 (
                     (entry, index) =>
-                        `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${entry.library} | ${index + 1} / ${entries.length} | ${Number.isFinite(entry.avg) ? formatDuration(entry.avg) : "-"} |`
+                        `| ${resultView.runtime} | ${getMode(resultView.result)} | \`${scenario}\` | ${entry.library} | ${index + 1} / ${entries.length} | ${Number.isFinite(entry.avg) ? formatDuration(entry.avg) : "-"} | ${entry.medianRange} |`
                 ).join("\n");
             }
         )
@@ -623,9 +700,15 @@ function renderReport(resultView: ResultView)
     return [
         `# ${resultView.runtime} Benchmark Report`,
         "",
+        ...(resultView.result.benchmarks.some(benchmark => benchmark.summary)
+            ? [
+                "Each case is measured in fresh processes. Time is the median of process medians; the range shows the minimum and maximum process medians. Allocations are the median of process allocation averages. Raw JSON retains every process measurement.",
+                ""
+            ]
+            : []),
         ...(resultView.result.libraryResults
             ? [
-                "Each library was measured in a separate process. Rankings compare independent Mitata runs.",
+                "Library results were collected independently. Rankings compare the case measurements below.",
                 "",
                 ...resultView.result.libraryResults.map
                 (
@@ -636,8 +719,8 @@ function renderReport(resultView: ResultView)
             : []),
         "## Speed Summary",
         "",
-        "| Runtime | Mode | Scenario | Library / configuration | Place | Time |",
-        "| --- | --- | --- | --- | ---: | ---: |",
+        "| Runtime | Mode | Scenario | Library / configuration | Place | Time | Process median range |",
+        "| --- | --- | --- | --- | ---: | ---: | --- |",
         renderSpeedRows(resultView),
         "",
         "## Memory Summary",
@@ -671,7 +754,7 @@ function getReportFilePath(resultView: ResultView, outDir: string)
 
 const scriptArguments = parseArguments(process.argv.slice(2));
 const generatedFiles = scriptArguments.runComplete
-    ? runCompleteBenchmarks(scriptArguments.outDir, scriptArguments.filter)
+    ? runCompleteBenchmarks(scriptArguments.outDir, scriptArguments.filter, scriptArguments.repetitions, scriptArguments.resume)
     : [];
 
 const inputFiles =

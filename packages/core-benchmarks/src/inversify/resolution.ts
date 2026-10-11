@@ -92,7 +92,7 @@ function createSingletonFactoryContainer(jitEnabled = false)
 {
     const value = {};
     const container = new Container({ jitless: !jitEnabled });
-    container.bind("singleton").toDynamicValue(() => value).inSingletonScope();
+    container.bind("singleton").toResolvedValue(() => value).inSingletonScope();
 
     return container;
 }
@@ -114,7 +114,7 @@ export function *coldResolveSingletonFactory(state: k_state)
 function createTransientFactoryContainer(jitEnabled = false)
 {
     const container = new Container({ jitless: !jitEnabled });
-    container.bind("transient").toDynamicValue(() => ({})).inTransientScope();
+    container.bind("transient").toResolvedValue(() => ({})).inTransientScope();
 
     return container;
 }
@@ -136,9 +136,9 @@ export function *coldResolveTransientFactory(state: k_state)
 function createTransientFactoryChainContainer(jitEnabled = false)
 {
     const container = new Container({ jitless: !jitEnabled });
-    container.bind("leaf").toDynamicValue(() => new Leaf()).inTransientScope();
-    container.bind("middle").toDynamicValue((context) => new Middle(context.get("leaf") as Leaf)).inTransientScope();
-    container.bind("root").toDynamicValue((context) => new Root(context.get("middle") as Middle)).inTransientScope();
+    container.bind("leaf").toResolvedValue(() => new Leaf()).inTransientScope();
+    container.bind("middle").toResolvedValue((leaf: Leaf) => new Middle(leaf), ["leaf"]).inTransientScope();
+    container.bind("root").toResolvedValue((middle: Middle) => new Root(middle), ["middle"]).inTransientScope();
 
     return container;
 }
@@ -165,7 +165,7 @@ function createTransientFactoryWithFiveDependenciesContainer(jitEnabled = false)
     container.bind("c").to(Dependency).inTransientScope();
     container.bind("d").to(Dependency).inTransientScope();
     container.bind("e").to(Dependency).inTransientScope();
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }
@@ -193,7 +193,7 @@ function createTransientFactoryWithSixDependenciesContainer(jitEnabled = false)
     container.bind("d").to(Dependency).inTransientScope();
     container.bind("e").to(Dependency).inTransientScope();
     container.bind("f").to(Dependency).inTransientScope();
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e, f) => ({ a, b, c, d, e, f }), ["a", "b", "c", "d", "e", "f"]).inTransientScope();
 
     return container;
 }
@@ -216,11 +216,11 @@ function createTransientFactoryDeepChainContainer(jitEnabled = false)
 {
     const container = new Container({ jitless: !jitEnabled });
     container.bind("leaf").to(Dependency).inTransientScope();
-    container.bind("level1").toDynamicValue((context) => ({ leaf: context.get("leaf") })).inTransientScope();
-    container.bind("level2").toDynamicValue((context) => ({ level1: context.get("level1") })).inTransientScope();
-    container.bind("level3").toDynamicValue((context) => ({ level2: context.get("level2") })).inTransientScope();
-    container.bind("level4").toDynamicValue((context) => ({ level3: context.get("level3") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ level4: context.get("level4") })).inTransientScope();
+    container.bind("level1").toResolvedValue((leaf) => ({ leaf }), ["leaf"]).inTransientScope();
+    container.bind("level2").toResolvedValue((level1) => ({ level1 }), ["level1"]).inTransientScope();
+    container.bind("level3").toResolvedValue((level2) => ({ level2 }), ["level2"]).inTransientScope();
+    container.bind("level4").toResolvedValue((level3) => ({ level3 }), ["level3"]).inTransientScope();
+    container.bind("root").toResolvedValue((level4) => ({ level4 }), ["level4"]).inTransientScope();
 
     return container;
 }
@@ -247,7 +247,7 @@ function createTransientFactoryWithTenDependenciesContainer(jitEnabled = false)
         container.bind(key).to(Dependency).inTransientScope();
     }
 
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f"), g: context.get("g"), h: context.get("h"), i: context.get("i"), j: context.get("j") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]).inTransientScope();
 
     return container;
 }
@@ -277,12 +277,12 @@ function createTransientFactoryDeepWideGraphContainer(jitEnabled = false)
         }
     }
 
-    container.bind("a").toDynamicValue((context) => ({ a1: context.get("a1"), a2: context.get("a2"), a3: context.get("a3"), a4: context.get("a4"), a5: context.get("a5") })).inTransientScope();
-    container.bind("b").toDynamicValue((context) => ({ b1: context.get("b1"), b2: context.get("b2"), b3: context.get("b3"), b4: context.get("b4"), b5: context.get("b5") })).inTransientScope();
-    container.bind("c").toDynamicValue((context) => ({ c1: context.get("c1"), c2: context.get("c2"), c3: context.get("c3"), c4: context.get("c4"), c5: context.get("c5") })).inTransientScope();
-    container.bind("d").toDynamicValue((context) => ({ d1: context.get("d1"), d2: context.get("d2"), d3: context.get("d3"), d4: context.get("d4"), d5: context.get("d5") })).inTransientScope();
-    container.bind("e").toDynamicValue((context) => ({ e1: context.get("e1"), e2: context.get("e2"), e3: context.get("e3"), e4: context.get("e4"), e5: context.get("e5") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("a").toResolvedValue((a1, a2, a3, a4, a5) => ({ a1, a2, a3, a4, a5 }), ["a1", "a2", "a3", "a4", "a5"]).inTransientScope();
+    container.bind("b").toResolvedValue((b1, b2, b3, b4, b5) => ({ b1, b2, b3, b4, b5 }), ["b1", "b2", "b3", "b4", "b5"]).inTransientScope();
+    container.bind("c").toResolvedValue((c1, c2, c3, c4, c5) => ({ c1, c2, c3, c4, c5 }), ["c1", "c2", "c3", "c4", "c5"]).inTransientScope();
+    container.bind("d").toResolvedValue((d1, d2, d3, d4, d5) => ({ d1, d2, d3, d4, d5 }), ["d1", "d2", "d3", "d4", "d5"]).inTransientScope();
+    container.bind("e").toResolvedValue((e1, e2, e3, e4, e5) => ({ e1, e2, e3, e4, e5 }), ["e1", "e2", "e3", "e4", "e5"]).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }
@@ -309,7 +309,7 @@ function createCachedFactoryWideGraphContainer(jitEnabled = false)
         container.bind(key).to(Dependency).inSingletonScope();
     }
 
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f"), g: context.get("g"), h: context.get("h"), i: context.get("i"), j: context.get("j") })).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]).inTransientScope();
 
     return container;
 }
@@ -332,12 +332,12 @@ function createCachedFactoryDeepWideGraphContainer(jitEnabled = false)
         }
     }
 
-    container.bind("a").toDynamicValue((context) => ({ a1: context.get("a1"), a2: context.get("a2"), a3: context.get("a3"), a4: context.get("a4"), a5: context.get("a5") })).inTransientScope();
-    container.bind("b").toDynamicValue((context) => ({ b1: context.get("b1"), b2: context.get("b2"), b3: context.get("b3"), b4: context.get("b4"), b5: context.get("b5") })).inTransientScope();
-    container.bind("c").toDynamicValue((context) => ({ c1: context.get("c1"), c2: context.get("c2"), c3: context.get("c3"), c4: context.get("c4"), c5: context.get("c5") })).inTransientScope();
-    container.bind("d").toDynamicValue((context) => ({ d1: context.get("d1"), d2: context.get("d2"), d3: context.get("d3"), d4: context.get("d4"), d5: context.get("d5") })).inTransientScope();
-    container.bind("e").toDynamicValue((context) => ({ e1: context.get("e1"), e2: context.get("e2"), e3: context.get("e3"), e4: context.get("e4"), e5: context.get("e5") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("a").toResolvedValue((a1, a2, a3, a4, a5) => ({ a1, a2, a3, a4, a5 }), ["a1", "a2", "a3", "a4", "a5"]).inTransientScope();
+    container.bind("b").toResolvedValue((b1, b2, b3, b4, b5) => ({ b1, b2, b3, b4, b5 }), ["b1", "b2", "b3", "b4", "b5"]).inTransientScope();
+    container.bind("c").toResolvedValue((c1, c2, c3, c4, c5) => ({ c1, c2, c3, c4, c5 }), ["c1", "c2", "c3", "c4", "c5"]).inTransientScope();
+    container.bind("d").toResolvedValue((d1, d2, d3, d4, d5) => ({ d1, d2, d3, d4, d5 }), ["d1", "d2", "d3", "d4", "d5"]).inTransientScope();
+    container.bind("e").toResolvedValue((e1, e2, e3, e4, e5) => ({ e1, e2, e3, e4, e5 }), ["e1", "e2", "e3", "e4", "e5"]).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }

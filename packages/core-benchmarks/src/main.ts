@@ -17,7 +17,8 @@ import * as typedInjectResolution from "./typed-inject/resolution.ts";
 import * as needleDiRegistration from "./needle-di/registration.ts";
 import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group, type k_state } from "mitata";
-import { runIsolatedBenchmarks } from "./isolated-runner.ts";
+import { getProcessContext, getRepetitions, runIsolatedBenchmarks } from "./isolated-runner.ts";
+import { libraryNames } from "./libraries.ts";
 
 type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown>;
 
@@ -331,6 +332,8 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
         benchmark: {
             mode,
             isolation: "case",
+            repetitions: getRepetitions(runtimeArgs),
+            library: runtimeArgs.find(argument => argument.startsWith("--library="))?.slice("--library=".length),
             filter: filter?.source,
             iterations,
             outputFormat,
@@ -907,6 +910,10 @@ const iterations = [getIterations(runtimeArgs)];
 const outputFormat = getOutputFormat(runtimeArgs);
 const filter = getFilter(runtimeArgs);
 const workerCase = runtimeArgs.find(argument => argument.startsWith("--case="))?.slice("--case=".length);
+const selectedLibrary = runtimeArgs.find(argument => argument.startsWith("--library="))?.slice("--library=".length);
+
+if(selectedLibrary !== undefined && !libraryNames.some(library => library === selectedLibrary))
+    throw new Error(`Unknown benchmark library: ${selectedLibrary}`);
 const selectedBenchmarks = benchmarks.filter
 (
     ({ modes }) =>
@@ -923,12 +930,26 @@ async function executeBenchmarks()
     if(workerCase === undefined)
     {
         const names = selectedBenchmarks.flatMap(({ runs }) => runs.map(({ name }) => name))
-            .filter(name => !filter || filter.test(name));
+            .filter(name => !filter || filter.test(name))
+            .filter
+            (
+                name => selectedLibrary === undefined
+                    || name.startsWith(`${selectedLibrary}:`)
+                    || name.startsWith(`${selectedLibrary}-codegen:`)
+                    || (selectedLibrary === "inversify" && name.startsWith("inversify-jit:"))
+                    || (selectedLibrary === "scope-di" && name.startsWith("diagnostics:scope-di:"))
+            );
+        if(runtimeArgs.includes("--list-cases"))
+        {
+            console.log(JSON.stringify(names));
+            return;
+        }
+
         const result = await runIsolatedBenchmarks(names, runtimeArgs);
         const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
 
         if(outputFormat === "json")
-            console.log(JSON.stringify({ metadata, ...result }));
+            console.log(JSON.stringify({ ...result, metadata }));
         else
         {
             for(const { name, runs } of selectedBenchmarks)
@@ -945,13 +966,15 @@ async function executeBenchmarks()
                     (
                         benchmark =>
                         {
-                            const stats = benchmark.runs[0]!.stats!;
+                            const summary = benchmark.summary;
 
                             return {
                                 case: benchmark.alias,
-                                "average (ns)": stats.avg,
-                                "median (ns)": stats.p50,
-                                "allocations (bytes)": stats.heap?.avg
+                                repetitions: summary.repetitions,
+                                "median of medians (ns)": summary.median,
+                                "minimum median (ns)": summary.minimumMedian,
+                                "maximum median (ns)": summary.maximumMedian,
+                                "median allocations (bytes)": summary.allocations
                             };
                         }
                     )
@@ -1007,7 +1030,7 @@ async function executeBenchmarks()
         { colors: false, format: "quiet", throw: true, filter: new RegExp(`^${escapeRegExp(workerCase)}$`) }
     );
 
-    console.log(JSON.stringify({ metadata, ...result, context: { ...result.context, processId: process.pid } }));
+    console.log(JSON.stringify({ metadata, ...result, context: getProcessContext(result.context) }));
 }
 
 await executeBenchmarks();
