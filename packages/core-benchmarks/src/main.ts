@@ -17,6 +17,7 @@ import * as typedInjectResolution from "./typed-inject/resolution.ts";
 import * as needleDiRegistration from "./needle-di/registration.ts";
 import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group, type k_state } from "mitata";
+import { runIsolatedBenchmarks } from "./isolated-runner.ts";
 
 type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown>;
 
@@ -25,6 +26,7 @@ type BenchmarkRun =
     name: string;
     action: BenchmarkAction;
     baseline: boolean;
+    codeGeneration?: boolean;
 };
 
 type BenchmarkMode = "fast" | "complete";
@@ -36,65 +38,64 @@ type BenchmarkGroup =
     modes?: BenchmarkMode[];
 };
 
-function createRuns
-(
-    benchmarkName: string,
-    actions:
-    {
-        scopeDi: BenchmarkAction;
-        inversify: BenchmarkAction;
-        tsyringe: BenchmarkAction;
-        awilix: BenchmarkAction;
-        typedi: BenchmarkAction;
-        typedInject: BenchmarkAction;
-        needleDi?: BenchmarkAction;
-    }
-)
-    : BenchmarkRun[]
+type BenchmarkActions =
 {
-    const runs: BenchmarkRun[] = [
-        {
-            name: `scope-di:${benchmarkName}`,
-            action: actions.scopeDi,
-            baseline: true
-        },
-        {
-            name: `inversify:${benchmarkName}`,
-            action: actions.inversify,
-            baseline: false
-        },
-        {
-            name: `tsyringe:${benchmarkName}`,
-            action: actions.tsyringe,
-            baseline: false
-        },
-        {
-            name: `awilix:${benchmarkName}`,
-            action: actions.awilix,
-            baseline: false
-        },
-        {
-            name: `typedi:${benchmarkName}`,
-            action: actions.typedi,
-            baseline: false
-        },
-        {
-            name: `typed-inject:${benchmarkName}`,
-            action: actions.typedInject,
-            baseline: false
-        }
-    ];
+    scopeDi: BenchmarkAction;
+    inversify: BenchmarkAction;
+    tsyringe: BenchmarkAction;
+    awilix: BenchmarkAction;
+    typedi: BenchmarkAction;
+    typedInject: BenchmarkAction;
+    needleDi?: BenchmarkAction;
+};
 
-    if(actions.needleDi)
+type BenchmarkLibraryConfiguration =
+{
+    key: keyof BenchmarkActions;
+    name: string;
+    baseline?: boolean;
+    codeGeneration?: boolean[];
+    codeGenerationName?: string;
+};
+
+const libraryConfigurations: BenchmarkLibraryConfiguration[] =
+[
+    { key: "scopeDi", name: "scope-di", baseline: true, codeGeneration: [false, true] },
+    { key: "inversify", name: "inversify", codeGeneration: [false, true], codeGenerationName: "inversify-jit" },
+    { key: "tsyringe", name: "tsyringe" },
+    { key: "awilix", name: "awilix" },
+    { key: "typedi", name: "typedi" },
+    { key: "typedInject", name: "typed-inject" },
+    { key: "needleDi", name: "needle-di" }
+];
+
+function createRuns(benchmarkName: string, actions: BenchmarkActions): BenchmarkRun[]
+{
+    const runs: BenchmarkRun[] = [];
+
+    for (const library of libraryConfigurations)
     {
-        runs.push
-        (
-            {
-                name: `needle-di:${benchmarkName}`,
-                action: actions.needleDi,
-                baseline: false
-            }
-        );
+        const action = actions[library.key];
+
+        if (!action)
+            continue;
+
+        for (const codeGeneration of library.codeGeneration ?? [undefined])
+        {
+            const name = codeGeneration === true
+                ? library.codeGenerationName ?? `${library.name}-codegen`
+                : library.name;
+
+            runs.push
+            (
+                {
+                    name: `${name}:${benchmarkName}`,
+                    action,
+                    baseline: library.baseline === true && codeGeneration !== true,
+                    ...(codeGeneration === undefined ? {} : { codeGeneration })
+                }
+            );
+        }
     }
 
     return runs;
@@ -241,7 +242,7 @@ function assertGitAvailable()
             [
                 "Benchmark sanity check failed: git is required before running benchmarks.",
                 "Install Git and make sure the `git` executable is available on PATH.",
-                "When running with Deno, also make sure the command includes `--allow-env --allow-run=git`."
+                "When running with Deno, also make sure the command includes `--allow-env --allow-run`."
             ],
             "git --version",
             error
@@ -329,6 +330,7 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
     return {
         benchmark: {
             mode,
+            isolation: "case",
             filter: filter?.source,
             iterations,
             outputFormat,
@@ -902,6 +904,9 @@ const runtimeArgs = getRuntimeArgs();
 assertBenchmarkSanityChecks();
 const mode = getMode(runtimeArgs);
 const iterations = [getIterations(runtimeArgs)];
+const outputFormat = getOutputFormat(runtimeArgs);
+const filter = getFilter(runtimeArgs);
+const workerCase = runtimeArgs.find(argument => argument.startsWith("--case="))?.slice("--case=".length);
 const selectedBenchmarks = benchmarks.filter
 (
     ({ modes }) =>
@@ -913,57 +918,96 @@ const selectedBenchmarks = benchmarks.filter
     }
 );
 
-for(const { name, runs } of selectedBenchmarks)
+async function executeBenchmarks()
 {
-    group
-    (
-        name,
-        () =>
+    if(workerCase === undefined)
+    {
+        const names = selectedBenchmarks.flatMap(({ runs }) => runs.map(({ name }) => name))
+            .filter(name => !filter || filter.test(name));
+        const result = await runIsolatedBenchmarks(names, runtimeArgs);
+        const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
+
+        if(outputFormat === "json")
+            console.log(JSON.stringify({ metadata, ...result }));
+        else
         {
-            boxplot
-            (
-                () => 
-                {
-                    summary
+            for(const { name, runs } of selectedBenchmarks)
+            {
+                const entries = result.benchmarks.filter(benchmark => runs.some(run => run.name === benchmark.alias));
+
+                if(entries.length === 0)
+                    continue;
+
+                console.log(`\n${name}`);
+                console.table
+                (
+                    entries.map
                     (
-                        () =>
+                        benchmark =>
                         {
-                            for(const { name, action, baseline } of runs)
-                            {
-                                bench(name, action)
-                                    .gc("inner")
-                                    .baseline(baseline)
-                                    .args({ iterations });
-                            }
+                            const stats = benchmark.runs[0]!.stats!;
+
+                            return {
+                                case: benchmark.alias,
+                                "average (ns)": stats.avg,
+                                "median (ns)": stats.p50,
+                                "allocations (bytes)": stats.heap?.avg
+                            };
                         }
-                    );
-                }
-            );
+                    )
+                );
+            }
         }
-    );
-}
 
-const outputFormat = getOutputFormat(runtimeArgs);
-const filter = getFilter(runtimeArgs);
-const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
+        return;
+    }
 
-if(outputFormat === "json")
-{
+    if(!selectedBenchmarks.some(({ runs }) => runs.some(({ name }) => name === workerCase)))
+        throw new Error(`Unknown benchmark case for ${mode} mode: ${workerCase}`);
+
+    for(const { name, runs } of selectedBenchmarks)
+    {
+        group
+        (
+            name,
+            () =>
+            {
+                boxplot
+                (
+                    () =>
+                    {
+                        summary
+                        (
+                            () =>
+                            {
+                                for(const { name, action, baseline, codeGeneration } of runs)
+                                {
+                                    bench(name, action)
+                                        .gc("inner")
+                                        .baseline(baseline)
+                                        .args
+                                        (
+                                            codeGeneration === undefined
+                                                ? { iterations }
+                                                : { iterations, codeGeneration: [codeGeneration] }
+                                        );
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    }
+
+    const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
+
     const result = await run
     (
-        filter
-            ? { colors: false, format: "quiet", filter }
-            : { colors: false, format: "quiet" }
+        { colors: false, format: "quiet", throw: true, filter: new RegExp(`^${escapeRegExp(workerCase)}$`) }
     );
 
-    console.log(JSON.stringify({ metadata, ...result }));
+    console.log(JSON.stringify({ metadata, ...result, context: { ...result.context, processId: process.pid } }));
 }
-else
-{
-    await run
-    (
-        filter
-            ? { colors: true, format: "mitata", filter }
-            : { colors: true, format: "mitata" }
-    );
-}
+
+await executeBenchmarks();

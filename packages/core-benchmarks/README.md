@@ -4,7 +4,21 @@
 
 This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: warm resolution, cold resolution, transient graphs, cached graphs, registration, speed, and memory.
 
+## Runtime Setup
+
+Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versions and pnpm, which downloads the required runtimes automatically during installation. This keeps benchmark runs consistent across machines without relying on globally installed runtime versions.
+
+Each machine has its own JSON results and Markdown reports, including the runtime versions used for that run. Updating the pinned runtimes does not change existing results; reports are refreshed when benchmarks are rerun on that machine.
+
+Each benchmark case runs in a fresh process: one scenario, one library, and one code-generation setting. Workers run sequentially to avoid competing for machine resources. Fast, filtered, and complete runs use the same isolation, and their measurements are combined into the usual JSON and Markdown reports. Console results show average and median times together. Isolation prevents earlier cases from influencing the engine's optimization history; it does not eliminate variation from warmup, garbage collection, or machine load.
+
 ## Compared Libraries
+
+Each library is measured by Mitata in its own process, with only that library's adapters loaded. Processes run sequentially so they do not compete for CPU. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
+
+`pnpm bench:json:complete` runs every library on Node.js, Bun, and Deno. Alongside each runtime's combined JSON and Markdown report, a matching directory contains the individual library JSON files. The report links to these raw results.
+
+For a single library, the runtime scripts accept an explicit selection, for example `pnpm bench:tsx:fast --library=inversify`. The same `--library` option works with the Bun and Deno scripts. An optional `--filter=warmResolveValue` narrows the scenarios being measured.
 
 | Library | Package | Primary style |
 | --- | --- | --- |
@@ -15,6 +29,10 @@ This page is for developers evaluating whether `scope-di` is a good fit for an a
 | TypeDI | `typedi` | Decorator/metadata-oriented container. |
 | Typed Inject | `typed-inject` | Token-based typed injection. |
 | Needle DI | `@needle-di/core` | Token/provider-based injection. |
+
+Each comparison includes `scope-di` with runtime code generation disabled and `scope-di-codegen` with it enabled. Inversify runs as `inversify` with JIT disabled (`jitless: true`) and `inversify-jit` with JIT enabled (`jitless: false`). A shared Mitata `codeGeneration` parameter selects the configuration for registration and both warm and cold resolution cases. Complete runs include both settings automatically. JSON results contain separate entries, and generated Markdown reports show every library and configuration in the regular speed and allocation tables.
+
+The other libraries use their existing configurations; their installed public APIs expose no equivalent code-generation toggle. Enabling a flag does not guarantee that a particular scenario uses generated code. Some scenarios exercise cached values or strategies that do not use code generation. Inversify's JIT option controls its generated resolution machinery, while scope-di currently generates instantiation strategies, so these are library-specific optimizations rather than identical mechanisms.
 
 ## Feature Context
 
@@ -147,21 +165,22 @@ Statistics:
 
 ### AMD Ryzen 7 3800X 8-Core Processor, Windows 10.0.22631 x64, 300 Iterations
 
-Commit: [d71b5796a374cc67fd6a2d166e6eb521cb064fd9](https://github.com/SvS-tm/scope-di/commit/d71b5796a374cc67fd6a2d166e6eb521cb064fd9)
+Commit: [62c9932873f4a5e62ef769f0447f40caffb6baee](https://github.com/SvS-tm/scope-di/commit/62c9932873f4a5e62ef769f0447f40caffb6baee)
 
 Statistics:
 
 - Tiny cached lookups are usually led by `typed-inject`.
-- `scope-di` remains strongest on transient factory graphs with several dependencies.
-- Deep and wide transient graphs are the clearest speed win for `scope-di` across Node.js, Bun, and Deno.
-- Allocation behavior is especially good on Node.js and Deno transient graph paths.
-- Bun allocation measurements are very small in absolute terms, so rank changes should be read with extra care.
+- `inversify` leads the five- and six-dependency transient factory scenarios across all three runtimes; `scope-di` places second or third.
+- `scope-di` wins the deep and wide transient factory graph on Bun and places second behind `inversify` on Node.js and Deno.
+- `scope-di` has the lowest measured allocations for transient classes and five-dependency transient factories on Node.js and Deno.
+- Registration varies by runtime: `scope-di` wins Node.js class registration, while `tsyringe` leads all three Deno registration scenarios.
+- Bun allocation measurements are often rounded to 0 B, so the displayed ranks should not be interpreted as meaningful allocation differences in those cases.
 
 | Runtime | Version | Report |
 | --- | --- | --- |
-| Node.js | `v24.18.0` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
-| Bun | `1.3.14` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
-| Deno | `2.9.0` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
+| Node.js | `v26.11.1` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
+| Bun | `1.4.2` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
+| Deno | `2.9.6` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
 
 ## License
 
