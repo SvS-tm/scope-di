@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-sloppy-imports
 import "reflect-metadata";
-import { Container } from "typedi";
+import { ContainerInstance } from "typedi";
 import type { k_state } from "mitata";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
@@ -22,25 +22,9 @@ class Root
 
 class Dependency {}
 
-let containerIndex = 0;
-
 function createIsolatedContainer()
 {
-    return Container.of(`resolution-benchmark-${containerIndex++}`);
-}
-
-function cleanupIsolatedContainer(container: { readonly id: string })
-{
-    Container.reset(container.id);
-}
-
-function *createColdTypeDiResolutionBenchmark<TContainer extends { readonly id: string }>
-(
-    createContainer: () => TContainer,
-    resolve: (container: TContainer) => unknown
-)
-{
-    yield *createColdResolutionBenchmark(createContainer, resolve, cleanupIsolatedContainer);
+    return new ContainerInstance("resolution-benchmark");
 }
 
 function createValueContainer()
@@ -58,7 +42,7 @@ export function *warmResolveValue(_: k_state)
 
 export function *coldResolveValue(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createValueContainer, (container) => container.get("value"));
+    yield *createColdResolutionBenchmark(createValueContainer, (container) => container.get("value"));
 }
 
 function createSingletonClassContainer()
@@ -76,7 +60,7 @@ export function *warmResolveSingletonClass(_: k_state)
 
 export function *coldResolveSingletonClass(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createSingletonClassContainer, (container) => container.get("singleton"));
+    yield *createColdResolutionBenchmark(createSingletonClassContainer, (container) => container.get("singleton"));
 }
 
 function createTransientClassContainer()
@@ -94,7 +78,7 @@ export function *warmResolveTransientClass(_: k_state)
 
 export function *coldResolveTransientClass(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientClassContainer, (container) => container.get("transient"));
+    yield *createColdResolutionBenchmark(createTransientClassContainer, (container) => container.get("transient"));
 }
 
 function createSingletonFactoryContainer()
@@ -113,7 +97,7 @@ export function *warmResolveSingletonFactory(_: k_state)
 
 export function *coldResolveSingletonFactory(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createSingletonFactoryContainer, (container) => container.get("singleton"));
+    yield *createColdResolutionBenchmark(createSingletonFactoryContainer, (container) => container.get("singleton"));
 }
 
 function createTransientFactoryContainer()
@@ -131,7 +115,7 @@ export function *warmResolveTransientFactory(_: k_state)
 
 export function *coldResolveTransientFactory(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryContainer, (container) => container.get("transient"));
+    yield *createColdResolutionBenchmark(createTransientFactoryContainer, (container) => container.get("transient"));
 }
 
 function createTransientFactoryChainContainer()
@@ -151,7 +135,7 @@ export function *warmResolveTransientFactoryChain(_: k_state)
 
 export function *coldResolveTransientFactoryChain(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryChainContainer, (container) => container.get("root"));
+    yield *createColdResolutionBenchmark(createTransientFactoryChainContainer, (container) => container.get("root"));
 }
 
 function createTransientFactoryWithFiveDependenciesContainer()
@@ -174,7 +158,7 @@ export function *warmResolveTransientFactoryWithFiveDependencies(_: k_state)
 
 export function *coldResolveTransientFactoryWithFiveDependencies(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer, (container) => container.get("parent"));
+    yield *createColdResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer, (container) => container.get("parent"));
 }
 
 function createTransientFactoryWithSixDependenciesContainer()
@@ -198,7 +182,7 @@ export function *warmResolveTransientFactoryWithSixDependencies(_: k_state)
 
 export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.get("parent"));
+    yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.get("parent"));
 }
 
 function createTransientFactoryDeepChainContainer()
@@ -221,7 +205,7 @@ export function *warmResolveTransientFactoryDeepChain(_: k_state)
 
 export function *coldResolveTransientFactoryDeepChain(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryDeepChainContainer, (container) => container.get("root"));
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepChainContainer, (container) => container.get("root"));
 }
 
 function createTransientFactoryWithTenDependenciesContainer()
@@ -249,7 +233,7 @@ export function *warmResolveTransientFactoryWithTenDependencies(_: k_state)
 
 export function *coldResolveTransientFactoryWithTenDependencies(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer, (container) => container.get("parent"));
+    yield *createColdResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer, (container) => container.get("parent"));
 }
 
 function createTransientFactoryDeepWideGraphContainer()
@@ -276,7 +260,7 @@ export function *warmResolveTransientFactoryDeepWideGraph(_: k_state)
 
 export function *coldResolveTransientFactoryDeepWideGraph(_: k_state)
 {
-    yield *createColdTypeDiResolutionBenchmark(createTransientFactoryDeepWideGraphContainer, (container) => container.get("root"));
+    yield *createColdResolutionBenchmark(createTransientFactoryDeepWideGraphContainer, (container) => container.get("root"));
 }
 
 function createCachedFactoryWideGraphContainer()

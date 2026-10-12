@@ -7,6 +7,13 @@ import type { DiMappingBuilder } from "./di-mapping-builder";
 
 export type DiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> =
 {
+    /**
+     * Allows the DI engine to generate JavaScript at runtime for optimization. Disabled by default.
+     * CSP policies or runtime restrictions may block code generation; the engine falls back when it fails.
+     * @param value Whether to allow code generation. Omit the argument to enable it.
+     */
+    setAllowRuntimeCodeGeneration(value?: boolean): DiScopeBuilder<T_RegisteredDependencies>;
+
     map<T_DependencyMappingKey extends AllowedDependencyKey>
     (
         key: T_DependencyMappingKey
