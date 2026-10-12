@@ -1,19 +1,10 @@
 import type { DiScopeBuilder } from "../../abstractions";
-import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
-import { DependencyDescriptorType } from "../../types";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
-import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
-import { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
-import { compileAsyncClassDescriptor } from "../instantiation-strategies/async/class-async/compile-async-class-descriptor";
-import { compileAsyncFactoryDescriptor } from "../instantiation-strategies/async/factory-async/compile-async-factory-descriptor";
-import { compileClassDescriptor } from "../instantiation-strategies/sync/class/compile-class-descriptor";
-import { compileFactoryDescriptor } from "../instantiation-strategies/sync/factory/compile-factory-descriptor";
-import { compileValueDescriptor } from "../instantiation-strategies/sync/value/compile-value-descriptor";
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 import { DefaultDiScope } from "../scope/default-di-scope";
 import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
@@ -23,27 +14,6 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 {
     private allowRuntimeCodeGeneration: boolean = false;
     private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
-
-    private compile(descriptor: DependencyDescriptor): RuntimeDependencyDescriptor
-    {
-        const { key, type } = descriptor;
-
-        switch (descriptor.type)
-        {
-            case DependencyDescriptorType.Value:
-                return compileValueDescriptor(descriptor);
-            case DependencyDescriptorType.Class:
-                return compileClassDescriptor(descriptor, this.allowRuntimeCodeGeneration);
-            case DependencyDescriptorType.Factory:
-                return compileFactoryDescriptor(descriptor, this.allowRuntimeCodeGeneration);
-            case DependencyDescriptorType.ClassAsync:
-                return compileAsyncClassDescriptor(descriptor, this.allowRuntimeCodeGeneration);
-            case DependencyDescriptorType.FactoryAsync:
-                return compileAsyncFactoryDescriptor(descriptor, this.allowRuntimeCodeGeneration);
-            default:
-                throw new UnknownDependencyTypeError(key, type);
-        }
-    }
 
     /**
      * @internal This is internal method, its not safe to use it.
@@ -89,19 +59,27 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
 
     public build()
     {
-        const compiledRegistrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>();
+        const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
 
+        // Compiling shared descriptors again would rebind strategies already owned by earlier scopes.
         for (const [key, descriptorOrCollection] of this.descriptors)
         {
-            if (Array.isArray(descriptorOrCollection))
-                compiledRegistrations.set(key, descriptorOrCollection.map(descriptor => this.compile(descriptor)));
-            else
-                compiledRegistrations.set(key, this.compile(descriptorOrCollection));
+            registrations.set
+            (
+                key,
+                Array.isArray(descriptorOrCollection)
+                    ? descriptorOrCollection.map(descriptor => ({ ...descriptor }))
+                    : { ...descriptorOrCollection }
+            );
         }
 
         return new DefaultDiScope<T_RegisteredDependencies>
         (
-            new DefaultDiDependenciesRegistry(compiledRegistrations)
+            new DefaultDiDependenciesRegistry
+            (
+                registrations,
+                this.allowRuntimeCodeGeneration
+            )
         );
     }
 }

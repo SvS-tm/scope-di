@@ -1,3 +1,4 @@
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
@@ -23,7 +24,12 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 8 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>(collectArguments, keys);
+                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                (
+                    ...getTestRegistrationMaps(root, keys),
+                    collectArguments,
+                    keys
+                );
 
                 const first: ReturnType<typeof collectArguments> = instantiate(firstScope);
                 const next: ReturnType<typeof collectArguments> = instantiate(firstScope);
@@ -52,7 +58,12 @@ describe
                 const promise = Promise.resolve(42);
                 const scope = createSyncValueStrategyScope(new Map<string, unknown>([["collection", ["first", "second"]], ["promise", promise], ["value", 7]]));
                 const keys: ("value" | "promise" | ["collection"])[] = ["value", ["collection"], "promise"];
-                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>(collectArguments, keys);
+                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    collectArguments,
+                    keys
+                );
                 const result = instantiate(scope);
 
                 expect(result.values).toEqual([7, scope.resolve(["collection"]), promise]);
@@ -66,7 +77,12 @@ describe
             () =>
             {
                 const scope = createDefaultDiScope();
-                const instantiate = createRuntimeArgumentsFactoryStrategy(collectArguments, []);
+                const instantiate = createRuntimeArgumentsFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(createDefaultDiScope<RegisteredDependencies>(), []),
+                    collectArguments,
+                    []
+                );
 
                 expect(instantiate(scope).values).toEqual([]);
             }
@@ -79,7 +95,7 @@ describe
             {
                 const key = "quote'\"; special-key";
                 const scope = createSyncValueStrategyScope(new Map([[key, 42]]));
-                const instantiate = createRuntimeArgumentsFactoryStrategy(collectArguments, [key]);
+                const instantiate = createRuntimeArgumentsFactoryStrategy(...getTestRegistrationMaps(scope, [key]), collectArguments, [key]);
 
                 expect(instantiate(scope).values).toEqual([42]);
             }
@@ -95,7 +111,12 @@ describe
                 {
                     throw error;
                 };
-                const instantiate = createRuntimeArgumentsFactoryStrategy(factory, []);
+                const instantiate = createRuntimeArgumentsFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(createDefaultDiScope<RegisteredDependencies>(), []),
+                    factory,
+                    []
+                );
                 const scope = createDefaultDiScope();
 
                 expect(() => instantiate(scope)).toThrow(error);

@@ -1,3 +1,4 @@
+import { getTestDescriptorBuckets } from "../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../../types";
@@ -47,7 +48,7 @@ describe
                         factory: secondFactory
                     });
                 const scope = createDefaultDiScope<RegisteredDependencies>(descriptors);
-                const promise = resolveAsyncDependencies(scope, ["first", "second"]);
+                const promise = resolveAsyncDependencies(scope, getTestDescriptorBuckets(scope, ["first", "second"]));
 
                 expect(firstFactory).toHaveBeenCalledTimes(1);
                 expect(secondFactory).toHaveBeenCalledTimes(1);
@@ -57,7 +58,7 @@ describe
                 first[TrackedPromise.resolve](1);
 
                 expect(await promise).toEqual([1, 2]);
-                expect(resolveAsyncDependencies(scope, ["first", "second"])[TrackedPromise.status])
+                expect(resolveAsyncDependencies(scope, getTestDescriptorBuckets(scope, ["first", "second"]))[TrackedPromise.status])
                     .toBe(TrackedPromiseStatus.Success);
             }
         );
@@ -92,7 +93,7 @@ describe
                         }
                     ]);
                 const scope = createDefaultDiScope<RegisteredDependencies>(descriptors);
-                const promise = resolveAsyncDependencies(scope, [["collection"]]);
+                const promise = resolveAsyncDependencies(scope, getTestDescriptorBuckets(scope, [["collection"]]));
 
                 expect(promise[TrackedPromise.status]).toBe(TrackedPromiseStatus.Pending);
                 pending[TrackedPromise.resolve](1);
@@ -101,7 +102,7 @@ describe
 
                 expect(collection).toEqual([1, 2, promiseValue]);
 
-                const next = resolveAsyncDependencies(scope, [["collection"]]);
+                const next = resolveAsyncDependencies(scope, getTestDescriptorBuckets(scope, [["collection"]]));
 
                 expect(next[TrackedPromise.status]).toBe(TrackedPromiseStatus.Success);
                 expect(await next).toEqual([[1, 2, promiseValue]]);

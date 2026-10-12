@@ -1,3 +1,5 @@
+import { createAsyncStrategyChildScope } from "../async-strategy.test-helpers";
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { AsyncArgumentList, assertTrackedPromise, createAsyncStrategyScope } from "../async-strategy.test-helpers";
@@ -15,9 +17,9 @@ describe
             {
                 const values = Array.from({ length: 8 }, (_, index) => index);
                 const firstScope = createAsyncStrategyScope(values);
-                const secondScope = createAsyncStrategyScope(values.map(value => value + 100));
+                const secondScope = { scope: createAsyncStrategyChildScope(firstScope.scope) };
                 const keys = firstScope.keys.slice().reverse();
-                const instantiate = createSpreadArgumentsAsyncClassStrategy(AsyncArgumentList, keys);
+                const instantiate = createSpreadArgumentsAsyncClassStrategy(...getTestRegistrationMaps(firstScope.scope, keys), AsyncArgumentList, keys);
                 const first = instantiate(firstScope.scope);
                 assertTrackedPromise(first);
                 const second = instantiate(secondScope.scope);
@@ -26,7 +28,7 @@ describe
                 expect(first[TrackedPromise.status]).toBe(TrackedPromiseStatus.Success);
 
                 expect((await first).values).toEqual(values.slice().reverse());
-                expect((await second).values).toEqual(values.map(value => value + 100).reverse());
+                expect((await second).values).toEqual(values.slice().reverse());
                 expect(await first).not.toBe(await instantiate(firstScope.scope));
             }
         );
@@ -39,7 +41,7 @@ describe
                 const values = Array.from({ length: 8 }, (_, index) => index);
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(values, new Map([[0, dependency]]));
-                const instantiate = createSpreadArgumentsAsyncClassStrategy(AsyncArgumentList, keys);
+                const instantiate = createSpreadArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
 
@@ -71,7 +73,7 @@ describe
                         construct(...values);
                     }
                 }
-                const instantiate = createSpreadArgumentsAsyncClassStrategy(Target, keys);
+                const instantiate = createSpreadArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), Target, keys);
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Dependency failed");
@@ -91,7 +93,7 @@ describe
             {
                 const promiseValue = Promise.resolve(42);
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(promiseValue));
-                const instantiate = createSpreadArgumentsAsyncClassStrategy(AsyncArgumentList, keys);
+                const instantiate = createSpreadArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
                 const result = await instantiate(scope);
 
                 expect(result.values).toHaveLength(8);
@@ -107,7 +109,7 @@ describe
             async () =>
             {
                 const { scope } = createAsyncStrategyScope([]);
-                const instantiate = createSpreadArgumentsAsyncClassStrategy(AsyncArgumentList, []);
+                const instantiate = createSpreadArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, []), AsyncArgumentList, []);
 
                 expect((await instantiate(scope)).values).toEqual([]);
             }

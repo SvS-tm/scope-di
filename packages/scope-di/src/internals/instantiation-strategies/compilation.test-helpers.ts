@@ -1,49 +1,51 @@
-import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
-import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType } from "../../types";
-import { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
-import { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
-import { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
-import { compileAsyncClassDescriptor } from "./async/class-async/compile-async-class-descriptor";
-import { compileAsyncFactoryDescriptor } from "./async/factory-async/compile-async-factory-descriptor";
-import { compileClassDescriptor } from "./sync/class/compile-class-descriptor";
-import { compileFactoryDescriptor } from "./sync/factory/compile-factory-descriptor";
-import { compileValueDescriptor } from "./sync/value/compile-value-descriptor";
+import type { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey, RegisteredDependencies } from "../../types";
+import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
+import type { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
+import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
+import type { DefaultDiScope } from "../scope/default-di-scope";
 
 export function compileTestDescriptor(descriptor: DependencyDescriptor): RuntimeDependencyDescriptor
 {
-    const { key, type } = descriptor;
+    const registry = new DefaultDiDependenciesRegistry(new Map([[descriptor.key, descriptor]]), false);
 
-    switch (descriptor.type)
-    {
-        case DependencyDescriptorType.Value:
-            return compileValueDescriptor(descriptor);
-        case DependencyDescriptorType.Class:
-            return compileClassDescriptor(descriptor, false);
-        case DependencyDescriptorType.Factory:
-            return compileFactoryDescriptor(descriptor, false);
-        case DependencyDescriptorType.ClassAsync:
-            return compileAsyncClassDescriptor(descriptor, false);
-        case DependencyDescriptorType.FactoryAsync:
-            return compileAsyncFactoryDescriptor(descriptor, false);
-        default:
-            throw new UnknownDependencyTypeError(key, type);
-    }
+    return registry.getDescriptors()[0];
 }
 
-export function compileTestRegistrations(registrations: ReadonlyMap<AllowedDependencyKey, DependencyDescriptorsBucket>)
+export function getTestRegistrationMaps
+(
+    scope: DefaultDiScope<RegisteredDependencies>,
+    keys: DependencyResolutionKey<AllowedDependencyKey>[] = []
+)
 {
-    const compiledRegistrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>();
+    const collections = new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>();
+    const singulars = new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>();
 
-    for (const [key, descriptorOrCollection] of registrations)
+    for (const descriptor of scope.registry.getDescriptors())
     {
-        compiledRegistrations.set
-        (
-            key,
-            Array.isArray(descriptorOrCollection)
-                ? descriptorOrCollection.map(compileTestDescriptor)
-                : compileTestDescriptor(descriptorOrCollection)
-        );
+        const collection = collections.get(descriptor.key) ?? [];
+        collection.push(descriptor);
+        collections.set(descriptor.key, collection);
+
+        if (!singulars.has(descriptor.key))
+            singulars.set(descriptor.key, descriptor);
     }
 
-    return compiledRegistrations;
+    for (const key of keys)
+    {
+        if (Array.isArray(key))
+            collections.set(key[0], scope.registry.resolveCollectionDescriptorsByKey(key[0]));
+    }
+
+    return [collections, singulars] as const;
+}
+
+export function getTestDescriptorBuckets
+(
+    scope: DefaultDiScope<RegisteredDependencies>,
+    keys: DependencyResolutionKey<AllowedDependencyKey>[]
+): RuntimeDependencyDescriptorsBucket[]
+{
+    return keys.map(key => Array.isArray(key)
+        ? scope.registry.resolveCollectionDescriptorsByKey(key[0])
+        : scope.registry.resolveSingularDescriptorByKey(key));
 }

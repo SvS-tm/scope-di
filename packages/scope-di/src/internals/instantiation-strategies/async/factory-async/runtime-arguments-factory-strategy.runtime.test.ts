@@ -1,3 +1,5 @@
+import { createAsyncStrategyChildScope } from "../async-strategy.test-helpers";
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { collectAsyncArguments, assertTrackedPromise, createAsyncStrategyScope } from "../async-strategy.test-helpers";
@@ -15,9 +17,14 @@ describe
             {
                 const values = Array.from({ length: 8 }, (_, index) => index);
                 const firstScope = createAsyncStrategyScope(values);
-                const secondScope = createAsyncStrategyScope(values.map(value => value + 100));
+                const secondScope = { scope: createAsyncStrategyChildScope(firstScope.scope) };
                 const keys = firstScope.keys.slice().reverse();
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(collectAsyncArguments, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(firstScope.scope, keys),
+                    collectAsyncArguments,
+                    keys
+                );
                 const first = instantiate(firstScope.scope);
                 assertTrackedPromise(first);
                 const second = instantiate(secondScope.scope);
@@ -25,7 +32,7 @@ describe
                 expect(TrackedPromise.isTracked(first)).toBe(true);
 
                 expect((await first).values).toEqual(values.slice().reverse());
-                expect((await second).values).toEqual(values.map(value => value + 100).reverse());
+                expect((await second).values).toEqual(values.slice().reverse());
                 expect(await first).not.toBe(await instantiate(firstScope.scope));
             }
         );
@@ -38,7 +45,7 @@ describe
                 const values = Array.from({ length: 8 }, (_, index) => index);
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(values, new Map([[0, dependency]]));
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(collectAsyncArguments, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), collectAsyncArguments, keys);
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
 
@@ -62,7 +69,7 @@ describe
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(0), new Map([[0, dependency]]));
                 const construct = jest.fn(collectAsyncArguments);
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(construct, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), construct, keys);
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Dependency failed");
@@ -82,7 +89,7 @@ describe
             {
                 const promiseValue = Promise.resolve(42);
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(promiseValue));
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(collectAsyncArguments, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), collectAsyncArguments, keys);
                 const result = await instantiate(scope);
 
                 expect(result.values).toHaveLength(8);
@@ -99,7 +106,7 @@ describe
             {
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(0));
                 const result = TrackedPromise.controlled<number>();
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(() => result, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), () => result, keys);
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
 
@@ -117,7 +124,7 @@ describe
             {
                 const error = new Error("Factory failed");
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(0));
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(() => Promise.reject(error), keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), () => Promise.reject(error), keys);
 
                 await expect(instantiate(scope)).rejects.toBe(error);
             }
@@ -129,7 +136,7 @@ describe
             async () =>
             {
                 const { scope } = createAsyncStrategyScope([]);
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(collectAsyncArguments, []);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, []), collectAsyncArguments, []);
 
                 expect((await instantiate(scope)).values).toEqual([]);
             }
@@ -141,7 +148,7 @@ describe
             async () =>
             {
                 const { scope, keys } = createAsyncStrategyScope([42], new Map(), ["quote'\"; special-key"]);
-                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(collectAsyncArguments, keys);
+                const instantiate = createRuntimeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), collectAsyncArguments, keys);
 
                 expect((await instantiate(scope)).values).toEqual([42]);
             }

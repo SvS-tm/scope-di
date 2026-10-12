@@ -1,6 +1,7 @@
 import { TrackedPromise } from "@svs-tm/system";
 import { DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../../types";
 import { DependencyDescriptorsBucket } from "../../../types/internals/dependency-descriptors-bucket";
+import { DefaultDiScope } from "../../scope/default-di-scope";
 import { createDefaultDiScope } from "../../scope/default-di-scope.test-helpers";
 
 export class AsyncArgumentList
@@ -55,4 +56,14 @@ export function createAsyncStrategyScope
     }
 
     return { scope: createDefaultDiScope<RegisteredDependencies>(descriptors), keys };
+}
+
+export function createAsyncStrategyChildScope(parent: DefaultDiScope<RegisteredDependencies>)
+{
+    const child = parent.createChildScope();
+
+    if (!(child instanceof DefaultDiScope))
+        throw new Error("Expected a DefaultDiScope child.");
+
+    return child;
 }

@@ -1,30 +1,27 @@
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { isAsyncDescriptor } from "../../../helpers/descriptor-helpers";
 import { RegisteredDependencies } from "../../../types";
-import { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
-import { DependencyResolutionKey } from "../../../types/dependency-resolution-key";
+import { RuntimeDependencyDescriptorsBucket } from "../../../types/internals/runtime-dependency-descriptors-bucket";
 import { DefaultDiScope } from "../../scope/default-di-scope";
 
 export function resolveAsyncDependencies
 (
     scope: DefaultDiScope<RegisteredDependencies>, 
-    keys: DependencyResolutionKey<AllowedDependencyKey>[]
+    descriptorsBuckets: RuntimeDependencyDescriptorsBucket[]
 )
 {
 	const asyncDependencies: Promise<any>[] = [];
 
-	const keysLength = keys.length;
-	const results: (unknown | unknown[])[] = new Array(keysLength);
+	const dependenciesLength = descriptorsBuckets.length;
+	const results: (unknown | unknown[])[] = new Array(dependenciesLength);
 
-	for (let index = 0; index < keysLength; ++index)
+	for (let index = 0; index < dependenciesLength; ++index)
 	{
-		const key = keys[index];
+		const descriptorsBucket = descriptorsBuckets[index];
 
-		if (Array.isArray(key))
+		if (Array.isArray(descriptorsBucket))
 		{
-			const [mappingKey] = key;
-
-			const descriptorsCollection = scope.registry.resolveCollectionDescriptorsByKey(mappingKey);
+			const descriptorsCollection = descriptorsBucket;
 
 			const descriptorsLength = descriptorsCollection.length;
 			const collection = new Array(descriptorsLength);
@@ -52,7 +49,7 @@ export function resolveAsyncDependencies
 		}
 		else
 		{
-			const descriptor = scope.registry.resolveSingularDescriptorByKey(key);
+			const descriptor = descriptorsBucket;
 
 			const value = scope.resolveByDescriptor(descriptor);
 

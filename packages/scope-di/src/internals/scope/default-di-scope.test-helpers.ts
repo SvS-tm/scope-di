@@ -1,6 +1,5 @@
 import type { AllowedDependencyKey, RegisteredDependencies } from "../../types";
 import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
-import { compileTestRegistrations } from "../instantiation-strategies/compilation.test-helpers";
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 import { DefaultDiScope } from "./default-di-scope";
 
@@ -9,5 +8,5 @@ export const createDefaultDiScope = <T_RegisteredDependencies extends Registered
     descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
 ) =>
 {
-    return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(compileTestRegistrations(descriptors)));
+    return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptors, false));
 };

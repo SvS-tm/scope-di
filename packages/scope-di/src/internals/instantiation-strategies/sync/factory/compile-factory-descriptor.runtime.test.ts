@@ -1,3 +1,5 @@
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
+import { FactoryDependencyDescriptor } from "../../../../types/factory-dependency-descriptor";
 import { describe, expect, it, jest } from "@jest/globals";
 import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
@@ -31,17 +33,18 @@ describe
 
                 try
                 {
-                    const compiled = compileFactoryDescriptor
-                    (
-                        {
-                            key: "target",
-                            type: DependencyDescriptorType.Factory,
-                            lifetime: DependencyLifetime.Transient,
-                            factory: collectArguments,
-                            subDependenciesKeys: keys
-                        },
-                        allowRuntimeCodeGeneration
-                    );
+                    const descriptor: FactoryDependencyDescriptor<unknown> =
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Factory,
+                        lifetime: DependencyLifetime.Transient,
+                        factory: collectArguments,
+                        subDependenciesKeys: keys
+                    };
+
+                    const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                    compileFactoryDescriptor(collectionRegistrations, singularRegistrations, descriptor, allowRuntimeCodeGeneration);
+                    const compiled = descriptor;
 
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));

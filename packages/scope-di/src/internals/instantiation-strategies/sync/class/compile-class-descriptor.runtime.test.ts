@@ -1,3 +1,5 @@
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
+import { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
 import { describe, expect, it, jest } from "@jest/globals";
 import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
@@ -41,17 +43,18 @@ describe
 
                 try
                 {
-                    const compiled = compileClassDescriptor
-                    (
-                        {
-                            key: "target",
-                            type: DependencyDescriptorType.Class,
-                            lifetime: DependencyLifetime.Transient,
-                            constructor: Target,
-                            subDependenciesKeys: keys
-                        },
-                        allowRuntimeCodeGeneration
-                    );
+                    const descriptor: ClassDependencyDescriptor<unknown> =
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Class,
+                        lifetime: DependencyLifetime.Transient,
+                        constructor: Target,
+                        subDependenciesKeys: keys
+                    };
+
+                    const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                    compileClassDescriptor(collectionRegistrations, singularRegistrations, descriptor, allowRuntimeCodeGeneration);
+                    const compiled = descriptor;
 
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));

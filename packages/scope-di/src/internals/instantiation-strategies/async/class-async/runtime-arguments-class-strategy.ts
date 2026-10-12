@@ -5,6 +5,8 @@ import { DependencyResolutionKey } from "../../../../types/dependency-resolution
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createAsyncClassStrategy } from "./create-async-class-strategy";
+import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
+import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 
 export function createRuntimeCodeGenerationAsyncClassStrategy
 <
@@ -12,6 +14,8 @@ export function createRuntimeCodeGenerationAsyncClassStrategy
     T_Constructor extends Constructor<any[], any>
 >
 (
+    collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
+    singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
     constructor: T_Constructor,
     keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
 )
@@ -32,6 +36,12 @@ export function createRuntimeCodeGenerationAsyncClassStrategy
         };`
     );
 
-    return createAsyncClassStrategy(keys, strategyFactory(constructor));
+    return createAsyncClassStrategy
+    (
+        collectionRegistrations,
+        singularRegistrations,
+        keys,
+        strategyFactory(constructor)
+    );
 }
 

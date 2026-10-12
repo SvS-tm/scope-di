@@ -1,3 +1,4 @@
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise } from "@svs-tm/system";
 import { AsyncFactoryDependencyDescriptor } from "../../../../types/async-factory-dependency-descriptor";
@@ -28,17 +29,18 @@ describe
 
                 try
                 {
-                    const compiled = compileAsyncFactoryDescriptor
-                    (
-                        {
-                            key: "target",
-                            type: DependencyDescriptorType.FactoryAsync,
-                            lifetime: DependencyLifetime.Transient,
-                            factory: collectAsyncArguments,
-                            subDependenciesKeys: keys
-                        },
-                        allowRuntimeCodeGeneration
-                    );
+                    const descriptor: AsyncFactoryDependencyDescriptor<unknown> =
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Transient,
+                        factory: collectAsyncArguments,
+                        subDependenciesKeys: keys
+                    };
+
+                    const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                    compileAsyncFactoryDescriptor(collectionRegistrations, singularRegistrations, descriptor, allowRuntimeCodeGeneration);
+                    const compiled = descriptor;
 
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));
                     expect(await compiled.instatiationStrategy(scope)).toEqual(expect.objectContaining({ values }));
@@ -66,9 +68,11 @@ describe
                     factory: collectAsyncArguments,
                     ...(count === undefined ? {} : { subDependenciesKeys: keys })
                 };
-                const compiled = compileAsyncFactoryDescriptor(descriptor, false);
+                const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                compileAsyncFactoryDescriptor(collectionRegistrations, singularRegistrations, descriptor, false);
+                const compiled = descriptor;
 
-                expect(compiled).not.toBe(descriptor);
+                expect(compiled).toBe(descriptor);
                 expect(compiled).toMatchObject(descriptor);
                 expect(await compiled.instatiationStrategy(scope)).toEqual(new AsyncArgumentList(...values));
             }
@@ -90,7 +94,9 @@ describe
                     factory: collectAsyncArguments,
                     subDependenciesKeys: keys
                 };
-                const compiled = compileAsyncFactoryDescriptor(descriptor, true);
+                const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                compileAsyncFactoryDescriptor(collectionRegistrations, singularRegistrations, descriptor, true);
+                const compiled = descriptor;
                 const promise = compiled.instatiationStrategy(scope);
 
                 pending[TrackedPromise.resolve](42);
@@ -123,7 +129,9 @@ describe
 
                 try
                 {
-                    const compiled = compileAsyncFactoryDescriptor(descriptor, false);
+                    const [collectionRegistrations, singularRegistrations] = getTestRegistrationMaps(scope, descriptor.subDependenciesKeys);
+                    compileAsyncFactoryDescriptor(collectionRegistrations, singularRegistrations, descriptor, false);
+                    const compiled = descriptor;
 
                     expect(await compiled.instatiationStrategy(scope)).toEqual(new AsyncArgumentList(0, 1, 2, 3, 4, 5));
                     expect(generation).not.toHaveBeenCalled();

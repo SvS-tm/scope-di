@@ -1,3 +1,4 @@
+import { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import type { AsyncClassDependencyDescriptor } from "../../../../types/async-class-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
@@ -12,57 +13,88 @@ import { createZeroArgumentsAsyncClassStrategy } from "./zero-arguments-async-cl
 
 export function compileAsyncClassDescriptor
 (
+    collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
+    singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
     descriptor: AsyncClassDependencyDescriptor<unknown, AllowedDependencyKey>,
     allowRuntimeCodeGeneration: boolean
 )
-    : RuntimeDependencyDescriptor
+    : asserts descriptor is RuntimeDependencyDescriptor<
+        AllowedDependencyKey,
+        unknown,
+        AsyncClassDependencyDescriptor<unknown, AllowedDependencyKey>
+    >
 {
     const keys = descriptor.subDependenciesKeys;
+    const runtimeDescriptor = descriptor as Writable<RuntimeDependencyDescriptor>;
 
     if (keys === undefined || keys.length === 0)
     {
-        return {
-            ...descriptor,
-            instatiationStrategy: createZeroArgumentsAsyncClassStrategy(descriptor.constructor)
-        };
+        runtimeDescriptor.instatiationStrategy = createZeroArgumentsAsyncClassStrategy(descriptor.constructor);
+
+        return;
     }
 
     switch (keys.length)
     {
         case 1:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createOneArgumentAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createOneArgumentAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor, 
+                keys
+            );
+
+            return;
         }
         case 2:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createTwoArgumentsAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createTwoArgumentsAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 3:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createThreeArgumentsAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createThreeArgumentsAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 4:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFourArgumentsAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFourArgumentsAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 5:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFiveArgumentsAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFiveArgumentsAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         default:
         {
@@ -70,10 +102,15 @@ export function compileAsyncClassDescriptor
             {
                 try
                 {
-                    return {
-                        ...descriptor,
-                        instatiationStrategy: createRuntimeCodeGenerationAsyncClassStrategy(descriptor.constructor, keys)
-                    };
+                    runtimeDescriptor.instatiationStrategy = createRuntimeCodeGenerationAsyncClassStrategy
+                    (
+                        collectionRegistrations,
+                        singularRegistrations,
+                        descriptor.constructor,
+                        keys
+                    );
+
+                    return;
                 }
                 catch
                 {
@@ -84,10 +121,15 @@ export function compileAsyncClassDescriptor
                 }
             }
 
-            return {
-                ...descriptor,
-                instatiationStrategy: createSpreadArgumentsAsyncClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createSpreadArgumentsAsyncClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
     }
 }

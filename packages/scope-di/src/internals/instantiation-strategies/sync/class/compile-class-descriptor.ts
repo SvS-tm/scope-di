@@ -1,3 +1,4 @@
+import { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
@@ -12,12 +13,19 @@ import { createZeroArgumentsClassStrategy } from "./zero-arguments-class-strateg
 
 export function compileClassDescriptor
 (
-    descriptor: ClassDependencyDescriptor<unknown, AllowedDependencyKey>, 
+    collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
+    singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
+    descriptor: ClassDependencyDescriptor<unknown, AllowedDependencyKey>,
     allowRuntimeCodeGeneration: boolean
 )
-    : RuntimeDependencyDescriptor
+    : asserts descriptor is RuntimeDependencyDescriptor<
+        AllowedDependencyKey,
+        unknown,
+        ClassDependencyDescriptor<unknown, AllowedDependencyKey>
+    >
 {
     const keys = descriptor.subDependenciesKeys;
+    const runtimeDescriptor = descriptor as Writable<RuntimeDependencyDescriptor>;
 
     /**
      * @note TS doesn't recongnize keys as not empty in default case if we include it into switch
@@ -25,48 +33,72 @@ export function compileClassDescriptor
      */
     if (keys === undefined || keys.length === 0)
     {
-        return {
-            ...descriptor,
-            instatiationStrategy: createZeroArgumentsClassStrategy(descriptor.constructor)
-        };
+        runtimeDescriptor.instatiationStrategy = createZeroArgumentsClassStrategy(descriptor.constructor);
+
+        return;
     }
 
     switch (keys.length)
     {
         case 1:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createOneArgumentClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createOneArgumentClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor, 
+                keys
+            );
+
+            return;
         }
         case 2:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createTwoArgumentsClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createTwoArgumentsClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 3:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createThreeArgumentsClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createThreeArgumentsClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 4:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFourArgumentsClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFourArgumentsClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         case 5:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFiveArgumentsClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFiveArgumentsClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
         default:
         {
@@ -74,10 +106,15 @@ export function compileClassDescriptor
             {
                 try
                 {
-                    return {
-                        ...descriptor,
-                        instatiationStrategy: createRuntimeCodeGenerationClassStrategy(descriptor.constructor, keys)
-                    };
+                    runtimeDescriptor.instatiationStrategy = createRuntimeCodeGenerationClassStrategy
+                    (
+                        collectionRegistrations,
+                        singularRegistrations,
+                        descriptor.constructor,
+                        keys
+                    );
+
+                    return;
                 }
                 catch
                 {
@@ -88,10 +125,15 @@ export function compileClassDescriptor
                 }
             }
 
-            return {
-                ...descriptor,
-                instatiationStrategy: createSpreadArgumentsClassStrategy(descriptor.constructor, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createSpreadArgumentsClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.constructor,
+                keys
+            );
+
+            return;
         }
     }
 }

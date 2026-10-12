@@ -4,6 +4,8 @@ import { DependencyResolutionKey } from "../../../../types/dependency-resolution
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createAsyncFactoryStrategy } from "./create-async-factory-strategy";
+import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
+import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 
 export function createSpreadArgumentsAsyncFactoryStrategy
 <
@@ -11,6 +13,8 @@ export function createSpreadArgumentsAsyncFactoryStrategy
     T_Factory extends DependencyFactory<any[], Promise<any>>
 >
 (
+    collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
+    singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
     factory: T_Factory,
     keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
 )
@@ -18,6 +22,8 @@ export function createSpreadArgumentsAsyncFactoryStrategy
 {
     return createAsyncFactoryStrategy
     (
+        collectionRegistrations,
+        singularRegistrations,
         keys,
         (dependencies) => factory(...dependencies)
     );

@@ -1,3 +1,4 @@
+import { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import type { FactoryDependencyDescriptor } from "../../../../types/factory-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
@@ -12,12 +13,19 @@ import { createZeroArgumentsFactoryStrategy } from "./zero-arguments-factory-str
 
 export function compileFactoryDescriptor
 (
+    collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
+    singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
     descriptor: FactoryDependencyDescriptor<unknown, AllowedDependencyKey>, 
     allowRuntimeCodeGeneration: boolean
 )
-    : RuntimeDependencyDescriptor
+    : asserts descriptor is RuntimeDependencyDescriptor<
+        AllowedDependencyKey,
+        unknown,
+        FactoryDependencyDescriptor<unknown, AllowedDependencyKey>
+    >
 {
     const keys = descriptor.subDependenciesKeys;
+    const runtimeDescriptor = descriptor as Writable<RuntimeDependencyDescriptor>;
 
     /**
      * @note TS doesn't recongnize keys as not empty in default case if we include it into switch
@@ -25,48 +33,72 @@ export function compileFactoryDescriptor
      */
     if (keys === undefined || keys.length === 0)
     {
-        return {
-            ...descriptor,
-            instatiationStrategy: createZeroArgumentsFactoryStrategy(descriptor.factory)
-        };
+        runtimeDescriptor.instatiationStrategy = createZeroArgumentsFactoryStrategy(descriptor.factory);
+
+        return;
     }
 
     switch (keys.length)
     {
         case 1:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createOneArgumentFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createOneArgumentFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
         case 2:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createTwoArgumentsFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createTwoArgumentsFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
         case 3:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createThreeArgumentsFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createThreeArgumentsFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
         case 4:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFourArgumentsFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFourArgumentsFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
         case 5:
         {
-            return {
-                ...descriptor,
-                instatiationStrategy: createFiveArgumentsFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createFiveArgumentsFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
         default:
         {
@@ -74,10 +106,15 @@ export function compileFactoryDescriptor
             {
                 try
                 {
-                    return {
-                        ...descriptor,
-                        instatiationStrategy: createRuntimeArgumentsFactoryStrategy(descriptor.factory, keys)
-                    };
+                    runtimeDescriptor.instatiationStrategy = createRuntimeArgumentsFactoryStrategy
+                    (
+                        collectionRegistrations,
+                        singularRegistrations,
+                        descriptor.factory,
+                        keys
+                    );
+
+                    return;
                 }
                 catch
                 {
@@ -88,10 +125,15 @@ export function compileFactoryDescriptor
                 }
             }
 
-            return {
-                ...descriptor,
-                instatiationStrategy: createSpreadArgumentsFactoryStrategy(descriptor.factory, keys)
-            };
+            runtimeDescriptor.instatiationStrategy = createSpreadArgumentsFactoryStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor.factory,
+                keys
+            );
+
+            return;
         }
     }
 }

@@ -32,7 +32,7 @@ describe
                     .set("collection", [descriptor1, descriptor2])
                     .set("empty", [])
                     .set("singular", descriptor3);
-                const registry = new DefaultDiDependenciesRegistry(registrations);
+                const registry = new DefaultDiDependenciesRegistry(registrations, false);
 
                 expect(registry.resolveSingularDescriptorByKey("collection")).toBe(descriptor1);
                 expect(registry.resolveCollectionDescriptorsByKey("singular")).toStrictEqual([descriptor3]);
@@ -61,7 +61,7 @@ describe
                 const bucket = [descriptor];
                 const registrations = new Map<AllowedDependencyKey, RuntimeDependencyDescriptorsBucket>()
                     .set("key", bucket);
-                const registry = new DefaultDiDependenciesRegistry(registrations);
+                const registry = new DefaultDiDependenciesRegistry(registrations, false);
 
                 bucket.length = 0;
                 registrations.clear();
@@ -93,7 +93,7 @@ describe
                 const registry = new DefaultDiDependenciesRegistry
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
-                        .set(key, descriptor)
+                        .set(key, descriptor), false
                 );
 
                 expect(registry.getDescriptors()).toStrictEqual([descriptor]);
@@ -130,7 +130,7 @@ describe
                 const registry = new DefaultDiDependenciesRegistry
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
-                        .set(key, [descriptor1, descriptor2])
+                        .set(key, [descriptor1, descriptor2]), false
                 );
 
                 const resolved = registry.resolveDescriptorsByKey(key);
@@ -169,7 +169,7 @@ describe
                 const registry = new DefaultDiDependenciesRegistry
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
-                        .set(key, [descriptor1, descriptor2])
+                        .set(key, [descriptor1, descriptor2]), false
                 );
 
                 const resolved = registry.resolveDescriptorsByKey([key]);
@@ -198,7 +198,7 @@ describe
                 const registry = new DefaultDiDependenciesRegistry
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
-                        .set(key, descriptor)
+                        .set(key, descriptor), false
                 );
 
                 const resolved = registry.resolveDescriptorsByKey(key);
@@ -227,7 +227,7 @@ describe
                 const registry = new DefaultDiDependenciesRegistry
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor>()
-                        .set(key, descriptor)
+                        .set(key, descriptor), false
                 );
 
                 const resolved = registry.resolveDescriptorsByKey([key]);
@@ -280,7 +280,7 @@ describe
                 (
                     new Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>()
                         .set(key1, [descriptor1])
-                        .set(key2, [descriptor2, descriptor3])
+                        .set(key2, [descriptor2, descriptor3]), false
                 );
 
                 const resolved = [...registry.resolveDescriptorsByKeys(key1, [key2])];
@@ -294,7 +294,7 @@ describe
             "resolveDescriptorsByKeys without keys yields no descriptors",
             () =>
             {
-                const registry = new DefaultDiDependenciesRegistry(new Map());
+                const registry = new DefaultDiDependenciesRegistry(new Map(), false);
 
                 const resolved = [...registry.resolveDescriptorsByKeys()];
 
@@ -325,7 +325,7 @@ describe
                                     }
                                 )
                             ]
-                        )
+                        ), false
                 );
 
                 const result = registry.isAsyncKey(key);
@@ -366,7 +366,7 @@ describe
                                     }
                                 )
                             ]
-                        )
+                        ), false
                 );
 
                 const result = registry.isAsyncKey([key]);
@@ -398,7 +398,7 @@ describe
                                     }
                                 )
                             ]
-                        )
+                        ), false
                 );
 
                 const result = registry.isAsyncKey(key);
@@ -412,7 +412,7 @@ describe
             "resolveDescriptorsByKey throws when the mapping key is not registered",
             () =>
             {
-                const registry = new DefaultDiDependenciesRegistry(new Map());
+                const registry = new DefaultDiDependenciesRegistry(new Map(), false);
 
                 expect(() => registry.resolveDescriptorsByKey("missing")).toThrow(DependencyNotRegisteredError);
                 expect(() => registry.resolveDescriptorsByKey(["missing"])).toThrow(DependencyNotRegisteredError);

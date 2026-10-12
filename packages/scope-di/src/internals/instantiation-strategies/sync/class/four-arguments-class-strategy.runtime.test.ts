@@ -1,3 +1,4 @@
+import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope } from "../sync-strategy.test-helpers";
 import { RegisteredDependencies } from "../../../../types/registered-dependencies";
@@ -27,7 +28,12 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 4 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createFourArgumentsClassStrategy<RegisteredDependencies, typeof ArgumentList>(ArgumentList, keys);
+                const instantiate = createFourArgumentsClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                (
+                    ...getTestRegistrationMaps(root, keys),
+                    ArgumentList,
+                    keys
+                );
 
                 const first: ArgumentList = instantiate(firstScope);
                 const next: ArgumentList = instantiate(firstScope);
