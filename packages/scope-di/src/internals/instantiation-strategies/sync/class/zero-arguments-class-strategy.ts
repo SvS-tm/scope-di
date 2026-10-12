@@ -1,11 +1,31 @@
-import { Constructor } from "@svs-tm/system";
+import { DependencyLifetime } from "../../../../types";
+import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
+import { trackTransientDependency } from "../../transient-tracking";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 
-export function createZeroArgumentsClassStrategy<T_Constructor extends Constructor<any[], any>>
+export function createZeroArgumentsClassStrategy<T_Dependency>
 (
-    constructor: T_Constructor
+    descriptor: ClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<InstanceType<T_Constructor>>
+    : InstantiationStrategy<T_Dependency>
 {
-    return () => new constructor();
+    const constructor = descriptor.constructor;
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const dependency = new constructor();
+
+            trackTransientDependency(scope, dependency);
+
+            return dependency;
+        };
+    }
+
+    return () =>
+    {
+        const dependency = new constructor();
+
+        return dependency;
+    };
 }

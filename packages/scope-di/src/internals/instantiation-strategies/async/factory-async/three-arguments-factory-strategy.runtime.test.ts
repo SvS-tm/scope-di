@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { createAsyncStrategyChildScope } from "../async-strategy.test-helpers";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
@@ -22,8 +23,13 @@ describe
                 const instantiate = createThreeArgumentsAsyncFactoryStrategy
                 (
                     ...getTestRegistrationMaps(firstScope.scope, keys),
-                    collectAsyncArguments,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectAsyncArguments,
+                        subDependenciesKeys: keys
+                    }
                 );
                 const first = instantiate(firstScope.scope);
                 assertTrackedPromise(first);
@@ -45,7 +51,17 @@ describe
                 const values = Array.from({ length: 3 }, (_, index) => index);
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(values, new Map([[0, dependency]]));
-                const instantiate = createThreeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), collectAsyncArguments, keys);
+                const instantiate = createThreeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectAsyncArguments,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
 
@@ -69,7 +85,17 @@ describe
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(new Array(3).fill(0), new Map([[0, dependency]]));
                 const construct = jest.fn(collectAsyncArguments);
-                const instantiate = createThreeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), construct, keys);
+                const instantiate = createThreeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: construct,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Dependency failed");
@@ -89,7 +115,17 @@ describe
             {
                 const promiseValue = Promise.resolve(42);
                 const { scope, keys } = createAsyncStrategyScope(new Array(3).fill(promiseValue));
-                const instantiate = createThreeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), collectAsyncArguments, keys);
+                const instantiate = createThreeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectAsyncArguments,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const result = await instantiate(scope);
 
                 expect(result.values).toHaveLength(3);
@@ -106,7 +142,17 @@ describe
             {
                 const { scope, keys } = createAsyncStrategyScope(new Array(3).fill(0));
                 const result = TrackedPromise.controlled<number>();
-                const instantiate = createThreeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), () => result, keys);
+                const instantiate = createThreeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: () => result,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
 
@@ -124,7 +170,17 @@ describe
             {
                 const error = new Error("Factory failed");
                 const { scope, keys } = createAsyncStrategyScope(new Array(3).fill(0));
-                const instantiate = createThreeArgumentsAsyncFactoryStrategy(...getTestRegistrationMaps(scope, keys), () => Promise.reject(error), keys);
+                const instantiate = createThreeArgumentsAsyncFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: () => Promise.reject(error),
+                        subDependenciesKeys: keys
+                    }
+                );
 
                 await expect(instantiate(scope)).rejects.toBe(error);
             }

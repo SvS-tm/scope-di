@@ -1,11 +1,31 @@
-import { Constructor, TrackedPromise } from "@svs-tm/system";
+import { DependencyLifetime } from "../../../../types";
+import type { AsyncClassDependencyDescriptor } from "../../../../types/async-class-dependency-descriptor";
+import { TrackedPromise } from "@svs-tm/system";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 
-export function createZeroArgumentsAsyncClassStrategy<T_Constructor extends Constructor<any[], any>>
+export function createZeroArgumentsAsyncClassStrategy<T_Dependency>
 (
-    constructor: T_Constructor
+    descriptor: AsyncClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<Promise<InstanceType<T_Constructor>>>
+    : InstantiationStrategy<Promise<T_Dependency>>
 {
-    return () => TrackedPromise.resolved(new constructor());
+    const constructor = descriptor.constructor;
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const dependency = TrackedPromise.resolved(new constructor());
+
+            scope.trackTransientAsyncDependency(dependency);
+
+            return dependency;
+        };
+    }
+
+    return () =>
+    {
+        const dependency = TrackedPromise.resolved(new constructor());
+
+        return dependency;
+    };
 }

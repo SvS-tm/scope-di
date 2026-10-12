@@ -1,27 +1,24 @@
+import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
+import { DependencyLifetime } from "../../../../types/dependency-lifetime";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
-import { Constructor } from "@svs-tm/system";
+import { Reflection } from "@svs-tm/system";
+import type { DefaultDiScope } from "../../../scope/default-di-scope";
 import { generateIdentifier } from "../../../../helpers/internals/identifier-helpers";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 
 import { createSyncResolver } from "../create-sync-resolver";
 
-export function createRuntimeCodeGenerationClassStrategy
-<
-    T_RegisteredDependencies extends RegisteredDependencies,
-    T_Constructor extends Constructor<any[], any>
->
+export function createRuntimeCodeGenerationClassStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    constructor: T_Constructor,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    descriptor: ClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<InstanceType<T_Constructor>>
+    : InstantiationStrategy<T_Dependency>
 {
+    const constructor = descriptor.constructor;
+    const keys = descriptor.subDependenciesKeys ?? [];
     const resolvers = keys.map(key => createSyncResolver(collectionRegistrations, singularRegistrations, key));
     const id = generateIdentifier().toString();
     const resolversParameterName = `resolvers$${id}`;
@@ -38,6 +35,25 @@ export function createRuntimeCodeGenerationClassStrategy
     const resolvedDependencies = keys.map((_key, index) =>`dependency${index}`)
         .join(", ");
 
+    /**
+     * @note Detect transient disposables inside each generated strategy for performance.
+     * V8 collects property-access feedback per lookup site. A shared detector sees unrelated instance
+     * shapes and can become megamorphic; separate generated sites can stay monomorphic when each
+     * descriptor produces a consistent shape. A deep-chain experiment confirmed this behavior.
+     * Keeping detection here also avoids a separate tracking-strategy call after construction.
+     * Check every instance; factories and constructors can produce different disposal properties.
+     */
+    const construction = (descriptor.lifetime === DependencyLifetime.Transient)
+        ? (
+            `const instance$${id} = new ${classParameterName}(${resolvedDependencies});
+            if (instance$${id}[Symbol.asyncDispose] != null)
+                ${scopeParameterName}.${Reflection.runtimeNameOf<DefaultDiScope>(scope => scope.addAsyncDisposableDependency)}(instance$${id});
+            else if (instance$${id}[Symbol.dispose] != null)
+                ${scopeParameterName}.${Reflection.runtimeNameOf<DefaultDiScope>(scope => scope.addDisposableDependency)}(instance$${id});
+            return instance$${id};`
+        )
+        : `return new ${classParameterName}(${resolvedDependencies});`;
+
     const strategyFactory = new Function
     (
         classParameterName,
@@ -45,8 +61,7 @@ export function createRuntimeCodeGenerationClassStrategy
         `return function instantiate$${id}(${scopeParameterName}) 
         {
             ${dependenciesResolution}
-
-            return new ${classParameterName}(${resolvedDependencies});
+            ${construction}
         };`
     );
 

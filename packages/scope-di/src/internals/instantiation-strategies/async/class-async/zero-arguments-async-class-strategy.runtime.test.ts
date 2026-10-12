@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { describe, expect, it } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { AsyncArgumentList, assertTrackedPromise, createAsyncStrategyScope } from "../async-strategy.test-helpers";
@@ -14,7 +15,15 @@ describe
             async () =>
             {
                 const { scope } = createAsyncStrategyScope([]);
-                const instantiate = createZeroArgumentsAsyncClassStrategy(AsyncArgumentList);
+                const instantiate = createZeroArgumentsAsyncClassStrategy
+                (
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList
+                    }
+                );
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
                 const second = instantiate(scope);

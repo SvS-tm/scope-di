@@ -1,20 +1,36 @@
+import { DependencyLifetime } from "../../../../types";
+import type { AsyncFactoryDependencyDescriptor } from "../../../../types/async-factory-dependency-descriptor";
 import { TrackedPromise } from "@svs-tm/system";
-import { DependencyFactory } from "../../../../types/dependency-factory";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 
-export function createZeroArgumentsAsyncFactoryStrategy
-<
-    T_Factory extends DependencyFactory<any[], Promise<any>>
->
+export function createZeroArgumentsAsyncFactoryStrategy<T_Dependency>
 (
-    factory: T_Factory
+    descriptor: AsyncFactoryDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<Promise<Awaited<ReturnType<T_Factory>>>>
+    : InstantiationStrategy<Promise<T_Dependency>>
 {
+    const factory = descriptor.factory;
     /**
      * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
      * So lets just track it
      */
-    return () => TrackedPromise.track(factory());
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const dependency = TrackedPromise.track(factory());
+
+            scope.trackTransientAsyncDependency(dependency);
+
+            return dependency;
+        };
+    }
+
+    return () =>
+    {
+        const dependency = TrackedPromise.track(factory());
+
+        return dependency;
+    };
 }
 

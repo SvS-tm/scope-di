@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
@@ -24,11 +25,10 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 8 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                const instantiate = createRuntimeArgumentsFactoryStrategy<ReturnType<typeof collectArguments>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    collectArguments,
-                    keys
+                    { key: "target", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Singleton, factory: collectArguments, subDependenciesKeys: keys }
                 );
 
                 const first: ReturnType<typeof collectArguments> = instantiate(firstScope);
@@ -58,11 +58,10 @@ describe
                 const promise = Promise.resolve(42);
                 const scope = createSyncValueStrategyScope(new Map<string, unknown>([["collection", ["first", "second"]], ["promise", promise], ["value", 7]]));
                 const keys: ("value" | "promise" | ["collection"])[] = ["value", ["collection"], "promise"];
-                const instantiate = createRuntimeArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                const instantiate = createRuntimeArgumentsFactoryStrategy<ReturnType<typeof collectArguments>>
                 (
                     ...getTestRegistrationMaps(scope, keys),
-                    collectArguments,
-                    keys
+                    { key: "target", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Singleton, factory: collectArguments, subDependenciesKeys: keys }
                 );
                 const result = instantiate(scope);
 
@@ -80,8 +79,7 @@ describe
                 const instantiate = createRuntimeArgumentsFactoryStrategy
                 (
                     ...getTestRegistrationMaps(createDefaultDiScope<RegisteredDependencies>(), []),
-                    collectArguments,
-                    []
+                    { key: "target", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Singleton, factory: collectArguments, subDependenciesKeys: [] }
                 );
 
                 expect(instantiate(scope).values).toEqual([]);
@@ -95,7 +93,11 @@ describe
             {
                 const key = "quote'\"; special-key";
                 const scope = createSyncValueStrategyScope(new Map([[key, 42]]));
-                const instantiate = createRuntimeArgumentsFactoryStrategy(...getTestRegistrationMaps(scope, [key]), collectArguments, [key]);
+                const instantiate = createRuntimeArgumentsFactoryStrategy
+                (
+                    ...getTestRegistrationMaps(scope, [key]),
+                    { key: "target", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Singleton, factory: collectArguments, subDependenciesKeys: [key] }
+                );
 
                 expect(instantiate(scope).values).toEqual([42]);
             }
@@ -114,8 +116,7 @@ describe
                 const instantiate = createRuntimeArgumentsFactoryStrategy
                 (
                     ...getTestRegistrationMaps(createDefaultDiScope<RegisteredDependencies>(), []),
-                    factory,
-                    []
+                    { key: "target", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Singleton, factory: factory, subDependenciesKeys: [] }
                 );
                 const scope = createDefaultDiScope();
 

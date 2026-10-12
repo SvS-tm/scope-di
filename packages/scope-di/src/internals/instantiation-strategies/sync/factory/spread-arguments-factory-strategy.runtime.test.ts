@@ -1,7 +1,7 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createSpreadArgumentsFactoryStrategy } from "./spread-arguments-factory-strategy";
 
 function collectArguments(...values: unknown[])
@@ -23,11 +23,16 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 8 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createSpreadArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                const instantiate = createSpreadArgumentsFactoryStrategy<ReturnType<typeof collectArguments>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    collectArguments,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Factory,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectArguments,
+                        subDependenciesKeys: keys
+                    }
                 );
 
                 const first: ReturnType<typeof collectArguments> = instantiate(firstScope);
@@ -57,11 +62,16 @@ describe
                 const promise = Promise.resolve(42);
                 const scope = createSyncValueStrategyScope(new Map<string, unknown>([["collection", ["first", "second"]], ["promise", promise], ["value", 7]]));
                 const keys: ("value" | "promise" | ["collection"])[] = ["value", ["collection"], "promise"];
-                const instantiate = createSpreadArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                const instantiate = createSpreadArgumentsFactoryStrategy<ReturnType<typeof collectArguments>>
                 (
                     ...getTestRegistrationMaps(scope, keys),
-                    collectArguments,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Factory,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectArguments,
+                        subDependenciesKeys: keys
+                    }
                 );
                 const result = instantiate(scope);
 

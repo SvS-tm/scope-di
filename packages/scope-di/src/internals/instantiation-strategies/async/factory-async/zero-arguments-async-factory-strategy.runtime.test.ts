@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { describe, expect, it } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
 import { collectAsyncArguments, assertTrackedPromise, createAsyncStrategyScope } from "../async-strategy.test-helpers";
@@ -14,7 +15,15 @@ describe
             async () =>
             {
                 const { scope } = createAsyncStrategyScope([]);
-                const instantiate = createZeroArgumentsAsyncFactoryStrategy(collectAsyncArguments);
+                const instantiate = createZeroArgumentsAsyncFactoryStrategy
+                (
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectAsyncArguments
+                    }
+                );
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
                 const second = instantiate(scope);
@@ -34,7 +43,15 @@ describe
             {
                 const { scope } = createAsyncStrategyScope([]);
                 const result = TrackedPromise.controlled<number>();
-                const instantiate = createZeroArgumentsAsyncFactoryStrategy(() => result);
+                const instantiate = createZeroArgumentsAsyncFactoryStrategy
+                (
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.FactoryAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: () => result
+                    }
+                );
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Factory failed");

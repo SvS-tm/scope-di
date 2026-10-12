@@ -29,7 +29,10 @@ export function compileAsyncClassDescriptor
 
     if (keys === undefined || keys.length === 0)
     {
-        runtimeDescriptor.instatiationStrategy = createZeroArgumentsAsyncClassStrategy(descriptor.constructor);
+        runtimeDescriptor.instatiationStrategy = createZeroArgumentsAsyncClassStrategy
+        (
+            descriptor
+        );
 
         return;
     }
@@ -42,8 +45,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor, 
-                keys
+                descriptor
             );
 
             return;
@@ -54,8 +56,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -66,8 +67,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -78,8 +78,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -90,8 +89,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -106,8 +104,7 @@ export function compileAsyncClassDescriptor
                     (
                         collectionRegistrations,
                         singularRegistrations,
-                        descriptor.constructor,
-                        keys
+                        descriptor
                     );
 
                     return;
@@ -125,8 +122,7 @@ export function compileAsyncClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;

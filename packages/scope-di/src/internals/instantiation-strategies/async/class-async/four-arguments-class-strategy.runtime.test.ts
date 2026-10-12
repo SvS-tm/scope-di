@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { createAsyncStrategyChildScope } from "../async-strategy.test-helpers";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
@@ -19,7 +20,17 @@ describe
                 const firstScope = createAsyncStrategyScope(values);
                 const secondScope = { scope: createAsyncStrategyChildScope(firstScope.scope) };
                 const keys = firstScope.keys.slice().reverse();
-                const instantiate = createFourArgumentsAsyncClassStrategy(...getTestRegistrationMaps(firstScope.scope, keys), AsyncArgumentList, keys);
+                const instantiate = createFourArgumentsAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(firstScope.scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const first = instantiate(firstScope.scope);
                 assertTrackedPromise(first);
                 const second = instantiate(secondScope.scope);
@@ -41,7 +52,17 @@ describe
                 const values = Array.from({ length: 4 }, (_, index) => index);
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(values, new Map([[0, dependency]]));
-                const instantiate = createFourArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
+                const instantiate = createFourArgumentsAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
 
@@ -73,7 +94,17 @@ describe
                         construct(...values);
                     }
                 }
-                const instantiate = createFourArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), Target, keys);
+                const instantiate = createFourArgumentsAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: Target,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Dependency failed");
@@ -93,7 +124,17 @@ describe
             {
                 const promiseValue = Promise.resolve(42);
                 const { scope, keys } = createAsyncStrategyScope(new Array(4).fill(promiseValue));
-                const instantiate = createFourArgumentsAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
+                const instantiate = createFourArgumentsAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const result = await instantiate(scope);
 
                 expect(result.values).toHaveLength(4);

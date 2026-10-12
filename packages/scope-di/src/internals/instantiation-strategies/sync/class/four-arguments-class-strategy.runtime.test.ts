@@ -1,7 +1,7 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope } from "../sync-strategy.test-helpers";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createFourArgumentsClassStrategy } from "./four-arguments-class-strategy";
 
 class ArgumentList
@@ -28,11 +28,16 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 4 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createFourArgumentsClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                const instantiate = createFourArgumentsClassStrategy<InstanceType<typeof ArgumentList>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    ArgumentList,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Class,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: ArgumentList,
+                        subDependenciesKeys: keys
+                    }
                 );
 
                 const first: ArgumentList = instantiate(firstScope);

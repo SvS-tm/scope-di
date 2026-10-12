@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
@@ -29,11 +30,10 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 8 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createRuntimeCodeGenerationClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                const instantiate = createRuntimeCodeGenerationClassStrategy<InstanceType<typeof ArgumentList>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    ArgumentList,
-                    keys
+                    { key: "target", type: DependencyDescriptorType.Class, lifetime: DependencyLifetime.Singleton, constructor: ArgumentList, subDependenciesKeys: keys }
                 );
 
                 const first: ArgumentList = instantiate(firstScope);
@@ -63,11 +63,10 @@ describe
                 const promise = Promise.resolve(42);
                 const scope = createSyncValueStrategyScope(new Map<string, unknown>([["collection", ["first", "second"]], ["promise", promise], ["value", 7]]));
                 const keys: ("value" | "promise" | ["collection"])[] = ["value", ["collection"], "promise"];
-                const instantiate = createRuntimeCodeGenerationClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                const instantiate = createRuntimeCodeGenerationClassStrategy<InstanceType<typeof ArgumentList>>
                 (
                     ...getTestRegistrationMaps(scope, keys),
-                    ArgumentList,
-                    keys
+                    { key: "target", type: DependencyDescriptorType.Class, lifetime: DependencyLifetime.Singleton, constructor: ArgumentList, subDependenciesKeys: keys }
                 );
                 const result = instantiate(scope);
 
@@ -85,8 +84,7 @@ describe
                 const instantiate = createRuntimeCodeGenerationClassStrategy
                 (
                     ...getTestRegistrationMaps(createDefaultDiScope<RegisteredDependencies>(), []),
-                    ArgumentList,
-                    []
+                    { key: "target", type: DependencyDescriptorType.Class, lifetime: DependencyLifetime.Singleton, constructor: ArgumentList, subDependenciesKeys: [] }
                 );
 
                 expect(instantiate(scope).values).toEqual([]);
@@ -100,7 +98,11 @@ describe
             {
                 const key = "quote'\"; special-key";
                 const scope = createSyncValueStrategyScope(new Map([[key, 42]]));
-                const instantiate = createRuntimeCodeGenerationClassStrategy(...getTestRegistrationMaps(scope, [key]), ArgumentList, [key]);
+                const instantiate = createRuntimeCodeGenerationClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, [key]),
+                    { key: "target", type: DependencyDescriptorType.Class, lifetime: DependencyLifetime.Singleton, constructor: ArgumentList, subDependenciesKeys: [key] }
+                );
 
                 expect(instantiate(scope).values).toEqual([42]);
             }

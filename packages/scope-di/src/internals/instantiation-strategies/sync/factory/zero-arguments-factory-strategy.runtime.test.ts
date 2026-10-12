@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { describe, expect, it } from "@jest/globals";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
 import { createZeroArgumentsFactoryStrategy } from "./zero-arguments-factory-strategy";
@@ -18,7 +19,15 @@ describe
             () =>
             {
                 const scope = createDefaultDiScope();
-                const instantiate = createZeroArgumentsFactoryStrategy(collectArguments);
+                const instantiate = createZeroArgumentsFactoryStrategy
+                (
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Factory,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectArguments
+                    }
+                );
                 const first: ReturnType<typeof collectArguments> = instantiate(scope);
                 const second: ReturnType<typeof collectArguments> = instantiate(scope);
 

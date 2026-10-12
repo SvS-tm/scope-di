@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { createAsyncStrategyChildScope } from "../async-strategy.test-helpers";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
@@ -22,8 +23,13 @@ describe
                 const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
                 (
                     ...getTestRegistrationMaps(firstScope.scope, keys),
-                    AsyncArgumentList,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
                 );
                 const first = instantiate(firstScope.scope);
                 assertTrackedPromise(first);
@@ -46,7 +52,17 @@ describe
                 const values = Array.from({ length: 8 }, (_, index) => index);
                 const dependency = TrackedPromise.controlled<number>();
                 const { scope, keys } = createAsyncStrategyScope(values, new Map([[0, dependency]]));
-                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
+                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const first = instantiate(scope);
                 assertTrackedPromise(first);
 
@@ -78,7 +94,17 @@ describe
                         construct(...values);
                     }
                 }
-                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), Target, keys);
+                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: Target,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const promise = instantiate(scope);
                 assertTrackedPromise(promise);
                 const error = new Error("Dependency failed");
@@ -98,7 +124,17 @@ describe
             {
                 const promiseValue = Promise.resolve(42);
                 const { scope, keys } = createAsyncStrategyScope(new Array(8).fill(promiseValue));
-                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
+                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
                 const result = await instantiate(scope);
 
                 expect(result.values).toHaveLength(8);
@@ -114,7 +150,17 @@ describe
             async () =>
             {
                 const { scope } = createAsyncStrategyScope([]);
-                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy(...getTestRegistrationMaps(scope, []), AsyncArgumentList, []);
+                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, []),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: []
+                    }
+                );
 
                 expect((await instantiate(scope)).values).toEqual([]);
             }
@@ -126,7 +172,17 @@ describe
             async () =>
             {
                 const { scope, keys } = createAsyncStrategyScope([42], new Map(), ["quote'\"; special-key"]);
-                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy(...getTestRegistrationMaps(scope, keys), AsyncArgumentList, keys);
+                const instantiate = createRuntimeCodeGenerationAsyncClassStrategy
+                (
+                    ...getTestRegistrationMaps(scope, keys),
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.ClassAsync,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: AsyncArgumentList,
+                        subDependenciesKeys: keys
+                    }
+                );
 
                 expect((await instantiate(scope)).values).toEqual([42]);
             }

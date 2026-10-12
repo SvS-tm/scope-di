@@ -1,26 +1,20 @@
-import { Constructor } from "@svs-tm/system";
+import type { AsyncClassDependencyDescriptor } from "../../../../types/async-class-dependency-descriptor";
 import { generateIdentifier } from "../../../../helpers/internals/identifier-helpers";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createAsyncClassStrategy } from "./create-async-class-strategy";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 
-export function createRuntimeCodeGenerationAsyncClassStrategy
-<
-    T_RegisteredDependencies extends RegisteredDependencies,
-    T_Constructor extends Constructor<any[], any>
->
+export function createRuntimeCodeGenerationAsyncClassStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    constructor: T_Constructor,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    descriptor: AsyncClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<Promise<InstanceType<T_Constructor>>>
+    : InstantiationStrategy<Promise<T_Dependency>>
 {
+    const constructor = descriptor.constructor;
+    const keys = descriptor.subDependenciesKeys ?? [];
     const id = generateIdentifier().toString();
     const constructorParameterName = `constructor$${id}`;
     const dependenciesParameterName = `dependencies$${id}`;
@@ -40,7 +34,7 @@ export function createRuntimeCodeGenerationAsyncClassStrategy
     (
         collectionRegistrations,
         singularRegistrations,
-        keys,
+        descriptor,
         strategyFactory(constructor)
     );
 }

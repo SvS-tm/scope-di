@@ -1,31 +1,47 @@
-import { Constructor } from "@svs-tm/system";
+import { DependencyLifetime } from "../../../../types";
+import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
+import { trackTransientDependency } from "../../transient-tracking";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createSyncResolver } from "../create-sync-resolver";
 
-export function createOneArgumentClassStrategy
-<
-    T_RegisteredDependencies extends RegisteredDependencies,
-    T_Constructor extends Constructor<any[], any>
->
+export function createOneArgumentClassStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    constructor: T_Constructor,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    descriptor: ClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<InstanceType<T_Constructor>>
+    : InstantiationStrategy<T_Dependency>
 {
+    const constructor = descriptor.constructor;
+    const keys = descriptor.subDependenciesKeys ?? [];
     const [key] = keys;
 
      const resolveDependency = createSyncResolver(collectionRegistrations, singularRegistrations, key);
 
-    return (scope) => new constructor
-    (
-        resolveDependency(scope)
-    );
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const dependency = new constructor
+            (
+                resolveDependency(scope)
+            );
+
+            trackTransientDependency(scope, dependency);
+
+            return dependency;
+        };
+    }
+
+    return (scope) =>
+    {
+        const dependency = new constructor
+        (
+            resolveDependency(scope)
+        );
+
+        return dependency;
+    };
 }

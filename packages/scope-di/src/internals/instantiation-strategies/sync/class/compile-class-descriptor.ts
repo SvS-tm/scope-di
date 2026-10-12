@@ -1,4 +1,5 @@
 import { Writable } from "@svs-tm/system";
+import { DependencyLifetime } from "../../../../types/dependency-lifetime";
 import type { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
@@ -27,13 +28,40 @@ export function compileClassDescriptor
     const keys = descriptor.subDependenciesKeys;
     const runtimeDescriptor = descriptor as Writable<RuntimeDependencyDescriptor>;
 
+
+    if (allowRuntimeCodeGeneration && ((descriptor.lifetime === DependencyLifetime.Transient) || (keys?.length ?? 0) > 5))
+    {
+        try
+        {
+            runtimeDescriptor.instatiationStrategy = createRuntimeCodeGenerationClassStrategy
+            (
+                collectionRegistrations,
+                singularRegistrations,
+                descriptor
+            );
+
+            return;
+        }
+        catch
+        {
+            /**
+             * @note Some runtimes or CSP policies block new Function.
+             * Continue with the existing fixed-argument or spread strategy and shared tracking helper.
+             * Generated bodies track inline; fallback strategies must still register disposable transients.
+             */
+        }
+    }
+
     /**
      * @note TS doesn't recongnize keys as not empty in default case if we include it into switch
      * so leaving this workaround to make TS happy
      */
     if (keys === undefined || keys.length === 0)
     {
-        runtimeDescriptor.instatiationStrategy = createZeroArgumentsClassStrategy(descriptor.constructor);
+        runtimeDescriptor.instatiationStrategy = createZeroArgumentsClassStrategy
+        (
+            descriptor
+        );
 
         return;
     }
@@ -46,8 +74,7 @@ export function compileClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor, 
-                keys
+                descriptor
             );
 
             return;
@@ -58,8 +85,7 @@ export function compileClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -70,8 +96,7 @@ export function compileClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -82,8 +107,7 @@ export function compileClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
@@ -94,43 +118,18 @@ export function compileClassDescriptor
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;
         }
         default:
         {
-            if (allowRuntimeCodeGeneration)
-            {
-                try
-                {
-                    runtimeDescriptor.instatiationStrategy = createRuntimeCodeGenerationClassStrategy
-                    (
-                        collectionRegistrations,
-                        singularRegistrations,
-                        descriptor.constructor,
-                        keys
-                    );
-
-                    return;
-                }
-                catch
-                {
-                    /**
-                     * @note Some runtimes or CSP policies block new Function.
-                     * Fall back to spread so compilation can still succeed when code generation is enabled.
-                     */
-                }
-            }
-
             runtimeDescriptor.instatiationStrategy = createSpreadArgumentsClassStrategy
             (
                 collectionRegistrations,
                 singularRegistrations,
-                descriptor.constructor,
-                keys
+                descriptor
             );
 
             return;

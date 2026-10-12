@@ -1,7 +1,7 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope } from "../sync-strategy.test-helpers";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createTwoArgumentsFactoryStrategy } from "./two-arguments-factory-strategy";
 
 function collectArguments(...values: unknown[])
@@ -23,11 +23,16 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 2 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createTwoArgumentsFactoryStrategy<RegisteredDependencies, typeof collectArguments>
+                const instantiate = createTwoArgumentsFactoryStrategy<ReturnType<typeof collectArguments>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    collectArguments,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Factory,
+                        lifetime: DependencyLifetime.Singleton,
+                        factory: collectArguments,
+                        subDependenciesKeys: keys
+                    }
                 );
 
                 const first: ReturnType<typeof collectArguments> = instantiate(firstScope);

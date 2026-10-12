@@ -1,28 +1,62 @@
+import { DependencyLifetime } from "../../../../types";
+import type { AsyncFactoryDependencyDescriptor } from "../../../../types/async-factory-dependency-descriptor";
 import { throwError, TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { resolveAsyncDependencies } from "../resolve-async-dependencies";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 import { DependencyNotRegisteredError } from "../../../../errors";
 
-export function createAsyncFactoryStrategy<T_Dependency, T_RegisteredDependencies extends RegisteredDependencies>
+export function createAsyncFactoryStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
+    descriptor: AsyncFactoryDependencyDescriptor<T_Dependency>,
     subStrategy: (dependencies: unknown[]) => Promise<T_Dependency>
 )
     : InstantiationStrategy<Promise<T_Dependency>>
 {
+    const keys = descriptor.subDependenciesKeys ?? [];
     const decsriptorsBuckets = keys.map
     (
         (key) => Array.isArray(key) 
             ? (collectionRegistrations.get(key[0]) ?? throwError<RuntimeDependencyDescriptor[]>(new DependencyNotRegisteredError(key[0])))
             : (singularRegistrations.get(key) ?? throwError<RuntimeDependencyDescriptor>(new DependencyNotRegisteredError(key)))
     );
+
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const promise = resolveAsyncDependencies(scope, decsriptorsBuckets);
+
+            if (promise[TrackedPromise.status] !== TrackedPromiseStatus.Success)
+            {
+                const resolveAsync = async () =>
+                {
+                    const dependencies = await promise;
+
+                    return subStrategy(dependencies);
+                };
+
+                const dependency = TrackedPromise.track(resolveAsync());
+
+                scope.trackTransientAsyncDependency(dependency);
+
+                return dependency;
+            }
+
+            /**
+             * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
+             * So lets just track it
+             */
+            const dependency = TrackedPromise.track(subStrategy(promise[TrackedPromise.value]));
+
+            scope.trackTransientAsyncDependency(dependency);
+
+            return dependency;
+        };
+    }
 
     return (scope) =>
     {
@@ -37,14 +71,18 @@ export function createAsyncFactoryStrategy<T_Dependency, T_RegisteredDependencie
                 return subStrategy(dependencies);
             };
 
-            return TrackedPromise.track(resolveAsync());
+            const dependency = TrackedPromise.track(resolveAsync());
+
+            return dependency;
         }
 
         /**
          * @note factory can have async work, so we can't reliably say if promise was resolved already or no...
          * So lets just track it
          */
-        return TrackedPromise.track(subStrategy(promise[TrackedPromise.value]));
+        const dependency = TrackedPromise.track(subStrategy(promise[TrackedPromise.value]));
+
+        return dependency;
     };
 }
 

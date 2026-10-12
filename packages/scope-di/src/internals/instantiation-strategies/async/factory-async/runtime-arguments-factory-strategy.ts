@@ -1,26 +1,20 @@
+import type { AsyncFactoryDependencyDescriptor } from "../../../../types/async-factory-dependency-descriptor";
 import { generateIdentifier } from "../../../../helpers/internals/identifier-helpers";
-import { DependencyFactory } from "../../../../types/dependency-factory";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createAsyncFactoryStrategy } from "./create-async-factory-strategy";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 
-export function createRuntimeArgumentsAsyncFactoryStrategy
-<
-    T_RegisteredDependencies extends RegisteredDependencies,
-    T_Factory extends DependencyFactory<any[], Promise<any>>
->
+export function createRuntimeArgumentsAsyncFactoryStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    factory: T_Factory,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    descriptor: AsyncFactoryDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<Promise<Awaited<ReturnType<T_Factory>>>>
+    : InstantiationStrategy<Promise<T_Dependency>>
 {
+    const factory = descriptor.factory;
+    const keys = descriptor.subDependenciesKeys ?? [];
     const id = generateIdentifier().toString();
     const factoryParameterName = `factory$${id}`;
     const dependenciesParameterName = `dependencies$${id}`;
@@ -40,7 +34,7 @@ export function createRuntimeArgumentsAsyncFactoryStrategy
     (
         collectionRegistrations,
         singularRegistrations,
-        keys,
+        descriptor,
         strategyFactory(factory)
     );
 }

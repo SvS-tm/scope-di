@@ -1,3 +1,4 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { describe, expect, it } from "@jest/globals";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
 import { createZeroArgumentsClassStrategy } from "./zero-arguments-class-strategy";
@@ -23,7 +24,15 @@ describe
             () =>
             {
                 const scope = createDefaultDiScope();
-                const instantiate = createZeroArgumentsClassStrategy(ArgumentList);
+                const instantiate = createZeroArgumentsClassStrategy
+                (
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Class,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: ArgumentList
+                    }
+                );
                 const first: ArgumentList = instantiate(scope);
                 const second: ArgumentList = instantiate(scope);
 

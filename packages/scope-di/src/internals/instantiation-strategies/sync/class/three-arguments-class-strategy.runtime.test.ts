@@ -1,7 +1,7 @@
+import { DependencyDescriptorType, DependencyLifetime } from "../../../../types";
 import { getTestRegistrationMaps } from "../../compilation.test-helpers";
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../sync-strategy.test-helpers";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 import { createThreeArgumentsClassStrategy } from "./three-arguments-class-strategy";
 
 class ArgumentList
@@ -28,11 +28,16 @@ describe
                 const firstScope = createSyncStrategyChildScope(root);
                 const secondScope = createSyncStrategyChildScope(root);
                 const keys = Array.from({ length: 3 }, (_, index) => index === 0 ? "dependency" : "transient");
-                const instantiate = createThreeArgumentsClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                const instantiate = createThreeArgumentsClassStrategy<InstanceType<typeof ArgumentList>>
                 (
                     ...getTestRegistrationMaps(root, keys),
-                    ArgumentList,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Class,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: ArgumentList,
+                        subDependenciesKeys: keys
+                    }
                 );
 
                 const first: ArgumentList = instantiate(firstScope);
@@ -62,11 +67,16 @@ describe
                 const promise = Promise.resolve(42);
                 const scope = createSyncValueStrategyScope(new Map<string, unknown>([["collection", ["first", "second"]], ["promise", promise], ["value", 7]]));
                 const keys: ("value" | "promise" | ["collection"])[] = ["value", ["collection"], "promise"];
-                const instantiate = createThreeArgumentsClassStrategy<RegisteredDependencies, typeof ArgumentList>
+                const instantiate = createThreeArgumentsClassStrategy<InstanceType<typeof ArgumentList>>
                 (
                     ...getTestRegistrationMaps(scope, keys),
-                    ArgumentList,
-                    keys
+                    {
+                        key: "target",
+                        type: DependencyDescriptorType.Class,
+                        lifetime: DependencyLifetime.Singleton,
+                        constructor: ArgumentList,
+                        subDependenciesKeys: keys
+                    }
                 );
                 const result = instantiate(scope);
 

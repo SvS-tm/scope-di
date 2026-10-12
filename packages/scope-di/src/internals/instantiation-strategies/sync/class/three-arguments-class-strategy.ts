@@ -1,34 +1,52 @@
+import { DependencyLifetime } from "../../../../types";
+import type { ClassDependencyDescriptor } from "../../../../types/class-dependency-descriptor";
+import { trackTransientDependency } from "../../transient-tracking";
 import { RuntimeDependencyDescriptor } from "../../../../types/internals/runtime-dependency-descriptor";
 import { AllowedDependencyKey } from "../../../../types/allowed-dependency-key";
-import { Constructor } from "@svs-tm/system";
-import { DependencyMappingKey } from "../../../../types/dependency-mapping-key";
-import { DependencyResolutionKey } from "../../../../types/dependency-resolution-key";
 import { InstantiationStrategy } from "../../../../types/instantiation-strategy";
-import { RegisteredDependencies } from "../../../../types/registered-dependencies";
 
 import { createSyncResolver } from "../create-sync-resolver";
 
-export function createThreeArgumentsClassStrategy
-<
-    T_RegisteredDependencies extends RegisteredDependencies,
-    T_Constructor extends Constructor<any[], any>
->
+export function createThreeArgumentsClassStrategy<T_Dependency>
 (
     collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
     singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
-    constructor: T_Constructor,
-    keys: DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
+    descriptor: ClassDependencyDescriptor<T_Dependency>
 )
-    : InstantiationStrategy<InstanceType<T_Constructor>>
+    : InstantiationStrategy<T_Dependency>
 {
+    const constructor = descriptor.constructor;
+    const keys = descriptor.subDependenciesKeys ?? [];
     const resolveDependency1 = createSyncResolver(collectionRegistrations, singularRegistrations, keys[0]);
     const resolveDependency2 = createSyncResolver(collectionRegistrations, singularRegistrations, keys[1]);
     const resolveDependency3 = createSyncResolver(collectionRegistrations, singularRegistrations, keys[2]);
 
-    return (scope) => new constructor
-    (
-        resolveDependency1(scope),
-        resolveDependency2(scope),
-        resolveDependency3(scope)
-    );
+    if (descriptor.lifetime === DependencyLifetime.Transient)
+    {
+        return (scope) =>
+        {
+            const dependency = new constructor
+            (
+                resolveDependency1(scope),
+                resolveDependency2(scope),
+                resolveDependency3(scope)
+            );
+
+            trackTransientDependency(scope, dependency);
+
+            return dependency;
+        };
+    }
+
+    return (scope) =>
+    {
+        const dependency = new constructor
+        (
+            resolveDependency1(scope),
+            resolveDependency2(scope),
+            resolveDependency3(scope)
+        );
+
+        return dependency;
+    };
 }
