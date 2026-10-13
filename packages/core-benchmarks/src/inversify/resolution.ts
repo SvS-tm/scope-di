@@ -2,6 +2,7 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import type { k_state } from "mitata";
+import { createChangingShapeFactory } from "../changing-shape-factory.ts";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
@@ -347,4 +348,11 @@ export function *warmResolveCachedFactoryDeepWideGraph(state: k_state)
     const jitEnabled = state.get("codeGeneration") === true;
 
     yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(jitEnabled), (container) => container.get("root"));
+}
+
+export function *warmResolveTransientFactoryWithChangingShape(state: k_state)
+{
+    const container = new Container({ jitless: state.get("codeGeneration") !== true });
+    container.bind("transient").toResolvedValue(createChangingShapeFactory()).inTransientScope();
+    yield *createWarmResolutionBenchmark(container, current => current.get("transient"));
 }

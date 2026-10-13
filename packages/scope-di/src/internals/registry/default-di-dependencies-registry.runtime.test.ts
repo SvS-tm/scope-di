@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { DependencyNotRegisteredError } from "../../errors";
 import { AllowedDependencyKey, DependencyDescriptorType, DependencyLifetime } from "../../types";
 import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
-import { compileTestDescriptor } from "../instantiation-strategies/compilation.test-helpers";
+import { compileTestDescriptor } from "../instantiation-strategies/compilation/compilation.test-helpers";
 import { DefaultDiDependenciesRegistry } from "./default-di-dependencies-registry";
 import type { RuntimeDependencyDescriptorsBucket } from "../../types/internals/runtime-dependency-descriptors-bucket";
 

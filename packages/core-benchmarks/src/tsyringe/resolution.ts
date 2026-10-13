@@ -2,6 +2,7 @@
 import "reflect-metadata";
 import { container, type DependencyContainer, instanceCachingFactory, Lifecycle } from "tsyringe";
 import type { k_state } from "mitata";
+import { createChangingShapeFactory } from "../changing-shape-factory.ts";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
@@ -304,4 +305,11 @@ function createCachedFactoryDeepWideGraphContainer()
 export function *warmResolveCachedFactoryDeepWideGraph(_: k_state)
 {
     yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+export function *warmResolveTransientFactoryWithChangingShape(_: k_state)
+{
+    const container = createIsolatedContainer();
+    container.register("transient", { useFactory: createChangingShapeFactory() });
+    yield *createWarmResolutionBenchmark(container, current => current.resolve("transient"));
 }

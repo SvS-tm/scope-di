@@ -1,9 +1,12 @@
+import { Logging } from "../../helpers/internals/logging";
+import { loadIsolatedTransientStrategyModules } from "./load-isolated-transient-strategy-modules";
 import type { DiScopeBuilder } from "../../abstractions";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
+import type { FeatureFlag } from "../../types/feature-flag";
 import type { RemoveDependenciesCollection } from "../../types/utilities/remove-dependencies-collection";
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 import { DefaultDiScope } from "../scope/default-di-scope";
@@ -12,7 +15,8 @@ import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
 export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> 
     implements DiScopeBuilder<T_RegisteredDependencies>
 {
-    private allowRuntimeCodeGeneration: boolean = false;
+    private allowRuntimeCodeGeneration: boolean = true;
+    private allowRuntimeModuleIsolation: boolean = true;
     private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
 
     /**
@@ -30,9 +34,17 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
             this.descriptors.set(descriptor.key, [descriptor, descriptorOrCollection]);
     }
 
-    public setAllowRuntimeCodeGeneration(value: boolean = true) 
+    public setAllowRuntimeCodeGeneration(value: FeatureFlag = true)
     {
-        this.allowRuntimeCodeGeneration = value;
+        // Automatic runtime selection is not implemented yet; auto follows the enabled default.
+        this.allowRuntimeCodeGeneration = value !== false;
+
+        return this;
+    }
+
+    public setAllowRuntimeModuleIsolation(value: FeatureFlag = true)
+    {
+        this.allowRuntimeModuleIsolation = value !== false;
 
         return this;
     }
@@ -57,7 +69,7 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
         return this.descriptors.has(key);
     }
 
-    public build()
+    private createRegistrations()
     {
         const registrations = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
 
@@ -73,6 +85,13 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
             );
         }
 
+        return registrations;
+    }
+
+    public build()
+    {
+        const registrations = this.createRegistrations();
+
         return new DefaultDiScope<T_RegisteredDependencies>
         (
             new DefaultDiDependenciesRegistry
@@ -80,6 +99,38 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
                 registrations,
                 this.allowRuntimeCodeGeneration
             )
+        );
+    }
+
+    private async loadIsolatedStrategies(descriptors: Iterable<DependencyDescriptor>)
+    {
+        try
+        {
+            return await loadIsolatedTransientStrategyModules(descriptors);
+        }
+        catch (error)
+        {
+            // Missing chunks, loader restrictions, or denied imports can prevent module isolation.
+            // Compile without isolated modules instead; enabled code generation can still be selected,
+            // otherwise predefined strategies retain transient tracking. Keep compilation outside this
+            // catch so invalid registrations are reported rather than treated as loading failures.
+            Logging.warning("Module isolation failed; continuing without isolation.", error);
+            return undefined;
+        }
+    }
+
+    public async buildAsync()
+    {
+        if (!this.allowRuntimeModuleIsolation)
+            return this.build();
+
+        const registrations = this.createRegistrations();
+        const descriptors = Array.from(registrations.values()).flat();
+        const strategyModules = await this.loadIsolatedStrategies(descriptors);
+
+        return new DefaultDiScope<T_RegisteredDependencies>
+        (
+            new DefaultDiDependenciesRegistry(registrations, this.allowRuntimeCodeGeneration, strategyModules)
         );
     }
 }

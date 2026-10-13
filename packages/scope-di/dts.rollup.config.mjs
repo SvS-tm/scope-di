@@ -11,7 +11,7 @@ export default defineConfig
             plugins: [dts({ tsconfig: "tsconfig.build.json" })],
             external: [
                 ...Object.keys(pkg.peerDependencies ?? {}),
-                "@svs-tm/system"
+                ...Object.keys(pkg.dependencies ?? {})
             ]
         }
     ]

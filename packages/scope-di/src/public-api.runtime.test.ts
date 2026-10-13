@@ -66,7 +66,7 @@ describe
                         expect(next).not.toBe(first);
                     }
 
-                    expect(generation).toHaveBeenCalledTimes(allowRuntimeCodeGeneration === true ? 2 : 0);
+                    expect(generation).toHaveBeenCalledTimes(allowRuntimeCodeGeneration !== false ? 2 : 0);
                 }
                 finally
                 {

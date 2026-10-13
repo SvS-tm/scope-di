@@ -10,7 +10,8 @@
         "dist/index.cjs.map",
         "dist/index.d.ts",
         "dist/index.mjs",
-        "dist/index.mjs.map"
+        "dist/index.mjs.map",
+        "dist/chunks"
     ],
     "repository": {
         "type": "git",
