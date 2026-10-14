@@ -1,6 +1,6 @@
 import { Logging } from "../../helpers/internals/logging";
 import { loadIsolatedTransientStrategyModules } from "./load-isolated-transient-strategy-modules";
-import type { DiScopeBuilder } from "../../abstractions";
+import type { DiScope, DiScopeBuilder } from "../../abstractions";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
@@ -11,12 +11,19 @@ import type { RemoveDependenciesCollection } from "../../types/utilities/remove-
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 import { DefaultDiScope } from "../scope/default-di-scope";
 import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
+import { SetFeature } from "../../types/utilities/set-feature";
+import { DiFeatures } from "../../types/di-features";
+import { DiScopeBuildingResult } from "../../types/di-scope-building-result";
 
-export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDependencies = never> 
-    implements DiScopeBuilder<T_RegisteredDependencies>
+export class DefaultDiScopeBuilder
+<
+    T_RegisteredDependencies extends RegisteredDependencies = never, 
+    T_Features extends DiFeatures = DiFeatures<false, false>
+> 
+    implements DiScopeBuilder<T_RegisteredDependencies, T_Features>
 {
-    private allowRuntimeCodeGeneration: boolean = true;
-    private allowRuntimeModuleIsolation: boolean = true;
+    private allowRuntimeCodeGeneration = false;
+    private allowRuntimeModuleIsolation = false;
     private readonly descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>();
 
     /**
@@ -34,19 +41,28 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
             this.descriptors.set(descriptor.key, [descriptor, descriptorOrCollection]);
     }
 
-    public setAllowRuntimeCodeGeneration(value: FeatureFlag = true)
+    public setAllowRuntimeCodeGeneration<const T_FeatureFlag extends FeatureFlag>(value: T_FeatureFlag)
     {
-        // Automatic runtime selection is not implemented yet; auto follows the enabled default.
+        // Runtime selection is not implemented yet. Explicit auto currently enables generation;
+        // leaving the setter unused keeps the feature disabled.
         this.allowRuntimeCodeGeneration = value !== false;
 
-        return this;
+        return this as unknown as DiScopeBuilder<
+            T_RegisteredDependencies, 
+            SetFeature<T_Features, "allowRuntimeCodeGeneration", T_FeatureFlag>
+        >;
     }
 
-    public setAllowRuntimeModuleIsolation(value: FeatureFlag = true)
+    public setAllowRuntimeModuleIsolation<const T_FeatureFlag extends FeatureFlag>(value: T_FeatureFlag)
     {
+        // Explicit auto currently enables isolation. Its build contract stays asynchronous even
+        // when a future runtime policy skips isolation, so callers can always await the result.
         this.allowRuntimeModuleIsolation = value !== false;
 
-        return this;
+        return this as unknown as DiScopeBuilder<
+            T_RegisteredDependencies, 
+            SetFeature<T_Features, "allowRuntimeModuleIsolation", T_FeatureFlag>
+        >;
     }
 
     public map<T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey)
@@ -61,7 +77,7 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
     {
         this.descriptors.delete(key);
 
-        return this as unknown as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>>;
+        return this as unknown as DiScopeBuilder<RemoveDependenciesCollection<T_RegisteredDependencies, T_DependencyMappingKey>, T_Features>;
     }
 
     public hasMapping<T_DependencyMappingKey extends AllowedDependencyKey>(key: T_DependencyMappingKey)
@@ -88,20 +104,6 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
         return registrations;
     }
 
-    public build()
-    {
-        const registrations = this.createRegistrations();
-
-        return new DefaultDiScope<T_RegisteredDependencies>
-        (
-            new DefaultDiDependenciesRegistry
-            (
-                registrations,
-                this.allowRuntimeCodeGeneration
-            )
-        );
-    }
-
     private async loadIsolatedStrategies(descriptors: Iterable<DependencyDescriptor>)
     {
         try
@@ -115,22 +117,33 @@ export class DefaultDiScopeBuilder<T_RegisteredDependencies extends RegisteredDe
             // otherwise predefined strategies retain transient tracking. Keep compilation outside this
             // catch so invalid registrations are reported rather than treated as loading failures.
             Logging.warning("Module isolation failed; continuing without isolation.", error);
+
             return undefined;
         }
     }
 
-    public async buildAsync()
+    private async buildAsync(registrations: Map<string, DependencyDescriptorsBucket>)
     {
-        if (!this.allowRuntimeModuleIsolation)
-            return this.build();
-
-        const registrations = this.createRegistrations();
         const descriptors = Array.from(registrations.values()).flat();
         const strategyModules = await this.loadIsolatedStrategies(descriptors);
 
         return new DefaultDiScope<T_RegisteredDependencies>
         (
             new DefaultDiDependenciesRegistry(registrations, this.allowRuntimeCodeGeneration, strategyModules)
+        );
+    }
+
+    public build(): DiScopeBuildingResult<T_RegisteredDependencies, T_Features>;
+    public build(): DiScope<T_RegisteredDependencies> | Promise<DiScope<T_RegisteredDependencies>>
+    {
+        const registrations = this.createRegistrations();
+
+        if (this.allowRuntimeModuleIsolation)
+            return this.buildAsync(registrations);
+        
+        return new DefaultDiScope<T_RegisteredDependencies>
+        (
+            new DefaultDiDependenciesRegistry(registrations, this.allowRuntimeCodeGeneration)
         );
     }
 }

@@ -13,7 +13,7 @@ describe
     "Isolated async strategies",
     () =>
     {
-        it.each([0, 1, 5, 6, 10])
+        it.each([0, 1, 2, 3, 4, 5, 6, 10])
         (
             "preserves arguments and tracking for count=%s",
             async count =>
@@ -28,9 +28,16 @@ describe
                 assertTrackedPromise(first);
                 expect(first[TrackedPromise.status]).toBe(TrackedPromiseStatus.Success);
                 expect((await first).values).toEqual(values);
-                expect((await factoryStrategy(scope)).values).toEqual(values);
+                const firstFactory = factoryStrategy(scope);
+                expect((await firstFactory).values).toEqual(values);
+                const nextFactory = factoryStrategy(scope);
+                expect((await nextFactory).values).toEqual(values);
+                expect(await nextFactory).not.toBe(await firstFactory);
                 expect(await classStrategy(scope)).not.toBe(await first);
-                expect(tracking).toHaveBeenCalledTimes(3);
+                expect(tracking).toHaveBeenCalledTimes(4);
+                expect(tracking).toHaveBeenCalledWith(first);
+                expect(tracking).toHaveBeenCalledWith(firstFactory);
+                expect(tracking).toHaveBeenCalledWith(nextFactory);
             }
         );
 

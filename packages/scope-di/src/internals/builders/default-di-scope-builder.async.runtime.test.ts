@@ -20,7 +20,7 @@ describe
                 const pending = new Promise<Map<never, never>>(resolve => { finish = resolve; });
                 const prepare = jest.mocked(loadIsolatedTransientStrategyModules).mockReturnValue(pending);
                 let completed = false;
-                const building = new DefaultDiScopeBuilder().setAllowRuntimeModuleIsolation().buildAsync().then(scope =>
+                const building = new DefaultDiScopeBuilder().setAllowRuntimeModuleIsolation(true).build().then(scope =>
                 {
                     completed = true;
                     return scope;
@@ -45,13 +45,13 @@ describe
                 let disposals = 0;
                 const builder = new DefaultDiScopeBuilder()
                     .setAllowRuntimeCodeGeneration(false)
-                    .setAllowRuntimeModuleIsolation()
+                    .setAllowRuntimeModuleIsolation(true)
                     .map("dependency").asFactory
                     (
                         () => ({ [Symbol.dispose]() { disposals++; } }),
                         DependencyLifetime.Transient
                     );
-                const scope = await builder.buildAsync();
+                const scope = await builder.build();
 
                 expect(warn).toHaveBeenCalledTimes(1);
                 expect(warn).toHaveBeenCalledWith("[scope-di] Module isolation failed; continuing without isolation.", error);
@@ -69,10 +69,10 @@ describe
                 jest.spyOn(console, "warn").mockImplementation(() => {});
                 const generate = jest.spyOn(globalThis, "Function");
                 const scope = await new DefaultDiScopeBuilder()
-                    .setAllowRuntimeModuleIsolation()
-                    .setAllowRuntimeCodeGeneration()
+                    .setAllowRuntimeModuleIsolation(true)
+                    .setAllowRuntimeCodeGeneration(true)
                     .map("dependency").asFactory(() => ({}), DependencyLifetime.Transient)
-                    .buildAsync();
+                    .build();
 
                 expect(generate).toHaveBeenCalled();
                 expect(scope.resolve("dependency")).not.toBe(scope.resolve("dependency"));
@@ -86,10 +86,10 @@ describe
                 jest.mocked(loadIsolatedTransientStrategyModules).mockRejectedValue(new Error("Import denied"));
                 jest.spyOn(console, "warn").mockImplementation(() => {});
                 const builder = new DefaultDiScopeBuilder()
-                    .setAllowRuntimeModuleIsolation()
+                    .setAllowRuntimeModuleIsolation(true)
                     .map("dependency").asDependent("missing" as never).factory(value => value, DependencyLifetime.Transient);
 
-                await expect(builder.buildAsync()).rejects.toBeInstanceOf(DependencyNotRegisteredError);
+                await expect(builder.build()).rejects.toBeInstanceOf(DependencyNotRegisteredError);
             }
         );
         it
@@ -113,10 +113,10 @@ describe
                     async descriptors => new Map(Array.from(descriptors, descriptor => [descriptor, strategyModule]))
                 );
                 const builder = new DefaultDiScopeBuilder()
-                    .setAllowRuntimeModuleIsolation()
+                    .setAllowRuntimeModuleIsolation(true)
                     .map("first").asFactory(() => ({}), DependencyLifetime.Transient)
                     .map("second").asDependent("first").factory(first => ({ first }), DependencyLifetime.Transient);
-                const scope = await builder.buildAsync();
+                const scope = await builder.build();
                 expect(createFactoryStrategy).toHaveBeenCalledTimes(2);
                 load.mockClear();
                 createFactoryStrategy.mockClear();
@@ -134,7 +134,7 @@ describe
                 const builder = new DefaultDiScopeBuilder();
                 if (enabled !== undefined)
                     builder.setAllowRuntimeModuleIsolation(enabled);
-                await builder.buildAsync();
+                await builder.build();
                 expect(loadIsolatedTransientStrategyModules).not.toHaveBeenCalled();
             }
         );
