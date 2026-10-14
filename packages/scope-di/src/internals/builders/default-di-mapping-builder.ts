@@ -9,13 +9,15 @@ import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { DiMappingBuilder, DiScopeBuilder } from "../../abstractions";
 import { DefaultDiDependentMappingBuilder } from "./default-di-dependent-mapping-builder";
 import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
+import { DiFeatures } from "../../types/di-features";
 
 export class DefaultDiMappingBuilder
 <
     T_RegisteredDependencies extends RegisteredDependencies,
+    T_Features extends DiFeatures,
     T_DependencyMappingKey extends AllowedDependencyKey 
 >
-    implements DiMappingBuilder<T_RegisteredDependencies, T_DependencyMappingKey>
+    implements DiMappingBuilder<T_RegisteredDependencies, T_Features, T_DependencyMappingKey>
 {
     public constructor
     (
@@ -47,7 +49,8 @@ export class DefaultDiMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -73,7 +76,8 @@ export class DefaultDiMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -95,7 +99,8 @@ export class DefaultDiMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Value
-            >
+            >,
+            T_Features
         >;
     }
     
@@ -121,7 +126,8 @@ export class DefaultDiMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -147,7 +153,8 @@ export class DefaultDiMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
-            >
+            >,
+            T_Features
         >;
     }
 

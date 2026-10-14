@@ -1,3 +1,4 @@
+import { DefaultDiScope } from "../scope/default-di-scope";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise } from "@svs-tm/system";
 import { DependencyNotRegisteredError } from "../../errors";
@@ -56,12 +57,13 @@ describe
             "prebinds forward registrations and preserves collections for $type / codegen $codeGeneration / $count arguments",
             async ({ type, codeGeneration, count }) =>
             {
-                const builder = new DefaultDiScopeBuilder<RegisteredDependencies>().setAllowRuntimeCodeGeneration(codeGeneration);
+                const builder = new DefaultDiScopeBuilder<RegisteredDependencies>();
+                builder.setAllowRuntimeCodeGeneration(codeGeneration);
                 const keys: DependencyResolutionKey<string>[] = Array.from({ length: count }, (_, index) => index === 0 ? ["collection"] : "value");
                 builder.register(createTargetDescriptor(type, keys));
                 builder.register({ key: "collection", type: DependencyDescriptorType.Factory, lifetime: DependencyLifetime.Transient, factory: () => ({}) });
                 builder.register({ key: "value", type: DependencyDescriptorType.Value, lifetime: DependencyLifetime.Singleton, value: 42 });
-                const scope = builder.build();
+                const scope = builder.build() as DefaultDiScope<RegisteredDependencies>;
                 const descriptor = scope.registry.resolveSingularDescriptorByKey("target");
                 const singularLookup = jest.spyOn(scope.registry, "resolveSingularDescriptorByKey");
                 const collectionLookup = jest.spyOn(scope.registry, "resolveCollectionDescriptorsByKey");
@@ -138,7 +140,7 @@ describe
                         }
                     }
                 );
-                const scope = builder.build();
+                const scope = builder.build() as DefaultDiScope<RegisteredDependencies>;
                 const first = scope.resolveAsync("target");
                 const second = scope.resolveAsync("target");
                 expect(pending).toHaveLength(2);

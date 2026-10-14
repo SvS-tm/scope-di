@@ -28,20 +28,23 @@ export function compileClassDescriptor
 
 
     /**
-     * @note buildAsync loads one module instance per transient descriptor using a unique query.
-     * Its strategy is created once and reused; no imports happen during resolution.
-     *
-     * Experiments showed that shared disposal-symbol checks cost a lot on transient deep chains.
-     * V8 feedback dumps showed megamorphic accesses: one detector saw many object shapes.
-     * Separate module bodies gave each descriptor its own feedback sites, so stable shapes could
-     * stay monomorphic. New closures from the same body did not separate that feedback.
-     *
-     * Sync benchmarks favored isolation for deep chains and small argument counts, but not for
-     * factories changing shape. Prefer it up to five arguments; try codegen for larger counts.
-     * Isolation can be disabled because loading takes time and retains module instances in memory.
-     * These bodies track transients. Cached lifetimes check disposal later, from their caches;
-     * routing them here could track and dispose the same instance twice.
-     * Disposal checks stay inside each strategy; importing a shared detector would share its feedback.
+     * Performance measurements led us to shared disposal-symbol checks as a transient-resolution bottleneck.
+     * Node/V8 feedback dumps showed megamorphic accesses: one check saw many unrelated object shapes.
+     * Code generation could give each descriptor separate feedback, but for small argument counts it
+     * mostly duplicated fixed strategy bodies; we did not need dynamically generated source for that.
+     * Generating and compiling that source can also add more setup time than loading another instance
+     * of the fixed strategy module, potentially moving the bottleneck to container construction.
+     * Node documents loading the same module separately when its import query changes:
+     * https://nodejs.org/api/esm.html#file-urls
+     * We tried this, then switched from file URLs to relative imports because Bun reused the module
+     * despite different file-URL queries in our Windows probe (Node 26.11.1, Bun 1.4.2, Deno 2.9.6).
+     * Relative imports with unique queries produced separate functions in all three tested runtimes.
+     * Separate module bodies gave each descriptor its own feedback sites, which stayed monomorphic
+     * for stable object shapes. New closures from the same body did not provide that separation.
+     * Sync benchmarks favored full-strategy isolation up to five arguments; changing factory shapes
+     * limited the benefit, and async gains remain unmeasured. Codegen remains an option for wider calls.
+     * buildAsync loads modules once per transient descriptor; resolution reuses the strategy.
+     * Isolation costs loading time and memory, and skips cached lifetimes to avoid double disposal.
      */
     if (isolatedTransientStrategies !== undefined && descriptor.lifetime === DependencyLifetime.Transient && (keys?.length ?? 0) <= 5)
     {

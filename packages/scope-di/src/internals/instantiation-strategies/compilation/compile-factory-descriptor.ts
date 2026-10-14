@@ -27,20 +27,9 @@ export function compileFactoryDescriptor
     const runtimeDescriptor = descriptor as Writable<RuntimeDependencyDescriptor>;
 
     /**
-     * @note buildAsync loads one module instance per transient descriptor using a unique query.
-     * Its strategy is created once and reused; no imports happen during resolution.
-     *
-     * Experiments showed that shared disposal-symbol checks cost a lot on transient deep chains.
-     * V8 feedback dumps showed megamorphic accesses: one detector saw many object shapes.
-     * Separate module bodies gave each descriptor its own feedback sites, so stable shapes could
-     * stay monomorphic. New closures from the same body did not separate that feedback.
-     *
-     * Sync benchmarks favored isolation for deep chains and small argument counts, but not for
-     * factories changing shape. Prefer it up to five arguments; try codegen for larger counts.
-     * Isolation can be disabled because loading takes time and retains module instances in memory.
-     * These bodies track transients. Cached lifetimes check disposal later, from their caches;
-     * routing them here could track and dispose the same instance twice.
-     * Disposal checks stay inside each strategy; importing a shared detector would share its feedback.
+     * See compileClassDescriptor for the isolation rationale and runtime observations.
+     * Prefer isolation for transients up to five arguments; cached lifetimes handle disposal separately.
+     * Keep disposal checks inside the strategy so their feedback stays isolated.
      */
     if (isolatedTransientStrategies !== undefined && descriptor.lifetime === DependencyLifetime.Transient && (keys?.length ?? 0) <= 5)
     {
