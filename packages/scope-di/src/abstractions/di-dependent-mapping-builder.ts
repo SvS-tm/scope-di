@@ -10,12 +10,14 @@ import type { AddDependency } from "../types/utilities/add-dependency";
 import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
 import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
 import type { DiScopeBuilder } from "./di-scope-builder";
+import { DiFeatures } from "../types/di-features";
 
 export type DiDependentMappingBuilder
 <
 
     T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
+    T_Features extends DiFeatures,
     T_ResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
 >
     =
@@ -34,7 +36,8 @@ export type DiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
-            >
+            >,
+            T_Features
         >;
 
     factory<const T_Abstraction>
@@ -51,7 +54,8 @@ export type DiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
-            >
+            >,
+            T_Features
         >;
 
     classAsync<T_Abstraction>
@@ -68,7 +72,8 @@ export type DiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
-            >
+            >,
+            T_Features
         >;  
         
     factoryAsync<const T_Abstraction>
@@ -85,6 +90,7 @@ export type DiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
-            >
+            >,
+            T_Features
         >;
 };

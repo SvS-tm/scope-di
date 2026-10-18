@@ -5,11 +5,12 @@ import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
 import { DependencyDescriptorType, type AllowedDependencyKey, type DependencyDescriptor, type DependencyResolutionKey } from "../../types";
 import { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
-import { compileAsyncClassDescriptor } from "../instantiation-strategies/async/class-async/compile-async-class-descriptor";
-import { compileAsyncFactoryDescriptor } from "../instantiation-strategies/async/factory-async/compile-async-factory-descriptor";
-import { compileClassDescriptor } from "../instantiation-strategies/sync/class/compile-class-descriptor";
-import { compileFactoryDescriptor } from "../instantiation-strategies/sync/factory/compile-factory-descriptor";
-import { compileValueDescriptor } from "../instantiation-strategies/sync/value/compile-value-descriptor";
+import { compileAsyncClassDescriptor } from "../instantiation-strategies/compilation/compile-async-class-descriptor";
+import { compileAsyncFactoryDescriptor } from "../instantiation-strategies/compilation/compile-async-factory-descriptor";
+import { compileClassDescriptor } from "../instantiation-strategies/compilation/compile-class-descriptor";
+import { compileFactoryDescriptor } from "../instantiation-strategies/compilation/compile-factory-descriptor";
+import { compileValueDescriptor } from "../instantiation-strategies/compilation/compile-value-descriptor";
+import type * as IsolatedTransientStrategies from "../instantiation-strategies/strategies/isolated-transient-strategies";
 
 export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
 {
@@ -20,7 +21,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
     public constructor
     (
         registrations: ReadonlyMap<AllowedDependencyKey, DependencyDescriptorsBucket>,
-        allowRuntimeCodeGeneration: boolean
+        allowRuntimeCodeGeneration: boolean,
+        strategyModules?: ReadonlyMap<DependencyDescriptor, typeof IsolatedTransientStrategies>
     )
     {
         const 
@@ -32,7 +34,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
             = DefaultDiDependenciesRegistry.compileRegistries
             (
                 registrations,
-                allowRuntimeCodeGeneration
+                allowRuntimeCodeGeneration,
+                strategyModules
             );
 
         this.collectionRegistrations = collectionRegistrations;
@@ -43,7 +46,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
     private static compileRegistries
     (
         registrations: ReadonlyMap<AllowedDependencyKey, DependencyDescriptorsBucket>,
-        allowRuntimeCodeGeneration: boolean
+        allowRuntimeCodeGeneration: boolean,
+        strategyModules?: ReadonlyMap<DependencyDescriptor, typeof IsolatedTransientStrategies>
     )
     {
         const collectionRegistrations = new Map<AllowedDependencyKey, DependencyDescriptor[]>();
@@ -83,7 +87,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
                 collectionRegistrations as Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
                 singularRegistrations as Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
                 descriptor,
-                allowRuntimeCodeGeneration
+                allowRuntimeCodeGeneration,
+                strategyModules?.get(descriptor)
             );
         }
 
@@ -99,7 +104,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
         collectionRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor[]>,
         singularRegistrations: Map<AllowedDependencyKey, RuntimeDependencyDescriptor>,
         descriptor: DependencyDescriptor,
-        allowRuntimeCodeGeneration: boolean
+        allowRuntimeCodeGeneration: boolean,
+        isolatedTransientStrategies?: typeof IsolatedTransientStrategies
     )
         : asserts descriptor is RuntimeDependencyDescriptor
     {
@@ -120,7 +126,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
                     collectionRegistrations, 
                     singularRegistrations, 
                     descriptor, 
-                    allowRuntimeCodeGeneration
+                    allowRuntimeCodeGeneration,
+                    isolatedTransientStrategies
                 );
                 
                 return;
@@ -132,7 +139,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
                     collectionRegistrations,
                     singularRegistrations,
                     descriptor,
-                    allowRuntimeCodeGeneration
+                    allowRuntimeCodeGeneration,
+                    isolatedTransientStrategies
                 );
 
                 return;
@@ -144,7 +152,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
                     collectionRegistrations,
                     singularRegistrations,
                     descriptor,
-                    allowRuntimeCodeGeneration
+                    allowRuntimeCodeGeneration,
+                    isolatedTransientStrategies
                 );
 
                 return;
@@ -156,7 +165,8 @@ export class DefaultDiDependenciesRegistry implements DiDependenciesRegistry
                     collectionRegistrations,
                     singularRegistrations,
                     descriptor,
-                    allowRuntimeCodeGeneration
+                    allowRuntimeCodeGeneration,
+                    isolatedTransientStrategies
                 );
 
                 return;

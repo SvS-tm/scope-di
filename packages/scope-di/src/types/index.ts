@@ -14,6 +14,7 @@ export * from "./dependency-mapping-key";
 export * from "./dependency-metadata";
 export * from "./dependency-resolution-key";
 export * from "./factory-dependency-descriptor";
+export * from "./feature-flag";
 export * from "./registered-dependencies";
 export * from "./utilities";
 export * from "./value-dependency-descriptor";

@@ -343,6 +343,7 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
             const expectedNames = names.filter(name => name.startsWith(library + ":")
                 || name.startsWith(library + "-codegen:")
                 || (library === "inversify" && name.startsWith("inversify-jit:"))
+                || (library === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
                 || (library === "scope-di" && name.startsWith("diagnostics:scope-di:")));
 
             if(expectedNames.length === 0)
@@ -401,6 +402,7 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
                 const belongsToLibrary = alias?.startsWith(`${library}:`)
                     || alias?.startsWith(`${library}-codegen:`)
                     || (library === "inversify" && alias?.startsWith("inversify-jit:"))
+                    || (library === "scope-di" && (alias?.startsWith("scope-di-module-reload:") || alias?.startsWith("scope-di-module-reload-codegen:")))
                     || (library === "scope-di" && alias?.startsWith("diagnostics:scope-di:"));
 
                 if(!belongsToLibrary || measuredBenchmark.runs.length !== repetitions)

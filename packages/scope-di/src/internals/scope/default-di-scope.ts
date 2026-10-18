@@ -325,12 +325,10 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
             ? this.root ?? this
             : this;
 
-        if (descriptor.lifetime === DependencyLifetime.Transient)
-            owner.trackTransientDependency(descriptor, dependency);
         /**
          * @note for other cases - caching as single dependency resolved by descriptor
          */
-        else
+        if (descriptor.lifetime !== DependencyLifetime.Transient)
             owner.dependenciesCache.set(descriptor, dependency);
 
         if (descriptor.lifetime !== DependencyLifetime.Transient && isAsyncDescriptor(descriptor) && dependency instanceof Promise)
@@ -348,40 +346,38 @@ export class DefaultDiScope<T_RegisteredDependencies extends RegisteredDependenc
         return dependency;
     }
 
-    private trackTransientDependency(descriptor: RuntimeDependencyDescriptor, dependency: unknown)
+    public addDisposableDependency(dependency: Disposable)
     {
-        if (isAsyncDescriptor(descriptor))
-        {
-            const promise = dependency as Promise<unknown>;
+        (this.transientDependencies ??= []).push(dependency);
+    }
 
-            (this.transientAsyncDependencies ??= []).push(promise);
+    public addAsyncDisposableDependency(dependency: AsyncDisposable)
+    {
+        (this.transientAsyncDisposables ??= []).push(dependency);
+    }
 
-            promise.catch
-            (
-                () =>
-                {
-                    const dependencies = this.transientAsyncDependencies;
+    public trackTransientAsyncDependency(promise: Promise<unknown>)
+    {
+        (this.transientAsyncDependencies ??= []).push(promise);
 
-                    if (!isSafeReference(dependencies))
-                        return;
+        promise.catch
+        (
+            () =>
+            {
+                const dependencies = this.transientAsyncDependencies;
 
-                    const index = dependencies.indexOf(promise);
+                if (!isSafeReference(dependencies))
+                    return;
 
-                    if (index >= 0)
-                        dependencies.splice(index, 1);
+                const index = dependencies.indexOf(promise);
 
-                    if (dependencies.length === 0)
-                        this.transientAsyncDependencies = undefined;
-                }
-            );
+                if (index >= 0)
+                    dependencies.splice(index, 1);
 
-            return;
-        }
-
-        if (isSafeReference((dependency as Partial<AsyncDisposable>)[Symbol.asyncDispose]))
-            (this.transientAsyncDisposables ??= []).push(dependency as AsyncDisposable);
-        else if (isSafeReference((dependency as Partial<Disposable>)[Symbol.dispose]))
-            (this.transientDependencies ??= []).push(dependency as Disposable);
+                if (dependencies.length === 0)
+                    this.transientAsyncDependencies = undefined;
+            }
+        );
     }
 
     public createChildScope(): DiScope<T_RegisteredDependencies>

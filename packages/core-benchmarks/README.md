@@ -4,7 +4,12 @@
 
 This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: warm resolution, cold resolution, transient graphs, cached graphs, registration, speed, and memory.
 
+
+The `warmResolveTransientFactoryWithChangingShape` case uses one transient factory that cycles through six object shapes on successive resolutions. Every shape has two numeric fields, and every result is a fresh, non-disposable object. All participating libraries use the same factory implementation. The case includes scope-di code generation and module isolation, plus Inversify JIT. Needle DI is excluded because its installed API does not provide an equivalent transient factory lifetime.
+
 ## Runtime Setup
+
+The experimental `scope-di-module-reload` and `scope-di-module-reload-codegen` cases initialize scopes with `await builder.setAllowRuntimeModuleIsolation().buildAsync()`. Each sync transient descriptor loads a separate instance of the emitted strategy module with a unique query parameter; compilation creates its strategy from that module before the scope is returned. Warm resolution reuses the closure. These cases cover deep-chain factories and factories with five, six, or ten dependencies. Initialization happens outside the timed callback, so these measurements do not include module-loading cost. The package build emits `dist/isolated-transient-strategies.mjs`; browser deployments must serve this asset beside the package entry, and bundler ignore directives alone do not copy them.
 
 Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versions and pnpm, which downloads the required runtimes automatically during installation. This keeps benchmark runs consistent across machines without relying on globally installed runtime versions.
 
@@ -195,3 +200,5 @@ Statistics:
     <br />
     <a href="../../LICENSE">MIT</a>
 </p>
+
+Module isolation and runtime code generation are independent flags. With both enabled, isolated fixed-argument strategies handle up to five arguments; larger argument counts use optional code generation and fall back to isolated spread strategies if generation is blocked.

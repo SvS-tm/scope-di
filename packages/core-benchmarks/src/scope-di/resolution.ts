@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-sloppy-imports
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
 import type { k_state } from "mitata";
+import { createChangingShapeFactory } from "../changing-shape-factory.ts";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
@@ -159,7 +160,7 @@ export function *coldResolveTransientFactoryChain(state: k_state)
     yield *createColdResolutionBenchmark(() => createTransientFactoryChainScope(allowRuntimeCodeGeneration), (scope) => scope.resolve("root"));
 }
 
-function createTransientFactoryWithFiveDependenciesScope(allowRuntimeCodeGeneration = false)
+export function createTransientFactoryWithFiveDependenciesBuilder(allowRuntimeCodeGeneration = false)
 {
     return configureRootScope()
         .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration)
@@ -169,8 +170,12 @@ function createTransientFactoryWithFiveDependenciesScope(allowRuntimeCodeGenerat
         .map("d").asClass(Dependency, DependencyLifetime.Transient)
         .map("e").asClass(Dependency, DependencyLifetime.Transient)
         .map("parent").asDependent("a", "b", "c", "d", "e")
-        .factory((a, b, c, d, e) => ({ a, b, c, d, e }), DependencyLifetime.Transient)
-        .build();
+        .factory((a, b, c, d, e) => ({ a, b, c, d, e }), DependencyLifetime.Transient);
+}
+
+function createTransientFactoryWithFiveDependenciesScope(allowRuntimeCodeGeneration = false)
+{
+    return createTransientFactoryWithFiveDependenciesBuilder(allowRuntimeCodeGeneration).build();
 }
 
 export function *warmResolveTransientFactoryWithFiveDependencies(state: k_state)
@@ -187,7 +192,7 @@ export function *coldResolveTransientFactoryWithFiveDependencies(state: k_state)
     yield *createColdResolutionBenchmark(() => createTransientFactoryWithFiveDependenciesScope(allowRuntimeCodeGeneration), (scope) => scope.resolve("parent"));
 }
 
-function createTransientFactoryWithSixDependenciesScope(allowRuntimeCodeGeneration = false)
+export function createTransientFactoryWithSixDependenciesBuilder(allowRuntimeCodeGeneration = false)
 {
     return configureRootScope()
         .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration)
@@ -198,8 +203,12 @@ function createTransientFactoryWithSixDependenciesScope(allowRuntimeCodeGenerati
         .map("e").asClass(Dependency, DependencyLifetime.Transient)
         .map("f").asClass(Dependency, DependencyLifetime.Transient)
         .map("parent").asDependent("a", "b", "c", "d", "e", "f")
-        .factory((a, b, c, d, e, f) => ({ a, b, c, d, e, f }), DependencyLifetime.Transient)
-        .build();
+        .factory((a, b, c, d, e, f) => ({ a, b, c, d, e, f }), DependencyLifetime.Transient);
+}
+
+function createTransientFactoryWithSixDependenciesScope(allowRuntimeCodeGeneration = false)
+{
+    return createTransientFactoryWithSixDependenciesBuilder(allowRuntimeCodeGeneration).build();
 }
 
 export function *warmResolveTransientFactoryWithSixDependencies(state: k_state)
@@ -216,7 +225,7 @@ export function *coldResolveTransientFactoryWithSixDependencies(state: k_state)
     yield *createColdResolutionBenchmark(() => createTransientFactoryWithSixDependenciesScope(allowRuntimeCodeGeneration), (scope) => scope.resolve("parent"));
 }
 
-function createTransientFactoryDeepChainScope(allowRuntimeCodeGeneration = false)
+export function createTransientFactoryDeepChainBuilder(allowRuntimeCodeGeneration = false)
 {
     return configureRootScope()
         .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration)
@@ -230,8 +239,12 @@ function createTransientFactoryDeepChainScope(allowRuntimeCodeGeneration = false
         .map("level4").asDependent("level3")
         .factory((level3) => ({ level3 }), DependencyLifetime.Transient)
         .map("root").asDependent("level4")
-        .factory((level4) => ({ level4 }), DependencyLifetime.Transient)
-        .build();
+        .factory((level4) => ({ level4 }), DependencyLifetime.Transient);
+}
+
+function createTransientFactoryDeepChainScope(allowRuntimeCodeGeneration = false)
+{
+    return createTransientFactoryDeepChainBuilder(allowRuntimeCodeGeneration).build();
 }
 
 export function *warmResolveTransientFactoryDeepChain(state: k_state)
@@ -248,7 +261,7 @@ export function *coldResolveTransientFactoryDeepChain(state: k_state)
     yield *createColdResolutionBenchmark(() => createTransientFactoryDeepChainScope(allowRuntimeCodeGeneration), (scope) => scope.resolve("root"));
 }
 
-function createTransientFactoryWithTenDependenciesScope(allowRuntimeCodeGeneration = false)
+export function createTransientFactoryWithTenDependenciesBuilder(allowRuntimeCodeGeneration = false)
 {
     return configureRootScope()
         .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration)
@@ -263,8 +276,12 @@ function createTransientFactoryWithTenDependenciesScope(allowRuntimeCodeGenerati
         .map("i").asClass(Dependency, DependencyLifetime.Transient)
         .map("j").asClass(Dependency, DependencyLifetime.Transient)
         .map("parent").asDependent("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
-        .factory((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), DependencyLifetime.Transient)
-        .build();
+        .factory((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), DependencyLifetime.Transient);
+}
+
+function createTransientFactoryWithTenDependenciesScope(allowRuntimeCodeGeneration = false)
+{
+    return createTransientFactoryWithTenDependenciesBuilder(allowRuntimeCodeGeneration).build();
 }
 
 export function *warmResolveTransientFactoryWithTenDependencies(state: k_state)
@@ -414,4 +431,17 @@ export function *warmResolveCachedFactoryDeepWideGraph(state: k_state)
     const allowRuntimeCodeGeneration = state.get("codeGeneration") === true;
 
     yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphScope(allowRuntimeCodeGeneration), (scope) => scope.resolve("root"));
+}
+
+export function createTransientFactoryWithChangingShapeBuilder(allowRuntimeCodeGeneration = false)
+{
+    return configureRootScope()
+        .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration)
+        .map("transient").asFactory(createChangingShapeFactory(), DependencyLifetime.Transient);
+}
+
+export function *warmResolveTransientFactoryWithChangingShape(state: k_state)
+{
+    const scope = createTransientFactoryWithChangingShapeBuilder(state.get("codeGeneration") === true).build();
+    yield *createWarmResolutionBenchmark(scope, current => current.resolve("transient"));
 }

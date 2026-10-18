@@ -1,3 +1,4 @@
+import { DefaultDiScope } from "../scope/default-di-scope";
 import { describe, expect, it } from "@jest/globals";
 import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
 import { DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../types";
@@ -109,7 +110,7 @@ describe
                 for (const descriptor of descriptors)
                     builder.register(descriptor);
 
-                const scope = builder.build();
+                const scope = builder.build() as DefaultDiScope<RegisteredDependencies>;
 
                 expect(scope.registry.getDescriptors()).toHaveLength(descriptors.length);
 
@@ -135,8 +136,8 @@ describe
             "compiles larger argument lists with runtime code generation set to %s",
             async allowRuntimeCodeGeneration =>
             {
-                const builder = new DefaultDiScopeBuilder<RegisteredDependencies>()
-                    .setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
+                const builder = new DefaultDiScopeBuilder<RegisteredDependencies>();
+                builder.setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
                 builder.register({ key: "value", type: DependencyDescriptorType.Value, lifetime: DependencyLifetime.Singleton, value: 42 });
 
                 const subDependenciesKeys = new Array<string>(6).fill("value");
@@ -175,7 +176,7 @@ describe
                 for (const descriptor of descriptors)
                     builder.register(descriptor);
 
-                const scope = builder.build();
+                const scope = builder.build() as DefaultDiScope<RegisteredDependencies>;
 
                 for (const descriptor of descriptors)
                 {

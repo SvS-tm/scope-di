@@ -92,7 +92,7 @@ describe
 
                 const dependency = jest.fn(async () => 0);
                 const builder = configureRootScope()
-                    .setAllowRuntimeCodeGeneration()
+                    .setAllowRuntimeCodeGeneration(true)
                     .map("pending").asFactoryAsync(dependency, DependencyLifetime.Singleton)
                     .map("one").asValue(1)
                     .map("two").asValue(2)
@@ -147,7 +147,7 @@ describe
                     throw error;
                 });
                 const builder = configureRootScope()
-                    .setAllowRuntimeCodeGeneration()
+                    .setAllowRuntimeCodeGeneration(true)
                     .map("value").asValue(42)
                     .map("sync").asDependent("value", "value", "value", "value", "value", "value")
                         .factory(syncFactory, DependencyLifetime.Transient)

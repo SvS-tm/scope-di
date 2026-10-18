@@ -3,6 +3,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as scopeDiResolution from "./scope-di/resolution.ts";
+import * as scopeDiModuleReload from "./scope-di/module-reload.ts";
 import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
 import * as inversifyRegistration from "./inversify/registration.ts";
 import * as inversifyResolution from "./inversify/resolution.ts";
@@ -20,7 +21,7 @@ import { bench, boxplot, summary, run, group, type k_state } from "mitata";
 import { getProcessContext, getRepetitions, runIsolatedBenchmarks } from "./isolated-runner.ts";
 import { libraryNames } from "./libraries.ts";
 
-type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown>;
+type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown> | AsyncGenerator<unknown, void, unknown>;
 
 type BenchmarkRun =
 {
@@ -97,6 +98,14 @@ function createRuns(benchmarkName: string, actions: BenchmarkActions): Benchmark
                 }
             );
         }
+    }
+
+    const moduleReloadAction = scopeDiModuleReload[benchmarkName as keyof typeof scopeDiModuleReload];
+
+    if (moduleReloadAction)
+    {
+        runs.push({ name: `scope-di-module-reload:${benchmarkName}`, action: moduleReloadAction, baseline: false, codeGeneration: false });
+        runs.push({ name: `scope-di-module-reload-codegen:${benchmarkName}`, action: moduleReloadAction, baseline: false, codeGeneration: true });
     }
 
     return runs;
@@ -548,6 +557,22 @@ const benchmarks =
         )
     },
     {
+        name: "warmResolveTransientFactoryWithChangingShape",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryWithChangingShape",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryWithChangingShape,
+                inversify: inversifyResolution.warmResolveTransientFactoryWithChangingShape,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryWithChangingShape,
+                awilix: awilixResolution.warmResolveTransientFactoryWithChangingShape,
+                typedi: typediResolution.warmResolveTransientFactoryWithChangingShape,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryWithChangingShape
+            }
+        )
+    },
+    {
         name: "warmResolveTransientFactory",
         runs: createRuns
         (
@@ -937,6 +962,7 @@ async function executeBenchmarks()
                     || name.startsWith(`${selectedLibrary}:`)
                     || name.startsWith(`${selectedLibrary}-codegen:`)
                     || (selectedLibrary === "inversify" && name.startsWith("inversify-jit:"))
+                    || (selectedLibrary === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
                     || (selectedLibrary === "scope-di" && name.startsWith("diagnostics:scope-di:"))
             );
         if(runtimeArgs.includes("--list-cases"))

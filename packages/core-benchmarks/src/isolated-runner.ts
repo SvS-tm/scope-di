@@ -84,6 +84,8 @@ function getWorkerCommand(runtimeArgs: string[], name: string)
             executable: runtime.Deno.execPath(),
             args: [
                 "run", "--allow-sys", "--allow-env", "--allow-run=git",
+                // Query-based strategy imports need read permission even though static imports are allowed.
+                `--allow-read=${fileURLToPath(new URL("../../scope-di/dist/", import.meta.url))}`,
                 `--import-map=${fileURLToPath(new URL("../deno.json", import.meta.url))}`,
                 "--v8-flags=--expose-gc", entryPoint, ...benchmarkArgs
             ]
