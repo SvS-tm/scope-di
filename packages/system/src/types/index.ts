@@ -10,4 +10,4 @@ export * from "./overloaded-delegate";
 export * from "./patch";
 export * from "./promised";
 export * from "./tuple-keys";
-
+export * from "./writable";

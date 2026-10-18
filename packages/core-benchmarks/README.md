@@ -4,7 +4,30 @@
 
 This page is for developers evaluating whether `scope-di` is a good fit for an application. It focuses on comparable dependency injection behavior: warm resolution, cold resolution, transient graphs, cached graphs, registration, speed, and memory.
 
+
+The `warmResolveTransientFactoryWithChangingShape` case uses one transient factory that cycles through six object shapes on successive resolutions. Every shape has two numeric fields, and every result is a fresh, non-disposable object. All participating libraries use the same factory implementation. The case includes scope-di code generation and module isolation, plus Inversify JIT. Needle DI is excluded because its installed API does not provide an equivalent transient factory lifetime.
+
+## Runtime Setup
+
+The experimental `scope-di-module-reload` and `scope-di-module-reload-codegen` cases initialize scopes with `await builder.setAllowRuntimeModuleIsolation().buildAsync()`. Each sync transient descriptor loads a separate instance of the emitted strategy module with a unique query parameter; compilation creates its strategy from that module before the scope is returned. Warm resolution reuses the closure. These cases cover deep-chain factories and factories with five, six, or ten dependencies. Initialization happens outside the timed callback, so these measurements do not include module-loading cost. The package build emits `dist/isolated-transient-strategies.mjs`; browser deployments must serve this asset beside the package entry, and bundler ignore directives alone do not copy them.
+
+Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versions and pnpm, which downloads the required runtimes automatically during installation. This keeps benchmark runs consistent across machines without relying on globally installed runtime versions.
+
+Each machine has its own JSON results and Markdown reports, including the runtime versions used for that run. Updating the pinned runtimes does not change existing results; reports are refreshed when benchmarks are rerun on that machine.
+
+Each benchmark case runs in a fresh process: one scenario, one library, and one code-generation setting. Five independent processes measure each case by default; `--repetitions=N` changes that count. Workers run sequentially, reversing case order on alternate rounds. Complete runs show total completed worker runs across all runtimes and libraries, alongside the current library counter and elapsed time. Resuming counts reused batches as completed; elapsed time starts from the new command. Fast, filtered, and complete runs use the same isolation. Console and Markdown comparisons use the median of process medians and show their range; allocations use the median of process allocation averages. JSON retains every process measurement. Isolation prevents earlier cases from influencing the engine's optimization history; it does not eliminate variation from warmup, garbage collection, or machine load.
+
+After an interrupted complete run, `pnpm bench:json:complete --resume` reuses completed library JSON files in the output directory. Use it only when benchmark code, dependencies, and runtime versions are unchanged; a normal run always measures everything again.
+
+Raw worker results are also saved incrementally under `dist/isolated-runs`, so completed measurements remain available if a run is interrupted. For example, `pnpm bench:tsx:fast --filter=warmResolveTransientFactoryWith --repetitions=5` repeats the five-, six-, and ten-dependency scenarios.
+
 ## Compared Libraries
+
+Each worker measures only its selected case. Comparison tables are assembled afterward from the independent measurements. Earlier reports without an isolation note used a shared process and should be treated as a different benchmark setup.
+
+`pnpm bench:json:complete` runs every library on Node.js, Bun, and Deno. Alongside each runtime's combined JSON and Markdown report, a matching directory contains the individual library JSON files. The report links to these raw results.
+
+For a single library, the runtime scripts accept an explicit selection, for example `pnpm bench:tsx:fast --library=inversify`. The same `--library` option works with the Bun and Deno scripts. An optional `--filter=warmResolveValue` narrows the scenarios being measured.
 
 | Library | Package | Primary style |
 | --- | --- | --- |
@@ -15,6 +38,10 @@ This page is for developers evaluating whether `scope-di` is a good fit for an a
 | TypeDI | `typedi` | Decorator/metadata-oriented container. |
 | Typed Inject | `typed-inject` | Token-based typed injection. |
 | Needle DI | `@needle-di/core` | Token/provider-based injection. |
+
+Each comparison includes `scope-di` with runtime code generation disabled and `scope-di-codegen` with it enabled. Inversify runs as `inversify` with JIT disabled (`jitless: true`) and `inversify-jit` with JIT enabled (`jitless: false`). A shared Mitata `codeGeneration` parameter selects the configuration for registration and both warm and cold resolution cases. Complete runs include both settings automatically. JSON results contain separate entries, and generated Markdown reports show every library and configuration in the regular speed and allocation tables.
+
+The other libraries use their existing configurations; their installed public APIs expose no equivalent code-generation toggle. Enabling a flag does not guarantee that a particular scenario uses generated code. Some scenarios exercise cached values or strategies that do not use code generation. Inversify's JIT option controls its generated resolution machinery, while scope-di currently generates instantiation strategies, so these are library-specific optimizations rather than identical mechanisms.
 
 ## Feature Context
 
@@ -62,8 +89,8 @@ Warm resolution measures dependency resolution after the container or scope has 
 | `warmResolveTransientFactoryDeepChain` | Resolve a deeper transient factory chain. |
 | `warmResolveTransientFactoryWithTenDependencies` | Resolve a transient factory with ten direct dependencies. |
 | `warmResolveTransientFactoryDeepWideGraph` | Resolve a graph that is both deeper and wider. |
-| `warmResolveCachedFactoryWideGraph` | Resolve a cached wide factory graph. |
-| `warmResolveCachedFactoryDeepWideGraph` | Resolve a cached graph that is both deeper and wider. |
+| `warmResolveCachedFactoryWideGraph` | Create a transient root factory with ten cached singleton class dependencies. |
+| `warmResolveCachedFactoryDeepWideGraph` | Create transient root and intermediate factories with cached singleton class leaves. |
 
 ### Cold Resolution
 
@@ -121,7 +148,9 @@ Diagnostics are internal `scope-di` measurements. They are useful for explaining
 
 ## Fairness Notes
 
-The public comparison uses idiomatic APIs for each library where possible. Some libraries resolve by token, some by string key, some through metadata, and some through factory functions. The benchmark names describe the behavior being measured rather than claiming identical internal mechanics.
+The public comparison uses idiomatic APIs for each library where possible. Some libraries resolve by token, some by string key, some through metadata, and some through factory functions. The benchmark names describe the behavior being measured rather than claiming identical internal mechanics. Graph leaves use class providers consistently; graph parents use factories. Scope DI, Inversify, and Typed Inject declare factory dependencies explicitly. TSyringe and TypeDI factories perform container lookups, while Awilix uses its default proxy injection mode. These API differences are part of the measured resolution cost.
+
+Needle DI participates only in registration, value resolution, and singleton resolution: its installed API does not provide an equivalent transient lifetime. TypeDI uses standalone container instances so repeated setup does not accumulate globally retained containers. Registration includes each library's normal setup work, including Scope DI's build step; work deferred until first resolution is measured by cold resolution instead. Warm resolution performs one initial resolution before timing.
 
 Public charts should compare only equivalent scenarios. `scope-di`-specific features such as inherited scopes and typed collection inference should be documented as library features, not benchmarked as competitor cases unless another library exposes a direct equivalent.
 
@@ -147,21 +176,22 @@ Statistics:
 
 ### AMD Ryzen 7 3800X 8-Core Processor, Windows 10.0.22631 x64, 300 Iterations
 
-Commit: [d71b5796a374cc67fd6a2d166e6eb521cb064fd9](https://github.com/SvS-tm/scope-di/commit/d71b5796a374cc67fd6a2d166e6eb521cb064fd9)
+Commit: [62c9932873f4a5e62ef769f0447f40caffb6baee](https://github.com/SvS-tm/scope-di/commit/62c9932873f4a5e62ef769f0447f40caffb6baee)
 
 Statistics:
 
 - Tiny cached lookups are usually led by `typed-inject`.
-- `scope-di` remains strongest on transient factory graphs with several dependencies.
-- Deep and wide transient graphs are the clearest speed win for `scope-di` across Node.js, Bun, and Deno.
-- Allocation behavior is especially good on Node.js and Deno transient graph paths.
-- Bun allocation measurements are very small in absolute terms, so rank changes should be read with extra care.
+- `inversify` leads the five- and six-dependency transient factory scenarios across all three runtimes; `scope-di` places second or third.
+- `scope-di` wins the deep and wide transient factory graph on Bun and places second behind `inversify` on Node.js and Deno.
+- `scope-di` has the lowest measured allocations for transient classes and five-dependency transient factories on Node.js and Deno.
+- Registration varies by runtime: `scope-di` wins Node.js class registration, while `tsyringe` leads all three Deno registration scenarios.
+- Bun allocation measurements are often rounded to 0 B, so the displayed ranks should not be interpreted as meaningful allocation differences in those cases.
 
 | Runtime | Version | Report |
 | --- | --- | --- |
-| Node.js | `v24.18.0` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
-| Bun | `1.3.14` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
-| Deno | `2.9.0` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
+| Node.js | `v26.11.1` | [Node.js report](./results/BONI/bench_node_json_complete.md) |
+| Bun | `1.4.2` | [Bun report](./results/BONI/bench_bun_json_complete.md) |
+| Deno | `2.9.6` | [Deno report](./results/BONI/bench_deno_json_complete.md) |
 
 ## License
 
@@ -170,3 +200,5 @@ Statistics:
     <br />
     <a href="../../LICENSE">MIT</a>
 </p>
+
+Module isolation and runtime code generation are independent flags. With both enabled, isolated fixed-argument strategies handle up to five arguments; larger argument counts use optional code generation and fall back to isolated spread strategies if generation is blocked.

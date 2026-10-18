@@ -2,6 +2,7 @@
 import "reflect-metadata";
 import { Container } from "inversify";
 import type { k_state } from "mitata";
+import { createChangingShapeFactory } from "../changing-shape-factory.ts";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
@@ -22,213 +23,253 @@ class Root
 
 class Dependency {}
 
-function createValueContainer()
+function createValueContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("value").toConstantValue({});
 
     return container;
 }
 
-export function *warmResolveValue(_: k_state)
+export function *warmResolveValue(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createValueContainer(), (container) => container.get("value"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createValueContainer(jitEnabled), (container) => container.get("value"));
 }
 
-export function *coldResolveValue(_: k_state)
+export function *coldResolveValue(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createValueContainer, (container) => container.get("value"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createValueContainer(jitEnabled), (container) => container.get("value"));
 }
 
-function createSingletonClassContainer()
+function createSingletonClassContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("singleton").to(Leaf).inSingletonScope();
 
     return container;
 }
 
-export function *warmResolveSingletonClass(_: k_state)
+export function *warmResolveSingletonClass(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createSingletonClassContainer(), (container) => container.get("singleton"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createSingletonClassContainer(jitEnabled), (container) => container.get("singleton"));
 }
 
-export function *coldResolveSingletonClass(_: k_state)
+export function *coldResolveSingletonClass(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createSingletonClassContainer, (container) => container.get("singleton"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createSingletonClassContainer(jitEnabled), (container) => container.get("singleton"));
 }
 
-function createTransientClassContainer()
+function createTransientClassContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("transient").to(Leaf).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientClass(_: k_state)
+export function *warmResolveTransientClass(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientClassContainer(), (container) => container.get("transient"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientClassContainer(jitEnabled), (container) => container.get("transient"));
 }
 
-export function *coldResolveTransientClass(_: k_state)
+export function *coldResolveTransientClass(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientClassContainer, (container) => container.get("transient"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientClassContainer(jitEnabled), (container) => container.get("transient"));
 }
 
-function createSingletonFactoryContainer()
+function createSingletonFactoryContainer(jitEnabled = false)
 {
     const value = {};
-    const container = new Container();
-    container.bind("singleton").toDynamicValue(() => value).inSingletonScope();
+    const container = new Container({ jitless: !jitEnabled });
+    container.bind("singleton").toResolvedValue(() => value).inSingletonScope();
 
     return container;
 }
 
-export function *warmResolveSingletonFactory(_: k_state)
+export function *warmResolveSingletonFactory(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createSingletonFactoryContainer(), (container) => container.get("singleton"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createSingletonFactoryContainer(jitEnabled), (container) => container.get("singleton"));
 }
 
-export function *coldResolveSingletonFactory(_: k_state)
+export function *coldResolveSingletonFactory(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createSingletonFactoryContainer, (container) => container.get("singleton"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createSingletonFactoryContainer(jitEnabled), (container) => container.get("singleton"));
 }
 
-function createTransientFactoryContainer()
+function createTransientFactoryContainer(jitEnabled = false)
 {
-    const container = new Container();
-    container.bind("transient").toDynamicValue(() => ({})).inTransientScope();
+    const container = new Container({ jitless: !jitEnabled });
+    container.bind("transient").toResolvedValue(() => ({})).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactory(_: k_state)
+export function *warmResolveTransientFactory(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryContainer(), (container) => container.get("transient"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryContainer(jitEnabled), (container) => container.get("transient"));
 }
 
-export function *coldResolveTransientFactory(_: k_state)
+export function *coldResolveTransientFactory(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryContainer, (container) => container.get("transient"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryContainer(jitEnabled), (container) => container.get("transient"));
 }
 
-function createTransientFactoryChainContainer()
+function createTransientFactoryChainContainer(jitEnabled = false)
 {
-    const container = new Container();
-    container.bind("leaf").toDynamicValue(() => new Leaf()).inTransientScope();
-    container.bind("middle").toDynamicValue((context) => new Middle(context.get("leaf") as Leaf)).inTransientScope();
-    container.bind("root").toDynamicValue((context) => new Root(context.get("middle") as Middle)).inTransientScope();
+    const container = new Container({ jitless: !jitEnabled });
+    container.bind("leaf").toResolvedValue(() => new Leaf()).inTransientScope();
+    container.bind("middle").toResolvedValue((leaf: Leaf) => new Middle(leaf), ["leaf"]).inTransientScope();
+    container.bind("root").toResolvedValue((middle: Middle) => new Root(middle), ["middle"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryChain(_: k_state)
+export function *warmResolveTransientFactoryChain(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryChainContainer(), (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryChainContainer(jitEnabled), (container) => container.get("root"));
 }
 
-export function *coldResolveTransientFactoryChain(_: k_state)
+export function *coldResolveTransientFactoryChain(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryChainContainer, (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryChainContainer(jitEnabled), (container) => container.get("root"));
 }
 
-function createTransientFactoryWithFiveDependenciesContainer()
+function createTransientFactoryWithFiveDependenciesContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("a").to(Dependency).inTransientScope();
     container.bind("b").to(Dependency).inTransientScope();
     container.bind("c").to(Dependency).inTransientScope();
     container.bind("d").to(Dependency).inTransientScope();
     container.bind("e").to(Dependency).inTransientScope();
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryWithFiveDependencies(_: k_state)
+export function *warmResolveTransientFactoryWithFiveDependencies(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer(), (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-export function *coldResolveTransientFactoryWithFiveDependencies(_: k_state)
+export function *coldResolveTransientFactoryWithFiveDependencies(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryWithFiveDependenciesContainer, (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryWithFiveDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-function createTransientFactoryWithSixDependenciesContainer()
+function createTransientFactoryWithSixDependenciesContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("a").to(Dependency).inTransientScope();
     container.bind("b").to(Dependency).inTransientScope();
     container.bind("c").to(Dependency).inTransientScope();
     container.bind("d").to(Dependency).inTransientScope();
     container.bind("e").to(Dependency).inTransientScope();
     container.bind("f").to(Dependency).inTransientScope();
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e, f) => ({ a, b, c, d, e, f }), ["a", "b", "c", "d", "e", "f"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryWithSixDependencies(_: k_state)
+export function *warmResolveTransientFactoryWithSixDependencies(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer(), (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-export function *coldResolveTransientFactoryWithSixDependencies(_: k_state)
+export function *coldResolveTransientFactoryWithSixDependencies(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryWithSixDependenciesContainer, (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryWithSixDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-function createTransientFactoryDeepChainContainer()
+function createTransientFactoryDeepChainContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     container.bind("leaf").to(Dependency).inTransientScope();
-    container.bind("level1").toDynamicValue((context) => ({ leaf: context.get("leaf") })).inTransientScope();
-    container.bind("level2").toDynamicValue((context) => ({ level1: context.get("level1") })).inTransientScope();
-    container.bind("level3").toDynamicValue((context) => ({ level2: context.get("level2") })).inTransientScope();
-    container.bind("level4").toDynamicValue((context) => ({ level3: context.get("level3") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ level4: context.get("level4") })).inTransientScope();
+    container.bind("level1").toResolvedValue((leaf) => ({ leaf }), ["leaf"]).inTransientScope();
+    container.bind("level2").toResolvedValue((level1) => ({ level1 }), ["level1"]).inTransientScope();
+    container.bind("level3").toResolvedValue((level2) => ({ level2 }), ["level2"]).inTransientScope();
+    container.bind("level4").toResolvedValue((level3) => ({ level3 }), ["level3"]).inTransientScope();
+    container.bind("root").toResolvedValue((level4) => ({ level4 }), ["level4"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryDeepChain(_: k_state)
+export function *warmResolveTransientFactoryDeepChain(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryDeepChainContainer(), (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepChainContainer(jitEnabled), (container) => container.get("root"));
 }
 
-export function *coldResolveTransientFactoryDeepChain(_: k_state)
+export function *coldResolveTransientFactoryDeepChain(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryDeepChainContainer, (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryDeepChainContainer(jitEnabled), (container) => container.get("root"));
 }
 
-function createTransientFactoryWithTenDependenciesContainer()
+function createTransientFactoryWithTenDependenciesContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
     {
         container.bind(key).to(Dependency).inTransientScope();
     }
 
-    container.bind("parent").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f"), g: context.get("g"), h: context.get("h"), i: context.get("i"), j: context.get("j") })).inTransientScope();
+    container.bind("parent").toResolvedValue((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryWithTenDependencies(_: k_state)
+export function *warmResolveTransientFactoryWithTenDependencies(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer(), (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-export function *coldResolveTransientFactoryWithTenDependencies(_: k_state)
+export function *coldResolveTransientFactoryWithTenDependencies(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryWithTenDependenciesContainer, (container) => container.get("parent"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryWithTenDependenciesContainer(jitEnabled), (container) => container.get("parent"));
 }
 
-function createTransientFactoryDeepWideGraphContainer()
+function createTransientFactoryDeepWideGraphContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     for(const prefix of ["a", "b", "c", "d", "e"])
     {
         for(let index = 1; index <= 5; index++)
@@ -237,47 +278,53 @@ function createTransientFactoryDeepWideGraphContainer()
         }
     }
 
-    container.bind("a").toDynamicValue((context) => ({ a1: context.get("a1"), a2: context.get("a2"), a3: context.get("a3"), a4: context.get("a4"), a5: context.get("a5") })).inTransientScope();
-    container.bind("b").toDynamicValue((context) => ({ b1: context.get("b1"), b2: context.get("b2"), b3: context.get("b3"), b4: context.get("b4"), b5: context.get("b5") })).inTransientScope();
-    container.bind("c").toDynamicValue((context) => ({ c1: context.get("c1"), c2: context.get("c2"), c3: context.get("c3"), c4: context.get("c4"), c5: context.get("c5") })).inTransientScope();
-    container.bind("d").toDynamicValue((context) => ({ d1: context.get("d1"), d2: context.get("d2"), d3: context.get("d3"), d4: context.get("d4"), d5: context.get("d5") })).inTransientScope();
-    container.bind("e").toDynamicValue((context) => ({ e1: context.get("e1"), e2: context.get("e2"), e3: context.get("e3"), e4: context.get("e4"), e5: context.get("e5") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("a").toResolvedValue((a1, a2, a3, a4, a5) => ({ a1, a2, a3, a4, a5 }), ["a1", "a2", "a3", "a4", "a5"]).inTransientScope();
+    container.bind("b").toResolvedValue((b1, b2, b3, b4, b5) => ({ b1, b2, b3, b4, b5 }), ["b1", "b2", "b3", "b4", "b5"]).inTransientScope();
+    container.bind("c").toResolvedValue((c1, c2, c3, c4, c5) => ({ c1, c2, c3, c4, c5 }), ["c1", "c2", "c3", "c4", "c5"]).inTransientScope();
+    container.bind("d").toResolvedValue((d1, d2, d3, d4, d5) => ({ d1, d2, d3, d4, d5 }), ["d1", "d2", "d3", "d4", "d5"]).inTransientScope();
+    container.bind("e").toResolvedValue((e1, e2, e3, e4, e5) => ({ e1, e2, e3, e4, e5 }), ["e1", "e2", "e3", "e4", "e5"]).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveTransientFactoryDeepWideGraph(_: k_state)
+export function *warmResolveTransientFactoryDeepWideGraph(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createTransientFactoryDeepWideGraphContainer(), (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createTransientFactoryDeepWideGraphContainer(jitEnabled), (container) => container.get("root"));
 }
 
-export function *coldResolveTransientFactoryDeepWideGraph(_: k_state)
+export function *coldResolveTransientFactoryDeepWideGraph(state: k_state)
 {
-    yield *createColdResolutionBenchmark(createTransientFactoryDeepWideGraphContainer, (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createColdResolutionBenchmark(() => createTransientFactoryDeepWideGraphContainer(jitEnabled), (container) => container.get("root"));
 }
 
-function createCachedFactoryWideGraphContainer()
+function createCachedFactoryWideGraphContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     for(const key of ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"])
     {
         container.bind(key).to(Dependency).inSingletonScope();
     }
 
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e"), f: context.get("f"), g: context.get("g"), h: context.get("h"), i: context.get("i"), j: context.get("j") })).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e, f, g, h, i, j) => ({ a, b, c, d, e, f, g, h, i, j }), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveCachedFactoryWideGraph(_: k_state)
+export function *warmResolveCachedFactoryWideGraph(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createCachedFactoryWideGraphContainer(), (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createCachedFactoryWideGraphContainer(jitEnabled), (container) => container.get("root"));
 }
 
-function createCachedFactoryDeepWideGraphContainer()
+function createCachedFactoryDeepWideGraphContainer(jitEnabled = false)
 {
-    const container = new Container();
+    const container = new Container({ jitless: !jitEnabled });
     for(const prefix of ["a", "b", "c", "d", "e"])
     {
         for(let index = 1; index <= 5; index++)
@@ -286,17 +333,26 @@ function createCachedFactoryDeepWideGraphContainer()
         }
     }
 
-    container.bind("a").toDynamicValue((context) => ({ a1: context.get("a1"), a2: context.get("a2"), a3: context.get("a3"), a4: context.get("a4"), a5: context.get("a5") })).inTransientScope();
-    container.bind("b").toDynamicValue((context) => ({ b1: context.get("b1"), b2: context.get("b2"), b3: context.get("b3"), b4: context.get("b4"), b5: context.get("b5") })).inTransientScope();
-    container.bind("c").toDynamicValue((context) => ({ c1: context.get("c1"), c2: context.get("c2"), c3: context.get("c3"), c4: context.get("c4"), c5: context.get("c5") })).inTransientScope();
-    container.bind("d").toDynamicValue((context) => ({ d1: context.get("d1"), d2: context.get("d2"), d3: context.get("d3"), d4: context.get("d4"), d5: context.get("d5") })).inTransientScope();
-    container.bind("e").toDynamicValue((context) => ({ e1: context.get("e1"), e2: context.get("e2"), e3: context.get("e3"), e4: context.get("e4"), e5: context.get("e5") })).inTransientScope();
-    container.bind("root").toDynamicValue((context) => ({ a: context.get("a"), b: context.get("b"), c: context.get("c"), d: context.get("d"), e: context.get("e") })).inTransientScope();
+    container.bind("a").toResolvedValue((a1, a2, a3, a4, a5) => ({ a1, a2, a3, a4, a5 }), ["a1", "a2", "a3", "a4", "a5"]).inTransientScope();
+    container.bind("b").toResolvedValue((b1, b2, b3, b4, b5) => ({ b1, b2, b3, b4, b5 }), ["b1", "b2", "b3", "b4", "b5"]).inTransientScope();
+    container.bind("c").toResolvedValue((c1, c2, c3, c4, c5) => ({ c1, c2, c3, c4, c5 }), ["c1", "c2", "c3", "c4", "c5"]).inTransientScope();
+    container.bind("d").toResolvedValue((d1, d2, d3, d4, d5) => ({ d1, d2, d3, d4, d5 }), ["d1", "d2", "d3", "d4", "d5"]).inTransientScope();
+    container.bind("e").toResolvedValue((e1, e2, e3, e4, e5) => ({ e1, e2, e3, e4, e5 }), ["e1", "e2", "e3", "e4", "e5"]).inTransientScope();
+    container.bind("root").toResolvedValue((a, b, c, d, e) => ({ a, b, c, d, e }), ["a", "b", "c", "d", "e"]).inTransientScope();
 
     return container;
 }
 
-export function *warmResolveCachedFactoryDeepWideGraph(_: k_state)
+export function *warmResolveCachedFactoryDeepWideGraph(state: k_state)
 {
-    yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(), (container) => container.get("root"));
+    const jitEnabled = state.get("codeGeneration") === true;
+
+    yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(jitEnabled), (container) => container.get("root"));
+}
+
+export function *warmResolveTransientFactoryWithChangingShape(state: k_state)
+{
+    const container = new Container({ jitless: state.get("codeGeneration") !== true });
+    container.bind("transient").toResolvedValue(createChangingShapeFactory()).inTransientScope();
+    yield *createWarmResolutionBenchmark(container, current => current.get("transient"));
 }

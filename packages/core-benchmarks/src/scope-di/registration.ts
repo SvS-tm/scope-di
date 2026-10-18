@@ -4,13 +4,15 @@ import { k_state } from "mitata";
 
 export function *registrationClass(state: k_state)
 {
+    const allowRuntimeCodeGeneration = state.get("codeGeneration") === true;
+
     const iterations = state.get("iterations") as number;
 
     const keys = Array.from({ length: iterations }, (_, index) => `k${index}`);
 
     yield () =>
     {
-        const builder = configureRootScope();
+        const builder = configureRootScope().setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
     
         for(let index = 0; index < iterations; ++index)
         {
@@ -23,13 +25,15 @@ export function *registrationClass(state: k_state)
 
 export function *registrationValue(state: k_state)
 {
+    const allowRuntimeCodeGeneration = state.get("codeGeneration") === true;
+
     const iterations = state.get("iterations") as number;
 
     const keys = Array.from({ length: iterations }, (_, index) => `k${index}`);
 
     yield () =>
     {
-        const builder = configureRootScope();
+        const builder = configureRootScope().setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
     
         for(let index = 0; index < iterations; ++index)
         {
@@ -42,13 +46,15 @@ export function *registrationValue(state: k_state)
 
 export function *registrationFactory(state: k_state)
 {
+    const allowRuntimeCodeGeneration = state.get("codeGeneration") === true;
+
     const iterations = state.get("iterations") as number;
 
     const keys = Array.from({ length: iterations }, (_, index) => `k${index}`);
 
     yield () =>
     {
-        const builder = configureRootScope();
+        const builder = configureRootScope().setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);
     
         for(let index = 0; index < iterations; ++index)
         {

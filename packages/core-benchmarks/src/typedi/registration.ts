@@ -1,13 +1,11 @@
 // deno-lint-ignore-file no-sloppy-imports
 import "reflect-metadata";
-import { Container } from "typedi";
+import { ContainerInstance } from "typedi";
 import type { k_state } from "mitata";
-
-let containerIndex = 0;
 
 function createIsolatedContainer()
 {
-    return Container.of(`benchmark-${containerIndex++}`);
+    return new ContainerInstance("registration-benchmark");
 }
 
 export function *registrationClass(state: k_state)

@@ -8,5 +8,5 @@ export const createDefaultDiScope = <T_RegisteredDependencies extends Registered
     descriptors = new Map<AllowedDependencyKey, DependencyDescriptorsBucket>()
 ) =>
 {
-    return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptors));
+    return new DefaultDiScope<T_RegisteredDependencies>(new DefaultDiDependenciesRegistry(descriptors, false));
 };

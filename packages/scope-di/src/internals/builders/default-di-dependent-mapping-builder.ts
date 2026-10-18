@@ -12,14 +12,16 @@ import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { AwaitedResolvedDependencies } from "../../types/utilities/awaited-resolved-dependencies";
 import type { ResolvedDependencies } from "../../types/utilities/resolved-dependencies";
 import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
+import { DiFeatures } from "../../types/di-features";
 
 export class DefaultDiDependentMappingBuilder
 <
     T_DependencyMappingKey extends AllowedDependencyKey,
     T_RegisteredDependencies extends RegisteredDependencies,
+    T_Features extends DiFeatures,
     T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
 >
-    implements DiDependentMappingBuilder<T_DependencyMappingKey, T_RegisteredDependencies, T_Keys>
+    implements DiDependentMappingBuilder<T_DependencyMappingKey, T_RegisteredDependencies, T_Features, T_Keys>
 {
     public constructor
     (
@@ -56,7 +58,8 @@ export class DefaultDiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Class
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -86,7 +89,8 @@ export class DefaultDiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 T_Abstraction, 
                 DependencyDescriptorType.Factory
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -116,7 +120,8 @@ export class DefaultDiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.ClassAsync
-            >
+            >,
+            T_Features
         >;
     }
 
@@ -146,7 +151,8 @@ export class DefaultDiDependentMappingBuilder
                 T_DependencyMappingKey, 
                 Promise<T_Abstraction>, 
                 DependencyDescriptorType.FactoryAsync
-            >
+            >,
+            T_Features
         >;
     }
 }

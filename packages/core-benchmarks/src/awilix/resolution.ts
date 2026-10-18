@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-sloppy-imports
 import { asClass, asFunction, asValue, createContainer, Lifetime } from "awilix";
 import type { k_state } from "mitata";
+import { createChangingShapeFactory } from "../changing-shape-factory.ts";
 import { createColdResolutionBenchmark, createWarmResolutionBenchmark } from "../helpers.ts";
 
 class Leaf {}
@@ -298,4 +299,11 @@ function createCachedFactoryDeepWideGraphContainer()
 export function *warmResolveCachedFactoryDeepWideGraph(_: k_state)
 {
     yield *createWarmResolutionBenchmark(createCachedFactoryDeepWideGraphContainer(), (container) => container.resolve("root"));
+}
+
+export function *warmResolveTransientFactoryWithChangingShape(_: k_state)
+{
+    const container = createContainer();
+    container.register("transient", asFunction(createChangingShapeFactory(), { lifetime: Lifetime.TRANSIENT }));
+    yield *createWarmResolutionBenchmark(container, current => current.resolve("transient"));
 }

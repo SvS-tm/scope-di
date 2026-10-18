@@ -26,7 +26,7 @@ describe
 
         it
         (
-            "Mixed descriptor types: value/class/factory/async *descriptors all show up as-is with correct fields",
+            "Mixed descriptor types: value/class/factory/async descriptors preserve their registration metadata",
             () =>
             {
                 class Dependency1 {}
@@ -76,7 +76,7 @@ describe
 
                 const descriptors = scope.registry.getDescriptors();
 
-                expect(descriptors).toStrictEqual(expectedDescriptors);
+                expect(descriptors).toMatchObject(expectedDescriptors);
             }
         );
 
@@ -178,7 +178,7 @@ describe
 
                 const scope = createDefaultDiScope(registry);
 
-                expect(scope.registry.getDescriptors()).toStrictEqual
+                expect(scope.registry.getDescriptors()).toMatchObject
                 (
                     [
                         descriptor1,
@@ -210,7 +210,7 @@ describe
 
                 scope.resolveRange(key as never);
 
-                const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+                const lookupResult = scope.findResolvedDependencyByDescriptor(scope.registry.resolveSingularDescriptorByKey(descriptor.key));
 
                 expect(ChancyValue.isSuccess(lookupResult)).toBe(false);
             }
@@ -288,7 +288,7 @@ describe
 
                 for (const { descriptor, value } of cases)
                 {
-                    const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+                    const lookupResult = scope.findResolvedDependencyByDescriptor(scope.registry.resolveSingularDescriptorByKey(descriptor.key));
 
                     if (!ChancyValue.isSuccess(lookupResult))
                         throw new Error(`Expected ${String(descriptor.key)} to be resolved`);
@@ -316,7 +316,7 @@ describe
                     .set(key, [descriptor]);
 
                 const scope = createDefaultDiScope(registry);
-                const lookupResult = scope.findResolvedDependencyByDescriptor(descriptor);
+                const lookupResult = scope.findResolvedDependencyByDescriptor(scope.registry.resolveSingularDescriptorByKey(descriptor.key));
 
                 expect(ChancyValue.isSuccess(lookupResult)).toBe(false);
             }
@@ -344,7 +344,7 @@ describe
 
                 scope.resolveRange(key as never);
 
-                const lookupResult = childScope.findResolvedDependencyByDescriptor(descriptor);
+                const lookupResult = childScope.findResolvedDependencyByDescriptor(scope.registry.resolveSingularDescriptorByKey(descriptor.key));
 
                 if (!ChancyValue.isSuccess(lookupResult))
                     throw new Error("Expected scoped inherited value to be resolved from ancestor");

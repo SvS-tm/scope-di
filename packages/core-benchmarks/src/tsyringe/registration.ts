@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-sloppy-imports
 import "reflect-metadata";
-import { container, DependencyContainer, Lifecycle } from "tsyringe";
+import { container, DependencyContainer, instanceCachingFactory, Lifecycle } from "tsyringe";
 import type { k_state } from "mitata";
 
 function createIsolatedContainer(): DependencyContainer 
@@ -54,7 +54,7 @@ export function *registrationFactory(state: k_state)
 
         for (let index = 0; index < iterations; ++index) 
         {
-            isolatedContainer.register(keys[index], { useFactory: () => ({}) });
+            isolatedContainer.register(keys[index], { useFactory: instanceCachingFactory(() => ({})) });
         }
     };
 }

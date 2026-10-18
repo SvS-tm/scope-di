@@ -3,6 +3,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as scopeDiResolution from "./scope-di/resolution.ts";
+import * as scopeDiModuleReload from "./scope-di/module-reload.ts";
 import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
 import * as inversifyRegistration from "./inversify/registration.ts";
 import * as inversifyResolution from "./inversify/resolution.ts";
@@ -17,14 +18,17 @@ import * as typedInjectResolution from "./typed-inject/resolution.ts";
 import * as needleDiRegistration from "./needle-di/registration.ts";
 import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group, type k_state } from "mitata";
+import { getProcessContext, getRepetitions, runIsolatedBenchmarks } from "./isolated-runner.ts";
+import { libraryNames } from "./libraries.ts";
 
-type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown>;
+type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown> | AsyncGenerator<unknown, void, unknown>;
 
 type BenchmarkRun =
 {
     name: string;
     action: BenchmarkAction;
     baseline: boolean;
+    codeGeneration?: boolean;
 };
 
 type BenchmarkMode = "fast" | "complete";
@@ -36,65 +40,72 @@ type BenchmarkGroup =
     modes?: BenchmarkMode[];
 };
 
-function createRuns
-(
-    benchmarkName: string,
-    actions:
-    {
-        scopeDi: BenchmarkAction;
-        inversify: BenchmarkAction;
-        tsyringe: BenchmarkAction;
-        awilix: BenchmarkAction;
-        typedi: BenchmarkAction;
-        typedInject: BenchmarkAction;
-        needleDi?: BenchmarkAction;
-    }
-)
-    : BenchmarkRun[]
+type BenchmarkActions =
 {
-    const runs: BenchmarkRun[] = [
-        {
-            name: `scope-di:${benchmarkName}`,
-            action: actions.scopeDi,
-            baseline: true
-        },
-        {
-            name: `inversify:${benchmarkName}`,
-            action: actions.inversify,
-            baseline: false
-        },
-        {
-            name: `tsyringe:${benchmarkName}`,
-            action: actions.tsyringe,
-            baseline: false
-        },
-        {
-            name: `awilix:${benchmarkName}`,
-            action: actions.awilix,
-            baseline: false
-        },
-        {
-            name: `typedi:${benchmarkName}`,
-            action: actions.typedi,
-            baseline: false
-        },
-        {
-            name: `typed-inject:${benchmarkName}`,
-            action: actions.typedInject,
-            baseline: false
-        }
-    ];
+    scopeDi: BenchmarkAction;
+    inversify: BenchmarkAction;
+    tsyringe: BenchmarkAction;
+    awilix: BenchmarkAction;
+    typedi: BenchmarkAction;
+    typedInject: BenchmarkAction;
+    needleDi?: BenchmarkAction;
+};
 
-    if(actions.needleDi)
+type BenchmarkLibraryConfiguration =
+{
+    key: keyof BenchmarkActions;
+    name: string;
+    baseline?: boolean;
+    codeGeneration?: boolean[];
+    codeGenerationName?: string;
+};
+
+const libraryConfigurations: BenchmarkLibraryConfiguration[] =
+[
+    { key: "scopeDi", name: "scope-di", baseline: true, codeGeneration: [false, true] },
+    { key: "inversify", name: "inversify", codeGeneration: [false, true], codeGenerationName: "inversify-jit" },
+    { key: "tsyringe", name: "tsyringe" },
+    { key: "awilix", name: "awilix" },
+    { key: "typedi", name: "typedi" },
+    { key: "typedInject", name: "typed-inject" },
+    { key: "needleDi", name: "needle-di" }
+];
+
+function createRuns(benchmarkName: string, actions: BenchmarkActions): BenchmarkRun[]
+{
+    const runs: BenchmarkRun[] = [];
+
+    for (const library of libraryConfigurations)
     {
-        runs.push
-        (
-            {
-                name: `needle-di:${benchmarkName}`,
-                action: actions.needleDi,
-                baseline: false
-            }
-        );
+        const action = actions[library.key];
+
+        if (!action)
+            continue;
+
+        for (const codeGeneration of library.codeGeneration ?? [undefined])
+        {
+            const name = codeGeneration === true
+                ? library.codeGenerationName ?? `${library.name}-codegen`
+                : library.name;
+
+            runs.push
+            (
+                {
+                    name: `${name}:${benchmarkName}`,
+                    action,
+                    baseline: library.baseline === true && codeGeneration !== true,
+                    ...(codeGeneration === undefined ? {} : { codeGeneration })
+                }
+            );
+        }
+    }
+
+    const moduleReloadAction = scopeDiModuleReload[benchmarkName as keyof typeof scopeDiModuleReload];
+
+    if (moduleReloadAction)
+    {
+        runs.push({ name: `scope-di-module-reload:${benchmarkName}`, action: moduleReloadAction, baseline: false, codeGeneration: false });
+        runs.push({ name: `scope-di-module-reload-codegen:${benchmarkName}`, action: moduleReloadAction, baseline: false, codeGeneration: true });
     }
 
     return runs;
@@ -241,7 +252,7 @@ function assertGitAvailable()
             [
                 "Benchmark sanity check failed: git is required before running benchmarks.",
                 "Install Git and make sure the `git` executable is available on PATH.",
-                "When running with Deno, also make sure the command includes `--allow-env --allow-run=git`."
+                "When running with Deno, also make sure the command includes `--allow-env --allow-run`."
             ],
             "git --version",
             error
@@ -329,6 +340,9 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
     return {
         benchmark: {
             mode,
+            isolation: "case",
+            repetitions: getRepetitions(runtimeArgs),
+            library: runtimeArgs.find(argument => argument.startsWith("--library="))?.slice("--library=".length),
             filter: filter?.source,
             iterations,
             outputFormat,
@@ -539,6 +553,22 @@ const benchmarks =
                 typedi: typediResolution.coldResolveSingletonFactory,
                 typedInject: typedInjectResolution.coldResolveSingletonFactory,
                 needleDi: needleDiResolution.coldResolveSingletonFactory
+            }
+        )
+    },
+    {
+        name: "warmResolveTransientFactoryWithChangingShape",
+        modes: ["fast", "complete"],
+        runs: createRuns
+        (
+            "warmResolveTransientFactoryWithChangingShape",
+            {
+                scopeDi: scopeDiResolution.warmResolveTransientFactoryWithChangingShape,
+                inversify: inversifyResolution.warmResolveTransientFactoryWithChangingShape,
+                tsyringe: tsyringeResolution.warmResolveTransientFactoryWithChangingShape,
+                awilix: awilixResolution.warmResolveTransientFactoryWithChangingShape,
+                typedi: typediResolution.warmResolveTransientFactoryWithChangingShape,
+                typedInject: typedInjectResolution.warmResolveTransientFactoryWithChangingShape
             }
         )
     },
@@ -902,6 +932,13 @@ const runtimeArgs = getRuntimeArgs();
 assertBenchmarkSanityChecks();
 const mode = getMode(runtimeArgs);
 const iterations = [getIterations(runtimeArgs)];
+const outputFormat = getOutputFormat(runtimeArgs);
+const filter = getFilter(runtimeArgs);
+const workerCase = runtimeArgs.find(argument => argument.startsWith("--case="))?.slice("--case=".length);
+const selectedLibrary = runtimeArgs.find(argument => argument.startsWith("--library="))?.slice("--library=".length);
+
+if(selectedLibrary !== undefined && !libraryNames.some(library => library === selectedLibrary))
+    throw new Error(`Unknown benchmark library: ${selectedLibrary}`);
 const selectedBenchmarks = benchmarks.filter
 (
     ({ modes }) =>
@@ -913,57 +950,113 @@ const selectedBenchmarks = benchmarks.filter
     }
 );
 
-for(const { name, runs } of selectedBenchmarks)
+async function executeBenchmarks()
 {
-    group
-    (
-        name,
-        () =>
-        {
-            boxplot
+    if(workerCase === undefined)
+    {
+        const names = selectedBenchmarks.flatMap(({ runs }) => runs.map(({ name }) => name))
+            .filter(name => !filter || filter.test(name))
+            .filter
             (
-                () => 
-                {
-                    summary
-                    (
-                        () =>
-                        {
-                            for(const { name, action, baseline } of runs)
-                            {
-                                bench(name, action)
-                                    .gc("inner")
-                                    .baseline(baseline)
-                                    .args({ iterations });
-                            }
-                        }
-                    );
-                }
+                name => selectedLibrary === undefined
+                    || name.startsWith(`${selectedLibrary}:`)
+                    || name.startsWith(`${selectedLibrary}-codegen:`)
+                    || (selectedLibrary === "inversify" && name.startsWith("inversify-jit:"))
+                    || (selectedLibrary === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
+                    || (selectedLibrary === "scope-di" && name.startsWith("diagnostics:scope-di:"))
             );
+        if(runtimeArgs.includes("--list-cases"))
+        {
+            console.log(JSON.stringify(names));
+            return;
         }
-    );
-}
 
-const outputFormat = getOutputFormat(runtimeArgs);
-const filter = getFilter(runtimeArgs);
-const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
+        const result = await runIsolatedBenchmarks(names, runtimeArgs);
+        const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
 
-if(outputFormat === "json")
-{
+        if(outputFormat === "json")
+            console.log(JSON.stringify({ ...result, metadata }));
+        else
+        {
+            for(const { name, runs } of selectedBenchmarks)
+            {
+                const entries = result.benchmarks.filter(benchmark => runs.some(run => run.name === benchmark.alias));
+
+                if(entries.length === 0)
+                    continue;
+
+                console.log(`\n${name}`);
+                console.table
+                (
+                    entries.map
+                    (
+                        benchmark =>
+                        {
+                            const summary = benchmark.summary;
+
+                            return {
+                                case: benchmark.alias,
+                                repetitions: summary.repetitions,
+                                "median of medians (ns)": summary.median,
+                                "minimum median (ns)": summary.minimumMedian,
+                                "maximum median (ns)": summary.maximumMedian,
+                                "median allocations (bytes)": summary.allocations
+                            };
+                        }
+                    )
+                );
+            }
+        }
+
+        return;
+    }
+
+    if(!selectedBenchmarks.some(({ runs }) => runs.some(({ name }) => name === workerCase)))
+        throw new Error(`Unknown benchmark case for ${mode} mode: ${workerCase}`);
+
+    for(const { name, runs } of selectedBenchmarks)
+    {
+        group
+        (
+            name,
+            () =>
+            {
+                boxplot
+                (
+                    () =>
+                    {
+                        summary
+                        (
+                            () =>
+                            {
+                                for(const { name, action, baseline, codeGeneration } of runs)
+                                {
+                                    bench(name, action)
+                                        .gc("inner")
+                                        .baseline(baseline)
+                                        .args
+                                        (
+                                            codeGeneration === undefined
+                                                ? { iterations }
+                                                : { iterations, codeGeneration: [codeGeneration] }
+                                        );
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    }
+
+    const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
+
     const result = await run
     (
-        filter
-            ? { colors: false, format: "quiet", filter }
-            : { colors: false, format: "quiet" }
+        { colors: false, format: "quiet", throw: true, filter: new RegExp(`^${escapeRegExp(workerCase)}$`) }
     );
 
-    console.log(JSON.stringify({ metadata, ...result }));
+    console.log(JSON.stringify({ metadata, ...result, context: getProcessContext(result.context) }));
 }
-else
-{
-    await run
-    (
-        filter
-            ? { colors: true, format: "mitata", filter }
-            : { colors: true, format: "mitata" }
-    );
-}
+
+await executeBenchmarks();
