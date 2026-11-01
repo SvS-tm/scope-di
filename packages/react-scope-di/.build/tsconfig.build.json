@@ -2,10 +2,17 @@
     "extends": "./tsconfig.common.json",
     "compilerOptions":
     {
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "declarationDir": "../dist/.types",
         "outDir": "../dist",
-        "rootDir": "../src"
-    }
+        "rootDir": "../src",
+        "noEmitOnError": true
+    },
+    "exclude":
+    [
+        "../dist",
+        "../node_modules",
+        "../**/*.runtime.test.ts",
+        "../**/*.runtime.test.tsx",
+        "../**/*.compiletime.test.ts",
+        "../**/*.compiletime.test.tsx"
+    ]
 }

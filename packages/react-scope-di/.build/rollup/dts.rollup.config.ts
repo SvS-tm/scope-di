@@ -8,7 +8,7 @@ export default defineConfig
         {
             input: "dist/.types/index.d.ts",
             output: { file: "dist/index.d.ts", format: "es" },
-            plugins: [dts({ tsconfig: ".build/tsconfig.build.json" })],
+            plugins: [dts({ tsconfig: ".build/tsconfig.declarations.json" })],
             external:
             [
                 ...Object.keys(pkg.peerDependencies ?? {}),

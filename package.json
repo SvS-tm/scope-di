@@ -22,6 +22,7 @@
         "bench:bun:json:complete": "pnpm --filter @svs-tm/core-benchmarks run bench:bun:json:complete",
         "bench:json:complete": "pnpm --filter @svs-tm/core-benchmarks run bench:json:complete",
         "build-all": "pnpm -r build",
+        "typecheck:tooling": "pnpm -r run typecheck:tooling",
         "pack-all": "pnpm -r pack",
         "test-all": "pnpm -r test"
     },
