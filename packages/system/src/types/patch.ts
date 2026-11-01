@@ -1,4 +1,4 @@
-export type Patch<T> = 
+export type Patch<T_Value> =
 {
-    -readonly [TKey in keyof T]: T[TKey];
+    -readonly [T_Key in keyof T_Value]: T_Value[T_Key];
 };

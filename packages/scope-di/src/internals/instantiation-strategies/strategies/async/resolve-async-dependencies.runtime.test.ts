@@ -1,8 +1,8 @@
 import { getTestDescriptorBuckets } from "../../compilation/compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
-import { DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../../../types";
-import { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
+import { DependencyDescriptorType, DependencyLifetime, type RegisteredDependencies } from "../../../../types";
+import type { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
 import { createAsyncStrategyScope } from "./async-strategy.test-helpers";
 import { resolveAsyncDependencies } from "./resolve-async-dependencies";

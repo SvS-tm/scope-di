@@ -13,7 +13,8 @@ export type ClassDependencyDescriptor
 <
     T_Dependency, 
     T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey
-> =
+>
+    =
 (
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &

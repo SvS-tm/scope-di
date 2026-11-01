@@ -1,0 +1,18 @@
+{
+    "extends": "../tsconfig.common.json",
+    "compilerOptions":
+    {
+        "module": "ESNext",
+        "target": "ES2022",
+        "lib": ["esnext"],
+        "isolatedModules": false,
+        "noEmit": true
+    },
+    "include":
+    [
+        "../../src/**/*.runtime.test.ts",
+        "../../src/**/*.d.ts",
+        "../../src/tests-setup.ts"
+    ],
+    "exclude": []
+}

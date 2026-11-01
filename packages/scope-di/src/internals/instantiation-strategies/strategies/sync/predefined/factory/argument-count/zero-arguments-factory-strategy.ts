@@ -1,7 +1,7 @@
 import { trackTransientDependency } from "../../../../transient-tracking";
 import { DependencyLifetime } from "../../../../../../../types";
 import type { FactoryDependencyDescriptor } from "../../../../../../../types/factory-dependency-descriptor";
-import { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
 
 export function createZeroArgumentsFactoryStrategy<T_Dependency>
 (

@@ -1,0 +1,7 @@
+{
+    "extends": "../jest/tsconfig.jest.json",
+    "compilerOptions":
+    {
+        "types": ["node", "@types/react18", "@testing-library/jest-dom"]
+    }
+}

@@ -3,7 +3,7 @@ import { createIsolatedAsyncClassStrategy } from "../strategies/async/isolated/c
 import { createPredefinedAsyncClassStrategy } from "../strategies/async/predefined/class/create-predefined-async-class-strategy";
 import { DependencyLifetime } from "../../../types/dependency-lifetime";
 import type * as IsolatedTransientStrategies from "../strategies/isolated-transient-strategies";
-import { Writable } from "@svs-tm/system";
+import type { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
 import type { AsyncClassDependencyDescriptor } from "../../../types/async-class-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../types/internals/runtime-dependency-descriptor";

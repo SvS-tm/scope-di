@@ -340,11 +340,21 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
         for(const library of libraryNames)
         {
-            const expectedNames = names.filter(name => name.startsWith(library + ":")
-                || name.startsWith(library + "-codegen:")
-                || (library === "inversify" && name.startsWith("inversify-jit:"))
-                || (library === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
-                || (library === "scope-di" && name.startsWith("diagnostics:scope-di:")));
+            const expectedNames = names.filter
+            (
+                (name) =>
+                (
+                    name.startsWith(library + ":")
+                        ||
+                    name.startsWith(library + "-codegen:")
+                        ||
+                    (library === "inversify" && name.startsWith("inversify-jit:"))
+                        ||
+                    (library === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
+                        ||
+                    (library === "scope-di" && name.startsWith("diagnostics:scope-di:"))
+                )
+            );
 
             if(expectedNames.length === 0)
                 continue;
@@ -382,8 +392,14 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
             const result = JSON.parse(child.stdout) as BenchmarkResult;
 
-            if(result.metadata?.benchmark?.library !== library || result.benchmarks.length !== expectedNames.length
-                || !expectedNames.every(name => result.benchmarks.some(benchmark => benchmark.alias === name)))
+            if
+            (
+                result.metadata?.benchmark?.library !== library
+                    ||
+                result.benchmarks.length !== expectedNames.length
+                    ||
+                !expectedNames.every(name => result.benchmarks.some(benchmark => benchmark.alias === name))
+            )
                 throw new Error(`Missing or unexpected benchmark results for ${library}.`);
 
             if(savedOutput)
@@ -391,19 +407,36 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
                 const expectedRuntime = benchmark.outputFile.match(/^bench_([^_]+)/)?.[1];
                 const settings = result.metadata?.benchmark;
 
-                if(result.metadata?.runtime?.name !== expectedRuntime || settings?.mode !== "complete"
-                    || settings.repetitions !== repetitions || settings.filter !== filter || settings.iterations !== 300)
+                if
+                (
+                    result.metadata?.runtime?.name !== expectedRuntime
+                        ||
+                    settings?.mode !== "complete"
+                        ||
+                    settings.repetitions !== repetitions
+                        ||
+                    settings.filter !== filter
+                        ||
+                    settings.iterations !== 300
+                )
                     throw new Error(`Saved results have incompatible run settings: ${libraryFile}`);
             }
 
             for(const measuredBenchmark of result.benchmarks)
             {
                 const alias = measuredBenchmark.alias;
-                const belongsToLibrary = alias?.startsWith(`${library}:`)
-                    || alias?.startsWith(`${library}-codegen:`)
-                    || (library === "inversify" && alias?.startsWith("inversify-jit:"))
-                    || (library === "scope-di" && (alias?.startsWith("scope-di-module-reload:") || alias?.startsWith("scope-di-module-reload-codegen:")))
-                    || (library === "scope-di" && alias?.startsWith("diagnostics:scope-di:"));
+                const belongsToLibrary =
+                (
+                    alias?.startsWith(`${library}:`)
+                        ||
+                    alias?.startsWith(`${library}-codegen:`)
+                        ||
+                    (library === "inversify" && alias?.startsWith("inversify-jit:"))
+                        ||
+                    (library === "scope-di" && (alias?.startsWith("scope-di-module-reload:") || alias?.startsWith("scope-di-module-reload-codegen:")))
+                        ||
+                    (library === "scope-di" && alias?.startsWith("diagnostics:scope-di:"))
+                );
 
                 if(!belongsToLibrary || measuredBenchmark.runs.length !== repetitions)
                     throw new Error(`Unexpected benchmark in ${library} results: ${alias}`);
@@ -441,10 +474,16 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
 function getRuntimeLabel(result: BenchmarkResult, filePath: string)
 {
-    const runtime = result.metadata?.runtime?.name
-        ?? result.context?.runtime
-        ?? path.basename(filePath).match(/bench_([^_]+)/)?.[1]
-        ?? "unknown";
+    const runtime =
+    (
+        result.metadata?.runtime?.name
+            ??
+        result.context?.runtime
+            ??
+        path.basename(filePath).match(/bench_([^_]+)/)?.[1]
+            ??
+        "unknown"
+    );
 
     switch(sanitizeText(runtime).toLowerCase())
     {
@@ -503,10 +542,15 @@ function getMode(result: BenchmarkResult)
 
 function getIterations(result: BenchmarkResult)
 {
-    return result.metadata?.benchmark?.iterations
-        ?? result.benchmarks[0]?.runs[0]?.args?.iterations
-        ?? result.benchmarks[0]?.args?.iterations?.[0]
-        ?? "not recorded";
+    return (
+        result.metadata?.benchmark?.iterations
+            ??
+        result.benchmarks[0]?.runs[0]?.args?.iterations
+            ??
+        result.benchmarks[0]?.args?.iterations?.[0]
+            ??
+        "not recorded"
+    );
 }
 
 function getCommit(result: BenchmarkResult)

@@ -11,7 +11,7 @@ export function createTwoArgumentsFactoryStrategy<T_Dependency>
     const factory = descriptor.factory;
     const [resolveFirst, resolveSecond] = resolvers;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = factory(resolveFirst(scope), resolveSecond(scope));
 

@@ -1,7 +1,7 @@
 import { DefaultDiScope } from "../scope/default-di-scope";
 import { describe, expect, it } from "@jest/globals";
 import { UnknownDependencyTypeError } from "../../errors/unknown-dependency-type-error";
-import { DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../types";
+import { type DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, type RegisteredDependencies } from "../../types";
 import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
 
 class ArgumentList
@@ -134,7 +134,7 @@ describe
         it.each([false, true])
         (
             "compiles larger argument lists with runtime code generation set to %s",
-            async allowRuntimeCodeGeneration =>
+            async (allowRuntimeCodeGeneration) =>
             {
                 const builder = new DefaultDiScopeBuilder<RegisteredDependencies>();
                 builder.setAllowRuntimeCodeGeneration(allowRuntimeCodeGeneration);

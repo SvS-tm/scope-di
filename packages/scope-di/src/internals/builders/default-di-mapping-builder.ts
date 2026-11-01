@@ -9,7 +9,7 @@ import type { AddDependency } from "../../types/utilities/add-dependency";
 import type { DiMappingBuilder, DiScopeBuilder } from "../../abstractions";
 import { DefaultDiDependentMappingBuilder } from "./default-di-dependent-mapping-builder";
 import { DefaultDiScopeBuilder } from "./default-di-scope-builder";
-import { DiFeatures } from "../../types/di-features";
+import type { DiFeatures } from "../../types/di-features";
 
 export class DefaultDiMappingBuilder
 <

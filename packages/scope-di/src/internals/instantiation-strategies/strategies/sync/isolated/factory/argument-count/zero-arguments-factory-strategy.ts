@@ -9,7 +9,7 @@ export function createZeroArgumentsFactoryStrategy<T_Dependency>
 {
     const factory = descriptor.factory;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = factory();
 

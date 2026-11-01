@@ -13,7 +13,7 @@ export function createAsyncDescriptorBuckets
 {
     return keys.map
     (
-        key => Array.isArray(key)
+        (key) => Array.isArray(key)
             ? (collections.get(key[0]) ?? throwError<RuntimeDependencyDescriptor[]>(new DependencyNotRegisteredError(key[0])))
             : (singles.get(key) ?? throwError<RuntimeDependencyDescriptor>(new DependencyNotRegisteredError(key)))
     );

@@ -1,11 +1,11 @@
 import type { DependencyDescriptorType } from "../dependency-descriptor-type";
 import type { RegisteredDependencies } from "../registered-dependencies";
 import type { DependenciesCollectionMetadata } from "../dependencies-collection-metadata";
-import { DependenciesCollectionResolutionKey } from "../dependencies-collection-resolution-key";
+import type { DependenciesCollectionResolutionKey } from "../dependencies-collection-resolution-key";
 import type { DependencyMappingKey } from "../dependency-mapping-key";
 import type { DependencyMetadata } from "../dependency-metadata";
 import type { DependencyResolutionKey } from "../dependency-resolution-key";
-import { GetDefaultDependencyMetadata } from "./get-default-dependency-metadata";
+import type { GetDefaultDependencyMetadata } from "./get-default-dependency-metadata";
 import type { GetDependenciesCollectionMetadata } from "./get-dependencies-collection-metadata";
 import type { ResolutionResult } from "./resolution-result";
 import type { IsAsyncDependencyDescriptorType } from "./is-async-dependency-descriptor-type";
@@ -33,7 +33,8 @@ type MetadataToAwaitedDependencyType
 <
     T_DependencyMetadata extends DependencyMetadata<any, DependencyDescriptorType>,
     T_WrapSyncPromise extends boolean
-> =
+>
+    =
 (
     IsAsyncDependencyDescriptorType<T_DependencyMetadata["type"]> extends true
         ? T_DependencyMetadata["dependency"] extends Promise<infer T_Dependency>
@@ -58,7 +59,8 @@ export type AwaitedResolutionResult
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKey extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>,
     T_WrapSyncPromise extends boolean = false
-> = 
+>
+    =
 (
     T_DependencyResolutionKey extends DependenciesCollectionResolutionKey<infer T_DependencyMappingKey>
         ? IsAsyncCollectionMetadata<GetDependenciesCollectionMetadata<T_RegisteredDependencies, T_DependencyMappingKey>> extends true

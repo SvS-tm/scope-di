@@ -11,7 +11,7 @@ export function createFourArgumentsFactoryStrategy<T_Dependency>
     const factory = descriptor.factory;
     const [resolveFirst, resolveSecond, resolveThird, resolveFourth] = resolvers;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = factory(resolveFirst(scope), resolveSecond(scope), resolveThird(scope), resolveFourth(scope));
 

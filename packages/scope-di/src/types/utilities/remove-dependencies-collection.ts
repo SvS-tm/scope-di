@@ -6,7 +6,8 @@ export type RemoveDependenciesCollection
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_ExistingKey extends AllowedDependencyKey
-> = 
+>
+    =
 (
     T_RegisteredDependencies extends DependenciesCollectionMetadata<T_ExistingKey, any>
         ? never

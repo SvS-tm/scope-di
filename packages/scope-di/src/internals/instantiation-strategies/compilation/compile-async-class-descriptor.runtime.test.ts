@@ -1,7 +1,7 @@
 import { getTestRegistrationMaps } from "./compilation.test-helpers";
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise } from "@svs-tm/system";
-import { AsyncClassDependencyDescriptor } from "../../../types/async-class-dependency-descriptor";
+import type { AsyncClassDependencyDescriptor } from "../../../types/async-class-dependency-descriptor";
 import { DependencyDescriptorType } from "../../../types/dependency-descriptor-type";
 import { DependencyLifetime } from "../../../types/dependency-lifetime";
 import { AsyncArgumentList, createAsyncStrategyScope } from "../strategies/async/async-strategy.test-helpers";
@@ -15,7 +15,7 @@ describe
         it.each([false, true])
         (
             "compiles a spread fallback when generation is blocked and enabled is %s",
-            async allowRuntimeCodeGeneration =>
+            async (allowRuntimeCodeGeneration) =>
             {
                 const values = [0, 1, 2, 3, 4, 5];
                 const { scope, keys } = createAsyncStrategyScope(values);
@@ -66,7 +66,7 @@ describe
         it.each([undefined, 0, 1, 2, 3, 4, 5, 6, 8])
         (
             "preserves descriptor metadata and resolves %s dependencies",
-            async count =>
+            async (count) =>
             {
                 const values = Array.from({ length: count ?? 0 }, (_, index) => index);
                 const { scope, keys } = createAsyncStrategyScope(values);

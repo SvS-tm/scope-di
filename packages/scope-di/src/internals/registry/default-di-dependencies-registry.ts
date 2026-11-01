@@ -3,7 +3,7 @@ import type { DiDependenciesRegistry } from "../../abstractions/di-dependencies-
 import { DependencyNotRegisteredError, UnknownDependencyTypeError } from "../../errors";
 import { isAsyncDescriptor } from "../../helpers/descriptor-helpers";
 import { DependencyDescriptorType, type AllowedDependencyKey, type DependencyDescriptor, type DependencyResolutionKey } from "../../types";
-import { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
+import type { DependencyDescriptorsBucket } from "../../types/internals/dependency-descriptors-bucket";
 import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
 import { compileAsyncClassDescriptor } from "../instantiation-strategies/compilation/compile-async-class-descriptor";
 import { compileAsyncFactoryDescriptor } from "../instantiation-strategies/compilation/compile-async-factory-descriptor";

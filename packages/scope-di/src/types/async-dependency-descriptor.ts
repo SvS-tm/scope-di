@@ -6,7 +6,8 @@ export type AsyncDependencyDescriptor
 <
     T_Dependency = unknown,
     T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey
-> =
+>
+    =
 (
     AsyncClassDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
         | 

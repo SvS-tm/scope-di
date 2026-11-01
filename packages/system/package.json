@@ -5,7 +5,8 @@
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
-    "files": [
+    "files":
+    [
         "dist/index.cjs",
         "dist/index.cjs.map",
         "dist/index.d.ts",
@@ -13,32 +14,39 @@
         "dist/index.mjs.map"
     ],
     "sideEffects": false,
-    "repository": {
+    "repository":
+    {
         "type": "git",
         "url": "git+https://github.com/SvS-tm/scope-di.git",
         "directory": "packages/system"
     },
-    "exports": {
-        ".": {
+    "exports":
+    {
+        ".":
+        {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
             "require": "./dist/index.cjs"
         }
     },
-    "scripts": {
-        "build": "tsc && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+    "scripts":
+    {
+        "build": "tsc --project .build/tsconfig.build.json && rollup --forceExit -c .build/rollup/ts.rollup.config.ts --configImportAttributesKey with --configPlugin \"typescript={tsconfig:'.build/rollup/tsconfig.rollup.json'}\" && rollup --forceExit -c .build/rollup/dts.rollup.config.ts --configImportAttributesKey with --configPlugin \"typescript={tsconfig:'.build/rollup/tsconfig.rollup.json'}\"",
         "test": "pnpm run test:runtime && pnpm run test:types",
-        "test:runtime": "jest",
-        "test:types": "tstyche"
+        "test:runtime": "jest --config .build/jest/jest.config.ts",
+        "test:types": "tstyche --config .build/tstyche/tstyche.json",
+        "typecheck:tooling": "tsc --project .build/rollup/tsconfig.rollup.json --noEmit"
     },
-    "keywords": [
+    "keywords":
+    [
         "typescript",
         "utilities",
         "helpers"
     ],
     "author": "svs-tm",
     "license": "MIT",
-    "devDependencies": {
+    "devDependencies":
+    {
         "@jest/globals": "^30.0.5",
         "@rollup/plugin-commonjs": "^28.0.9",
         "@rollup/plugin-node-resolve": "^16.0.3",
@@ -56,11 +64,14 @@
         "tstyche": "^7.2.1",
         "typescript": "^6.0.3"
     },
-    "peerDependencies": {
+    "peerDependencies":
+    {
         "typescript": ">=5 <7"
     },
-    "peerDependenciesMeta": {
-        "typescript": {
+    "peerDependenciesMeta":
+    {
+        "typescript":
+        {
             "optional": true
         }
     }

@@ -1,4 +1,4 @@
-import { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
+import type { DiScope, RegisteredDependencies } from "@svs-tm/scope-di";
 import { useDebugValue, useEffect, useState } from "react";
 import { resolutionScopeContext } from "../constants/resolution-scope-context";
 import { useContextValue } from "./use-context-value";

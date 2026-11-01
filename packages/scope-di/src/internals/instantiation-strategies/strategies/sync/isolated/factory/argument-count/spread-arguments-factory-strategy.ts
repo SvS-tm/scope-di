@@ -10,7 +10,7 @@ export function createSpreadArgumentsFactoryStrategy<T_Dependency>
 {
     const factory = descriptor.factory;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = factory(...resolvers.map(resolveDependency => resolveDependency(scope)));
 

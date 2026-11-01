@@ -1,4 +1,4 @@
-import { Writable } from "@svs-tm/system";
+import type { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
 import type { RuntimeDependencyDescriptor } from "../../../types/internals/runtime-dependency-descriptor";
 import type { ValueDependencyDescriptor } from "../../../types/value-dependency-descriptor";

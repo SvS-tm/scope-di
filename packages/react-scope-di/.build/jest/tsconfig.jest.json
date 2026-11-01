@@ -1,0 +1,21 @@
+{
+    "extends": "../tsconfig.common.json",
+    "compilerOptions":
+    {
+        "module": "ESNext",
+        "target": "ES2022",
+        "moduleResolution": "bundler",
+        "lib": ["esnext", "DOM"],
+        "isolatedModules": false,
+        "noEmit": true
+    },
+    "include":
+    [
+        "../../src/**/*.runtime.test.ts",
+        "../../src/**/*.runtime.test.tsx",
+        "../../src/tests-setup.after-env.ts",
+        "../../src/tests-setup.ts",
+        "../../src/tests-extensions.d.ts"
+    ],
+    "exclude": ["../../.rollup.cache", "../../dist"]
+}

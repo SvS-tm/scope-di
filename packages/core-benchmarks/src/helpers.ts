@@ -1,25 +1,29 @@
 import { do_not_optimize } from "mitata";
 
-export function *createWarmResolutionBenchmark<TContainer>(container: TContainer, resolve: (container: TContainer) => unknown)
+export function *createWarmResolutionBenchmark<T_Container>
+(
+    container: T_Container,
+    resolve: (container: T_Container) => unknown
+)
 {
     resolve(container);
 
     yield () => do_not_optimize(resolve(container));
 }
 
-export function *createColdResolutionBenchmark<TContainer>
+export function *createColdResolutionBenchmark<T_Container>
 (
-    createContainer: () => TContainer,
-    resolve: (container: TContainer) => unknown,
-    cleanupContainer?: (container: TContainer) => void
+    createContainer: () => T_Container,
+    resolve: (container: T_Container) => unknown,
+    cleanupContainer?: (container: T_Container) => void
 )
 {
-    let previousContainer: TContainer | undefined;
+    let previousContainer: T_Container | undefined;
 
     yield {
         [0]()
         {
-            if(previousContainer)
+            if (previousContainer)
                 cleanupContainer?.(previousContainer);
 
             previousContainer = createContainer();
@@ -27,7 +31,7 @@ export function *createColdResolutionBenchmark<TContainer>
             return previousContainer;
         },
 
-        bench(container: TContainer)
+        bench(container: T_Container)
         {
             do_not_optimize(resolve(container));
         }

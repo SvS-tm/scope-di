@@ -1,0 +1,9 @@
+{
+    "extends": "./tsconfig.common.json",
+    "compilerOptions":
+    {
+        "rootDir": "../src",
+        "allowImportingTsExtensions": true,
+        "noEmit": true
+    }
+}

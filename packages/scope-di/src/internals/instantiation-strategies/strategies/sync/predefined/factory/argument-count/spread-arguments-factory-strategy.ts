@@ -1,10 +1,10 @@
 import { trackTransientDependency } from "../../../../transient-tracking";
 import { DependencyLifetime } from "../../../../../../../types";
 import type { FactoryDependencyDescriptor } from "../../../../../../../types/factory-dependency-descriptor";
-import { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
-import { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
-import { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
-import { RegisteredDependencies } from "../../../../../../../types/registered-dependencies";
+import type { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
+import type { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
+import type { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
+import type { RegisteredDependencies } from "../../../../../../../types/registered-dependencies";
 import { DefaultDiScope } from "../../../../../../scope/default-di-scope";
 
 import { createSyncResolver } from "../../../create-sync-resolver";

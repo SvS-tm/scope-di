@@ -5,33 +5,40 @@
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
-    "files": [
+    "files":
+    [
         "dist/index.cjs",
         "dist/index.cjs.map",
         "dist/index.d.ts",
         "dist/index.mjs",
         "dist/index.mjs.map"
     ],
-    "repository": {
+    "repository":
+    {
         "type": "git",
         "url": "git+https://github.com/SvS-tm/scope-di.git",
         "directory": "packages/react-scope-di"
     },
     "sideEffects": false,
-    "exports": {
-        ".": {
+    "exports":
+    {
+        ".":
+        {
             "import": "./dist/index.mjs",
             "require": "./dist/index.cjs",
             "types": "./dist/index.d.ts"
         }
     },
-    "scripts": {
-        "build": "tsc --project tsconfig.build.json && rollup -c ts.rollup.config.mjs && rollup -c dts.rollup.config.mjs",
+    "scripts":
+    {
+        "build": "tsc --project .build/tsconfig.build.json && rollup --forceExit -c .build/rollup/ts.rollup.config.ts --configImportAttributesKey with --configPlugin \"typescript={tsconfig:'.build/rollup/tsconfig.rollup.json'}\" && rollup --forceExit -c .build/rollup/dts.rollup.config.ts --configImportAttributesKey with --configPlugin \"typescript={tsconfig:'.build/rollup/tsconfig.rollup.json'}\"",
         "test": "pnpm run test:runtime && pnpm run test:types",
-        "test:runtime": "jest",
-        "test:types": "tstyche"
+        "test:runtime": "jest --config .build/jest/jest.config.ts",
+        "test:types": "tstyche --config .build/tstyche/tstyche.json",
+        "typecheck:tooling": "tsc --project .build/rollup/tsconfig.rollup.json --noEmit"
     },
-    "keywords": [
+    "keywords":
+    [
         "react",
         "dependency-injection",
         "di",
@@ -42,10 +49,12 @@
     ],
     "author": "svs-tm",
     "license": "MIT",
-    "dependencies": {
+    "dependencies":
+    {
         "@svs-tm/system": "workspace:*"
     },
-    "devDependencies": {
+    "devDependencies":
+    {
         "@jest/globals": "^30.0.5",
         "@rollup/plugin-commonjs": "^28.0.9",
         "@rollup/plugin-node-resolve": "^16.0.3",
@@ -78,13 +87,16 @@
         "tstyche": "^7.2.1",
         "typescript": "^6.0.3"
     },
-    "peerDependencies": {
+    "peerDependencies":
+    {
         "@svs-tm/scope-di": "^1.0.0-alpha.0 || >=1 <2",
         "react": ">=18 <20",
         "typescript": ">=5 <7"
     },
-    "peerDependenciesMeta": {
-        "typescript": {
+    "peerDependenciesMeta":
+    {
+        "typescript":
+        {
             "optional": true
         }
     }

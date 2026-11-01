@@ -31,7 +31,7 @@ describe
         it.each([true, false])
         (
             "selects code generation for %s without changing the synchronous build contract",
-            enabled =>
+            (enabled) =>
             {
                 const generate = jest.spyOn(globalThis, "Function");
                 const dependency = {};
@@ -60,7 +60,7 @@ describe
         it.each<FeatureFlag>([true, false, "auto"])
         (
             "matches the build return shape for isolation %s",
-            async flag =>
+            async (flag) =>
             {
                 const load = jest.mocked(loadIsolatedTransientStrategyModules).mockResolvedValue(new Map());
                 const building = configureRootScope()
@@ -81,7 +81,7 @@ describe
         it.each([true, "auto"] as const)
         (
             "keeps isolation %s asynchronous when loading fails and preserves disposal",
-            async flag =>
+            async (flag) =>
             {
                 const error = new Error("Import denied");
                 jest.mocked(loadIsolatedTransientStrategyModules).mockRejectedValue(error);

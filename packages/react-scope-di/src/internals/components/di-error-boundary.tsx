@@ -1,7 +1,7 @@
-import { Component, ErrorInfo, PropsWithChildren } from "react";
-import { ResolutionErrorFallback } from "../../types";
+import { Component, type ErrorInfo, type PropsWithChildren } from "react";
+import type { ResolutionErrorFallback } from "../../types";
 import { DiFallback } from "./di-fallback";
-import { Delegate } from "@svs-tm/system";
+import type { Delegate } from "@svs-tm/system";
 
 export type DiErrorBoundaryProps = PropsWithChildren<{ onError?: Delegate<[error: unknown, errorInfo: ErrorInfo]>; fallback?: ResolutionErrorFallback | undefined; }>;
 

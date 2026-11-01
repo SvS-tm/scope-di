@@ -13,7 +13,8 @@ export type AddDependency
     T_NewKey extends AllowedDependencyKey,
     T_NewDependency,
     T_NewDependencyType extends DependencyDescriptorType
-> = 
+>
+    =
 (
     RemoveDependenciesCollection<T_RegisteredDependencies, T_NewKey>
         |

@@ -192,7 +192,7 @@ function getRuntimeName()
     return "unknown";
 }
 
-function getBestEffortValue<T>(getValue: () => T, fallback: T)
+function getBestEffortValue<T_Value>(getValue: () => T_Value, fallback: T_Value)
 {
     try
     {
@@ -338,7 +338,8 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
     const firstCpu = cpus[0];
 
     return {
-        benchmark: {
+        benchmark:
+        {
             mode,
             isolation: "case",
             repetitions: getRepetitions(runtimeArgs),
@@ -349,14 +350,16 @@ function createBenchmarkMetadata(mode: BenchmarkMode, filter: RegExp | undefined
             timestamp: new Date().toISOString()
         },
         source: createSourceMetadata(),
-        runtime: {
+        runtime:
+        {
             name: getRuntimeName(),
             node: runtime.process?.version,
             bun: runtime.Bun?.version,
             deno: runtime.Deno?.version,
             versions: runtime.process?.versions
         },
-        machine: {
+        machine:
+        {
             platform: getBestEffortValue(() => os.platform(), "unknown"),
             release: getBestEffortValue(() => os.release(), "unknown"),
             arch: getBestEffortValue(() => os.arch(), "unknown"),
@@ -958,12 +961,20 @@ async function executeBenchmarks()
             .filter(name => !filter || filter.test(name))
             .filter
             (
-                name => selectedLibrary === undefined
-                    || name.startsWith(`${selectedLibrary}:`)
-                    || name.startsWith(`${selectedLibrary}-codegen:`)
-                    || (selectedLibrary === "inversify" && name.startsWith("inversify-jit:"))
-                    || (selectedLibrary === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
-                    || (selectedLibrary === "scope-di" && name.startsWith("diagnostics:scope-di:"))
+                (name) =>
+                (
+                    selectedLibrary === undefined
+                        ||
+                    name.startsWith(`${selectedLibrary}:`)
+                        ||
+                    name.startsWith(`${selectedLibrary}-codegen:`)
+                        ||
+                    (selectedLibrary === "inversify" && name.startsWith("inversify-jit:"))
+                        ||
+                    (selectedLibrary === "scope-di" && (name.startsWith("scope-di-module-reload:") || name.startsWith("scope-di-module-reload-codegen:")))
+                        ||
+                    (selectedLibrary === "scope-di" && name.startsWith("diagnostics:scope-di:"))
+                )
             );
         if(runtimeArgs.includes("--list-cases"))
         {
@@ -990,7 +1001,7 @@ async function executeBenchmarks()
                 (
                     entries.map
                     (
-                        benchmark =>
+                        (benchmark) =>
                         {
                             const summary = benchmark.summary;
 

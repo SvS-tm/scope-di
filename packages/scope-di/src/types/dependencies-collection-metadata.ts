@@ -6,7 +6,8 @@ export type DependenciesCollectionMetadata
 <
     T_DependencyMappingKey extends AllowedDependencyKey, 
     T_Dependencies extends DependencyMetadata<any, DependencyDescriptorType>[]
-> = 
+>
+    =
 {
     key: T_DependencyMappingKey;
     dependencies: T_Dependencies;

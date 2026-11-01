@@ -11,7 +11,7 @@ export function createTwoArgumentsClassStrategy<T_Dependency>
     const constructor = descriptor.constructor;
     const [resolveFirst, resolveSecond] = resolvers;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = new constructor(resolveFirst(scope), resolveSecond(scope));
 
