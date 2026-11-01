@@ -1,5 +1,5 @@
-import { DiFeatures } from "../di-features";
-import { FeatureFlag } from "../feature-flag";
+import type { DiFeatures } from "../di-features";
+import type { FeatureFlag } from "../feature-flag";
 
 export type SetFeature
 <

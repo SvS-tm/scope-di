@@ -1,8 +1,12 @@
-import { ComponentType } from "react";
+import type { ComponentType } from "react";
 
 export function getComponentDisplayName(component: ComponentType<any>, fallback: string)
 {
-    return component.displayName
-        ?? component.name
-        ?? fallback;
+    return (
+        component.displayName
+            ??
+        component.name
+            ??
+        fallback
+    );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { ChancyValue } from "@svs-tm/system";
-import { DependencyDescriptor } from "../../types/dependency-descriptor";
-import { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependencyDescriptor } from "../../types/dependency-descriptor";
+import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyDescriptorType, DependencyLifetime } from "../../types";
 import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 

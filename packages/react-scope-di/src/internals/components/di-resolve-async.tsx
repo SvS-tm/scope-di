@@ -15,7 +15,8 @@ type AsyncDependenciesAwaiterProps
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
     T_Props extends {}
-> =
+>
+    =
 {
     props: T_Props;
     children: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>;
@@ -47,7 +48,8 @@ type AsyncDependenciesProviderProps
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
     T_Props extends {}
-> =
+>
+    =
 {
     keys: T_DependencyResolutionKeys;
     props: T_Props;
@@ -96,7 +98,8 @@ export const diResolveAsync =
     renderer: ResolvedAsyncComponentRenderer<T_RegisteredDependencies, T_DependencyResolutionKeys, T_Props>,
     DiScope: DiScopeComponent,
     useDependenciesAsync: UseDependenciesAsyncHook<T_RegisteredDependencies>
-) : ComponentType<T_Props> =>
+)
+    : ComponentType<T_Props> =>
 {
     const ResolvedAsyncComponent = (props: T_Props) =>
     {

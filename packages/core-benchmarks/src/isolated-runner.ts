@@ -82,7 +82,8 @@ function getWorkerCommand(runtimeArgs: string[], name: string)
     {
         return {
             executable: runtime.Deno.execPath(),
-            args: [
+            args:
+            [
                 "run", "--allow-sys", "--allow-env", "--allow-run=git",
                 // Query-based strategy imports need read permission even though static imports are allowed.
                 `--allow-read=${fileURLToPath(new URL("../../scope-di/dist/", import.meta.url))}`,
@@ -96,8 +97,9 @@ function getWorkerCommand(runtimeArgs: string[], name: string)
     {
         return {
             executable: process.execPath,
-            args: [
-                "--tsconfig-override", fileURLToPath(new URL("../tsconfig.build.json", import.meta.url)),
+            args:
+            [
+                "--tsconfig-override", fileURLToPath(new URL("../.build/tsconfig.build.json", import.meta.url)),
                 "--expose-gc", entryPoint, ...benchmarkArgs
             ]
         };
@@ -213,7 +215,7 @@ export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string
         rawResultsDirectory,
         benchmarks: names.map
         (
-            name =>
+            (name) =>
             {
                 const measurement = measurements.get(name)!;
 

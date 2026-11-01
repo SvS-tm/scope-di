@@ -1,6 +1,6 @@
-import { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
-import { ReactNode, JSX } from "react";
-import { AsyncResolutionResult } from "./async-resolution-result";
+import type { AwaitedResolvedDependencies, DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
+import type { ReactNode, JSX } from "react";
+import type { AsyncResolutionResult } from "./async-resolution-result";
 
 export type DiAwaitProps
 <

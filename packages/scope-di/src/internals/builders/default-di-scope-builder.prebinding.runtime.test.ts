@@ -99,7 +99,7 @@ describe
         it.each(descriptorTypes)
         (
             "uses the executing child scope's instance cache for %s",
-            async type =>
+            async (type) =>
             {
                 const builder = new DefaultDiScopeBuilder<RegisteredDependencies>();
                 builder.register(createTargetDescriptor(type, ["dependency"]));
@@ -120,7 +120,7 @@ describe
         it.each([DependencyDescriptorType.ClassAsync, DependencyDescriptorType.FactoryAsync])
         (
             "keeps concurrent pending collection resolutions independent for %s",
-            async type =>
+            async (type) =>
             {
                 const pending: ReturnType<typeof TrackedPromise.controlled<number>>[] = [];
                 const builder = new DefaultDiScopeBuilder<RegisteredDependencies>();

@@ -11,7 +11,7 @@ export function createOneArgumentClassStrategy<T_Dependency>
     const constructor = descriptor.constructor;
     const [resolveFirst] = resolvers;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = new constructor(resolveFirst(scope));
 

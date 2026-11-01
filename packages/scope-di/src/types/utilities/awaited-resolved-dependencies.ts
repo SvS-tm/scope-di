@@ -7,7 +7,8 @@ export type AwaitedResolvedDependencies
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_Keys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
-> = 
+>
+    =
 {
     [T_DependencyResolutionKey in keyof T_Keys]: AwaitedResolutionResult<T_RegisteredDependencies, T_Keys[T_DependencyResolutionKey]>;
 };

@@ -3,10 +3,10 @@ import { createAsyncDescriptorBuckets } from "../../create-async-descriptor-buck
 import { DependencyLifetime } from "../../../../../../types";
 import type { AsyncFactoryDependencyDescriptor } from "../../../../../../types/async-factory-dependency-descriptor";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
-import { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
 import { resolveAsyncDependencies } from "../../resolve-async-dependencies";
-import { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
-import { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
+import type { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
+import type { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
 
 export function createAsyncFactoryStrategy<T_Dependency>
 (

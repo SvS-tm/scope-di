@@ -2,7 +2,7 @@ import { Logging } from "../../../helpers/internals/logging";
 import { createIsolatedClassStrategy } from "../strategies/sync/isolated/class/create-isolated-class-strategy";
 import { createPredefinedClassStrategy } from "../strategies/sync/predefined/class/create-predefined-class-strategy";
 import type * as IsolatedTransientStrategies from "../strategies/isolated-transient-strategies";
-import { Writable } from "@svs-tm/system";
+import type { Writable } from "@svs-tm/system";
 import { DependencyLifetime } from "../../../types/dependency-lifetime";
 import type { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
 import type { ClassDependencyDescriptor } from "../../../types/class-dependency-descriptor";

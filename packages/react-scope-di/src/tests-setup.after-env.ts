@@ -21,9 +21,13 @@ expect.extend
                 return {
                     pass: false,
                     message: () =>
-                        `${this.utils.matcherHint('.toHaveBeenCalledWithContext')}\n\n` +
-                        `Received value must be a Jest mock/spyon function.\n` +
+                    (
+                        `${this.utils.matcherHint('.toHaveBeenCalledWithContext')}\n\n`
+                            +
+                        `Received value must be a Jest mock/spyon function.\n`
+                            +
                         `Received: ${this.utils.printReceived(received)}`
+                    )
                 };
             }
 
@@ -33,12 +37,16 @@ expect.extend
 
             const message = pass
                 ? (
-                    `${this.utils.matcherHint('.not.toHaveBeenCalledWithContext')}\n\n` +
-                    `Expected mock NOT to have been called with context:\n  ${this.utils.printExpected(expected)}\n` +
+                    `${this.utils.matcherHint('.not.toHaveBeenCalledWithContext')}\n\n`
+                        +
+                    `Expected mock NOT to have been called with context:\n  ${this.utils.printExpected(expected)}\n`
+                        +
                     `But it was. Contexts:\n  ${this.utils.printReceived(contexts)}`
                 ) : (
-                    `${this.utils.matcherHint('.toHaveBeenCalledWithContext')}\n\n` +
-                    `Expected mock to have been called with context:\n  ${this.utils.printExpected(expected)}\n` +
+                    `${this.utils.matcherHint('.toHaveBeenCalledWithContext')}\n\n`
+                        +
+                    `Expected mock to have been called with context:\n  ${this.utils.printExpected(expected)}\n`
+                        +
                     `Received contexts:\n  ${this.utils.printReceived(contexts)}`
                 );
 

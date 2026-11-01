@@ -1,4 +1,4 @@
-import { ResolutionErrorFallback } from "./resolution-error-fallback";
+import type { ResolutionErrorFallback } from "./resolution-error-fallback";
 
 export type DiResolutionOptions = 
 { 

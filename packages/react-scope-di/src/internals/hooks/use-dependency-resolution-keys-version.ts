@@ -1,5 +1,5 @@
-import { DependencyMappingKey, DependencyResolutionKey } from "@svs-tm/scope-di";
-import { RegisteredDependencies } from "@svs-tm/scope-di";
+import { type DependencyMappingKey, DependencyResolutionKey } from "@svs-tm/scope-di";
+import type { RegisteredDependencies } from "@svs-tm/scope-di";
 import { useRef } from "react";
 
 type KeysState =

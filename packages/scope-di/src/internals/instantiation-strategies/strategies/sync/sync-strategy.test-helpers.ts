@@ -1,5 +1,5 @@
-import { DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../../../types";
-import { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
+import { DependencyDescriptorType, DependencyLifetime, type RegisteredDependencies } from "../../../../types";
+import type { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
 import { DefaultDiScope } from "../../../scope/default-di-scope";
 

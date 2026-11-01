@@ -1,0 +1,9 @@
+{
+    "extends": "../tsconfig.common.json",
+    "compilerOptions":
+    {
+        "noEmitOnError": true
+    },
+    "include": ["./**/*.ts", "../jest/**/*.ts"],
+    "exclude": []
+}

@@ -144,7 +144,7 @@ describe
             () =>
             {
                 const error = new Error("Selector failed");
-                const selector: Reflection.RuntimeSelector<ReflectionTarget> = target =>
+                const selector: Reflection.RuntimeSelector<ReflectionTarget> = (target) =>
                 {
                     target.first;
 

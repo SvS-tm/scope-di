@@ -8,7 +8,8 @@ export type DependencyDescriptor
 <
     T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey, 
     T_Dependency = unknown
-> =
+>
+    =
 (
     ValueDependencyDescriptor<T_Dependency, T_DependencyMappingKey>
         | 

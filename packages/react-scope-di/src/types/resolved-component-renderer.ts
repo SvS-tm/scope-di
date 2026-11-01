@@ -6,7 +6,8 @@ export type ResolvedComponentRenderer
     T_RegisteredDependencies extends RegisteredDependencies, 
     T_ResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[],
     T_Props extends {}
-> = 
+>
+    =
 (
     ElementType<
         {

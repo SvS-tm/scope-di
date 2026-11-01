@@ -14,9 +14,7 @@ describe
             () =>
             {
                 const key = "Key";
-                const value = {
-                    id: "id"
-                };
+                const value = { id: "id" };
 
                 const scope = configureRootScope()
                     .map(key)

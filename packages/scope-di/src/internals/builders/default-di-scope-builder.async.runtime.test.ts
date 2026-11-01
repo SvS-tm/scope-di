@@ -20,7 +20,7 @@ describe
                 const pending = new Promise<Map<never, never>>(resolve => { finish = resolve; });
                 const prepare = jest.mocked(loadIsolatedTransientStrategyModules).mockReturnValue(pending);
                 let completed = false;
-                const building = new DefaultDiScopeBuilder().setAllowRuntimeModuleIsolation(true).build().then(scope =>
+                const building = new DefaultDiScopeBuilder().setAllowRuntimeModuleIsolation(true).build().then((scope) =>
                 {
                     completed = true;
                     return scope;
@@ -129,7 +129,7 @@ describe
         it.each([false])
         (
             "does not load modules when isolation is %s",
-            async enabled =>
+            async (enabled) =>
             {
                 const builder = new DefaultDiScopeBuilder();
                 if (enabled !== undefined)

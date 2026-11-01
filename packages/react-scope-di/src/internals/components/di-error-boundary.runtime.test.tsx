@@ -1,8 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import { DiErrorBoundary } from "./di-error-boundary";
-import { JSX } from "react";
+import type { JSX } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
-import { Delegate } from "@svs-tm/system";
+import type { Delegate } from "@svs-tm/system";
 
 describe
 (

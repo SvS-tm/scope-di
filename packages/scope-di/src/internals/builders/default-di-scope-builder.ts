@@ -11,9 +11,9 @@ import type { RemoveDependenciesCollection } from "../../types/utilities/remove-
 import { DefaultDiDependenciesRegistry } from "../registry/default-di-dependencies-registry";
 import { DefaultDiScope } from "../scope/default-di-scope";
 import { DefaultDiMappingBuilder } from "./default-di-mapping-builder";
-import { SetFeature } from "../../types/utilities/set-feature";
-import { DiFeatures } from "../../types/di-features";
-import { DiScopeBuildingResult } from "../../types/di-scope-building-result";
+import type { SetFeature } from "../../types/utilities/set-feature";
+import type { DiFeatures } from "../../types/di-features";
+import type { DiScopeBuildingResult } from "../../types/di-scope-building-result";
 
 export class DefaultDiScopeBuilder
 <

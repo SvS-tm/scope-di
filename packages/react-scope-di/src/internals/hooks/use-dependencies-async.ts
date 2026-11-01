@@ -17,7 +17,8 @@ type DependenciesResolutionResult
 <
     T_RegisteredDependencies extends RegisteredDependencies, 
     T_DependencyResolutionKeys extends DependencyResolutionKey<DependencyMappingKey<T_RegisteredDependencies>>[]
-> = 
+>
+    =
 (
     {
         trace: DependenciesResolutionTraceResult.Async,
@@ -68,7 +69,7 @@ export const createUseDependenciesAsyncHook =
         (
             () => 
             {
-                const trace = traceDependenciesResolution(scope, ...keys)
+                const trace = traceDependenciesResolution(scope, ...keys);
 
                 switch (trace)
                 {

@@ -1,7 +1,7 @@
 import type { AllowedDependencyKey } from "./allowed-dependency-key";
 import type { DependenciesCollectionResolutionKey } from "./dependencies-collection-resolution-key";
-import { DependencyMappingKey } from "./dependency-mapping-key";
-import { RegisteredDependencies } from "./registered-dependencies";
+import type { DependencyMappingKey } from "./dependency-mapping-key";
+import type { RegisteredDependencies } from "./registered-dependencies";
 
 export type DependencyResolutionKey<T_DependencyMappingKey extends AllowedDependencyKey> = 
     T_DependencyMappingKey | DependenciesCollectionResolutionKey<T_DependencyMappingKey>;

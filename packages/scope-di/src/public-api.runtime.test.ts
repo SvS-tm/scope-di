@@ -9,7 +9,7 @@ describe
         it.each([undefined, false, true])
         (
             "builds and resolves when code generation is blocked and the flag is %s",
-            allowRuntimeCodeGeneration =>
+            (allowRuntimeCodeGeneration) =>
             {
                 class ArgumentList
                 {

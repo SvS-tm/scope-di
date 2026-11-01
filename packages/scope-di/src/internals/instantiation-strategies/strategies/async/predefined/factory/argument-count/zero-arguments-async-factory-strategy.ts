@@ -1,7 +1,7 @@
 import { DependencyLifetime } from "../../../../../../../types";
 import type { AsyncFactoryDependencyDescriptor } from "../../../../../../../types/async-factory-dependency-descriptor";
 import { TrackedPromise } from "@svs-tm/system";
-import { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
 
 export function createZeroArgumentsAsyncFactoryStrategy<T_Dependency>
 (

@@ -1,10 +1,10 @@
 import { Reflection } from "@svs-tm/system";
 import { generateIdentifier } from "../../../../../../helpers/internals/identifier-helpers";
-import { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
+import type { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
 import { DependencyLifetime } from "../../../../../../types/dependency-lifetime";
 import type { FactoryDependencyDescriptor } from "../../../../../../types/factory-dependency-descriptor";
-import { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
-import { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
+import type { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
+import type { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
 import type { DefaultDiScope } from "../../../../../scope/default-di-scope";
 import { createSyncResolver } from "../../create-sync-resolver";
 

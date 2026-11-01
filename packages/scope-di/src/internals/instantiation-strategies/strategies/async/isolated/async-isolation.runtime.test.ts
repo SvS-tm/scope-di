@@ -16,7 +16,7 @@ describe
         it.each([0, 1, 2, 3, 4, 5, 6, 10])
         (
             "preserves arguments and tracking for count=%s",
-            async count =>
+            async (count) =>
             {
                 const values = Array.from({ length: count }, (_, index) => index);
                 const { scope, keys } = createAsyncStrategyScope(values);

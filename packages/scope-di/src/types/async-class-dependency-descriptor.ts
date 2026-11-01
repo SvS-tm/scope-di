@@ -14,7 +14,8 @@ export type AsyncClassDependencyDescriptor
 <
     T_Dependency, 
     T_DependencyMappingKey extends AllowedDependencyKey = AllowedDependencyKey
-> =
+>
+    =
 (
     CommonDependencyDescriptorData<T_DependencyMappingKey>
         &

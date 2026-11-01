@@ -1,39 +1,9 @@
 {
-    "compilerOptions": {
-        "importHelpers": true,
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "rootDir": "src",
-        "outDir": "dist",
-        "declarationDir": "dist/.types",
-        "strict": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitThis": true,
-        "alwaysStrict": true,
-        "strictNullChecks": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true,
-        "useDefineForClassFields": true,
-        "resolveJsonModule": true,
-        "types": [
-            "node"
-        ]
+    "extends": "./.build/tsconfig.common.json",
+    "compilerOptions":
+    {
+        "noEmit": true,
+        "allowImportingTsExtensions": true
     },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "dist",
-        "node_modules",
-        "**/*.test.ts"
-    ]
+    "include": ["src/**/*", ".build/**/*.ts"]
 }

@@ -10,7 +10,7 @@ import type { AddDependency } from "../types/utilities/add-dependency";
 import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
 import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
 import type { DiScopeBuilder } from "./di-scope-builder";
-import { DiFeatures } from "../types/di-features";
+import type { DiFeatures } from "../types/di-features";
 
 export type DiDependentMappingBuilder
 <

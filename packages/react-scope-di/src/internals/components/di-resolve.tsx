@@ -1,7 +1,7 @@
 import type { DependencyMappingKey, DependencyResolutionKey, RegisteredDependencies } from "@svs-tm/scope-di";
 import type { ComponentType } from "react";
-import { DiResolutionOptions, UseDependenciesHook } from "../../types";
-import { DiScopeComponent } from "../../types/di-scope-component";
+import type { DiResolutionOptions, UseDependenciesHook } from "../../types";
+import type { DiScopeComponent } from "../../types/di-scope-component";
 import type { ResolvedComponentOptions } from "../../types/resolved-component-options";
 import type { ResolvedComponentRenderer } from "../../types/resolved-component-renderer";
 import { getComponentDisplayName } from "../helpers/get-component-display-name";

@@ -1,3 +1,3 @@
-import { RuntimeDependencyDescriptor } from "./runtime-dependency-descriptor";
+import type { RuntimeDependencyDescriptor } from "./runtime-dependency-descriptor";
 
 export type RuntimeDependencyDescriptorsBucket = RuntimeDependencyDescriptor | RuntimeDependencyDescriptor[];

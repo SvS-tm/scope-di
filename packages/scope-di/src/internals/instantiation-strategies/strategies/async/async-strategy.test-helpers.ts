@@ -1,6 +1,6 @@
 import { TrackedPromise } from "@svs-tm/system";
-import { DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, RegisteredDependencies } from "../../../../types";
-import { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
+import { type DependencyDescriptor, DependencyDescriptorType, DependencyLifetime, type RegisteredDependencies } from "../../../../types";
+import type { DependencyDescriptorsBucket } from "../../../../types/internals/dependency-descriptors-bucket";
 import { DefaultDiScope } from "../../../scope/default-di-scope";
 import { createDefaultDiScope } from "../../../scope/default-di-scope.test-helpers";
 

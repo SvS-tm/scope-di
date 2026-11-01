@@ -1,4 +1,4 @@
-import { DiAsyncResolutionOptions } from "./di-async-resolution-options";
+import type { DiAsyncResolutionOptions } from "./di-async-resolution-options";
 import type { ResolvedComponentOptions } from "./resolved-component-options";
 import type { ResolvedComponentOptionsParameters } from "./resolved-component-options-parameters";
 

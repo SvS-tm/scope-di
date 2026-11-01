@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { DiScope } from "../../abstractions/di-scope";
+import type { DiScope } from "../../abstractions/di-scope";
 import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import type { DependenciesCollectionResolutionKey } from "../../types/dependencies-collection-resolution-key";
 import type { DependencyDescriptor } from "../../types/dependency-descriptor";

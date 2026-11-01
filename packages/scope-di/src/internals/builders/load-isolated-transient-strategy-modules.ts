@@ -19,8 +19,16 @@ export async function loadIsolatedTransientStrategyModules(descriptors: Iterable
         if (descriptor.lifetime !== DependencyLifetime.Transient)
             continue;
 
-        if (descriptor.type !== DependencyDescriptorType.Class && descriptor.type !== DependencyDescriptorType.Factory
-            && descriptor.type !== DependencyDescriptorType.ClassAsync && descriptor.type !== DependencyDescriptorType.FactoryAsync)
+        if
+        (
+            descriptor.type !== DependencyDescriptorType.Class
+                &&
+            descriptor.type !== DependencyDescriptorType.Factory
+                &&
+            descriptor.type !== DependencyDescriptorType.ClassAsync
+                &&
+            descriptor.type !== DependencyDescriptorType.FactoryAsync
+        )
             continue;
 
         const module: typeof IsolatedTransientStrategies = await import

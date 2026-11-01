@@ -1,4 +1,4 @@
-import { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../types";
+import type { AllowedDependencyKey, DependencyDescriptor, DependencyResolutionKey } from "../types";
 
 export type DiDependenciesRegistry = 
 {

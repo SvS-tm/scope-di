@@ -63,7 +63,7 @@ describe
         it.each(["disabled", "generated", "blocked"])
         (
             "preserves per-instance disposal detection when generation is %s",
-            async mode =>
+            async (mode) =>
             {
                 const syncDispose = jest.fn();
                 const asyncDispose = jest.fn(async () => {});

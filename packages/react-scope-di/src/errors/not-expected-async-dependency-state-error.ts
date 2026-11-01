@@ -1,5 +1,5 @@
 import { DependencyResolutionKey } from "@svs-tm/scope-di";
-import { AllowedDependencyKey } from "@svs-tm/scope-di";
+import type { AllowedDependencyKey } from "@svs-tm/scope-di";
 import { TrackedPromiseStatus } from "@svs-tm/system";
 
 export class NotExpectedAsyncDependencyStateError extends Error

@@ -1,5 +1,5 @@
 import { getTestRegistrationMaps } from "./compilation.test-helpers";
-import { FactoryDependencyDescriptor } from "../../../types/factory-dependency-descriptor";
+import type { FactoryDependencyDescriptor } from "../../../types/factory-dependency-descriptor";
 import { describe, expect, it, jest } from "@jest/globals";
 import { DependencyDescriptorType, DependencyLifetime } from "../../../types";
 import { createSyncValueStrategyScope } from "../strategies/sync/sync-strategy.test-helpers";
@@ -18,7 +18,7 @@ describe
         it.each([false, true])
         (
             "compiles a spread fallback when generation is blocked and enabled is %s",
-            async allowRuntimeCodeGeneration =>
+            async (allowRuntimeCodeGeneration) =>
             {
                 const values = [0, 1, 2, 3, 4, 5];
                 const scope = createSyncValueStrategyScope(new Map(values.map((value, index) => [`dependency${index}`, value])));

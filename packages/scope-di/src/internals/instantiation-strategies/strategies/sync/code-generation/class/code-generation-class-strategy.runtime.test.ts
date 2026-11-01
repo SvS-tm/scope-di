@@ -3,7 +3,7 @@ import { getTestRegistrationMaps } from "../../../../compilation/compilation.tes
 import { describe, expect, it } from "@jest/globals";
 import { createSyncStrategyChildScope, createSyncStrategyScope, createSyncValueStrategyScope } from "../../sync-strategy.test-helpers";
 import { createDefaultDiScope } from "../../../../../scope/default-di-scope.test-helpers";
-import { RegisteredDependencies } from "../../../../../../types/registered-dependencies";
+import type { RegisteredDependencies } from "../../../../../../types/registered-dependencies";
 import { createCodeGenerationClassStrategy } from "./code-generation-class-strategy";
 
 class ArgumentList
