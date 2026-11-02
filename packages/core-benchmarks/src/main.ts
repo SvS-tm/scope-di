@@ -21,6 +21,7 @@ import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group, type k_state } from "mitata";
 import { getProcessContext, getRepetitions, runIsolatedBenchmarks } from "./isolated-runner.ts";
 import { libraryNames } from "./libraries.ts";
+import { logBenchmarkProgress } from "./progress.ts";
 
 type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown> | AsyncGenerator<unknown, void, unknown>;
 
@@ -1052,7 +1053,25 @@ async function executeBenchmarks()
                             {
                                 for(const { name, action, baseline, codeGeneration } of runs)
                                 {
-                                    bench(name, action)
+                                    const measuredAction = async function *(state: k_state)
+                                    {
+                                        logBenchmarkProgress(`Worker ${process.pid} SETUP ${name}`);
+                                        const generator = action(state);
+                                        const sample = await generator.next();
+
+                                        if(sample.done)
+                                            throw new Error(`Benchmark ${name} did not provide a measurement callback.`);
+
+                                        logBenchmarkProgress(`Worker ${process.pid} MEASURING ${name} (setup complete; calibration, timing and GC)`);
+                                        yield sample.value;
+
+                                        if(!(await generator.next()).done)
+                                            throw new Error(`Benchmark ${name} yielded more than once.`);
+
+                                        logBenchmarkProgress(`Worker ${process.pid} MEASURED ${name}`);
+                                    };
+
+                                    bench(name, measuredAction)
                                         .gc("inner")
                                         .baseline(baseline)
                                         .args

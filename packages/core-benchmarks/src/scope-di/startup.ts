@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { getRepetitions, getWorkerCommand } from "../isolated-runner.ts";
+import { createBenchmarkProgress } from "../progress.ts";
 import
 {
     createTransientClassBuilder,
@@ -143,6 +144,7 @@ export async function runStartupBenchmarks(runtimeArgs: string[])
     const names = workloads.flatMap(workload => configurations.map(configuration => `${configuration.name}:${workload.name}`));
     const repetitions = getRepetitions(runtimeArgs);
     const measurements: StartupMeasurement[] = [];
+    const progress = createBenchmarkProgress(runtimeArgs, names.length * repetitions);
 
     // One build per process: unique isolation modules are retained by the runtime.
     for(let repetition = 0; repetition < repetitions; ++repetition)
@@ -151,8 +153,12 @@ export async function runStartupBenchmarks(runtimeArgs: string[])
 
         for(const name of orderedNames)
         {
-            console.error(`[startup ${measurements.length + 1}/${names.length * repetitions}] ${name}`);
-            measurements.push(await runStartupWorker(runtimeArgs, name));
+            const measurement = await progress.measure
+            (
+                `startup ${name} (repetition ${repetition + 1}/${repetitions})`,
+                () => runStartupWorker(runtimeArgs, name)
+            );
+            measurements.push(measurement);
         }
     }
 

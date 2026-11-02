@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { run } from "mitata";
+import { createBenchmarkProgress, logBenchmarkProgress } from "./progress.ts";
 
 type MitataResult = Awaited<ReturnType<typeof run>>;
 type BenchmarkResult = Omit<MitataResult, "context"> & { context: ReturnType<typeof getProcessContext> };
@@ -169,21 +170,16 @@ function runWorker(runtimeArgs: string[], name: string)
 export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string[])
 {
     const repetitions = getRepetitions(runtimeArgs);
-    const option = (key: string) => runtimeArgs.find(argument => argument.startsWith(key + "="))?.slice(key.length + 1);
-    const progressOffset = Number(option("--progress-offset") ?? 0);
-    const progressTotal = Number(option("--progress-total") ?? names.length * repetitions);
-    const startedAt = Number(option("--progress-started-at") ?? Date.now());
-    const runtimeLabel = option("--progress-runtime");
+    const progress = createBenchmarkProgress(runtimeArgs, names.length * repetitions);
     let firstResult: BenchmarkResult | undefined;
     const measurements = new Map<string, { benchmark: BenchmarkTrial; runs: ProcessRun[] }>();
-    let completed = 0;
     const rawResultsDirectory = fileURLToPath(new URL(`../dist/isolated-runs/${Date.now()}-${process.pid}/`, import.meta.url));
 
     if(names.length === 0)
         throw new Error("No benchmark cases match the requested mode and filter.");
 
     mkdirSync(rawResultsDirectory, { recursive: true });
-    console.error(`Raw worker results: ${rawResultsDirectory}`);
+    logBenchmarkProgress(`Raw worker results: ${rawResultsDirectory}`);
 
     // Run sequentially: concurrent workers would compete for CPU and memory during measurement.
     for(let repetition = 0; repetition < repetitions; ++repetition)
@@ -193,11 +189,11 @@ export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string
 
         for(const name of orderedNames)
         {
-            const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-            const elapsed = `${Math.floor(elapsedSeconds / 3600).toString().padStart(2, "0")}:${Math.floor(elapsedSeconds / 60 % 60).toString().padStart(2, "0")}:${(elapsedSeconds % 60).toString().padStart(2, "0")}`;
-            const totalCompleted = progressOffset + completed;
-            console.error(`[total ${totalCompleted}/${progressTotal} ${(100 * totalCompleted / progressTotal).toFixed(1)}% | elapsed ${elapsed}] ${runtimeLabel ? runtimeLabel + " " : ""}[${++completed}/${names.length * repetitions}] ${name} (repetition ${repetition + 1}/${repetitions})`);
-            const result = await runWorker(runtimeArgs, name);
+            const result = await progress.measure
+            (
+                `${name} (repetition ${repetition + 1}/${repetitions})`,
+                () => runWorker(runtimeArgs, name)
+            );
             const file = path.join(rawResultsDirectory, `${name.replace(/[^A-Za-z0-9_-]/g, "_")}-${repetition + 1}.json`);
             writeFileSync(file, JSON.stringify(result));
             firstResult ??= result;

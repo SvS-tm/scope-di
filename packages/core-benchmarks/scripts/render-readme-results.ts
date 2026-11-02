@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { libraryNames } from "../src/libraries.ts";
 import { getRepetitions, type ProcessSummary } from "../src/isolated-runner.ts";
+import { logBenchmarkProgress } from "../src/progress.ts";
 import type { StartupMeasurement } from "../src/scope-di/startup.ts";
 
 type BenchmarkStats =
@@ -311,14 +312,15 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
         throw new Error("Could not list benchmark cases for total progress.");
 
     const names = JSON.parse(listedCases.stdout) as string[];
-    const total = names.length * repetitions * completeBenchmarks.length;
+    const startupCount = filter === undefined ? 20 * repetitions : 0;
+    const total = (names.length * repetitions + startupCount) * completeBenchmarks.length;
     let completed = 0;
 
     const reportProgress = () =>
     {
         const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
         const elapsed = `${Math.floor(elapsedSeconds / 3600).toString().padStart(2, "0")}:${Math.floor(elapsedSeconds / 60 % 60).toString().padStart(2, "0")}:${(elapsedSeconds % 60).toString().padStart(2, "0")}`;
-        console.error(`[total ${completed}/${total} ${(100 * completed / total).toFixed(1)}% | elapsed ${elapsed}]`);
+        logBenchmarkProgress(`[total ${completed}/${total} ${(100 * completed / total).toFixed(1)}% | elapsed ${elapsed}]`);
     };
 
     mkdirSync(outDir, { recursive: true });
@@ -332,14 +334,14 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
         const outputFile = path.join(outDir, benchmark.outputFile);
 
-        console.error(`Running ${benchmark.script}...`);
+        logBenchmarkProgress(`Running ${benchmark.script}...`);
 
         if(filter === undefined)
         {
             const startupFile = path.join(outDir, benchmark.outputFile.replace(".json", ".startup.json"));
             const startup = spawnSync
             (
-                `${command} --startup --repetitions=${repetitions}`,
+                `${command} --startup --repetitions=${repetitions} --progress-offset=${completed} --progress-total=${total} --progress-started-at=${startedAt} --progress-runtime=${benchmark.outputFile.match(/^bench_([^_]+)/)?.[1]}`,
                 {
                     cwd: packageDirectory,
                     shell: true,
@@ -361,6 +363,8 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
             writeFileSync(startupFile, startup.stdout);
             writeFileSync(startupFile.replace(".json", ".md"), renderStartupReport(startupResult.measurements));
+            completed += startupResult.measurements.length;
+            reportProgress();
         }
 
         const libraryDirectory = path.join(outDir, path.basename(benchmark.outputFile, ".json"));
@@ -391,13 +395,13 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
                 continue;
 
             const runtime = benchmark.outputFile.match(/^bench_([^_]+)/)?.[1];
-            console.error(`Running ${benchmark.script} for ${library}...`);
+            logBenchmarkProgress(`Running ${benchmark.script} for ${library}...`);
 
             const libraryFile = path.join(libraryDirectory, `${library}.json`);
             const savedOutput = resume && existsSync(libraryFile) ? readFileSync(libraryFile, "utf8") : undefined;
 
             if(savedOutput)
-                console.error(`Reusing completed results: ${libraryFile}`);
+                logBenchmarkProgress(`Reusing completed results: ${libraryFile}`);
 
             const child = savedOutput === undefined ? spawnSync
             (
