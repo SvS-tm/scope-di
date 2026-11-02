@@ -1,0 +1,160 @@
+import { spawn } from "node:child_process";
+import { getRepetitions, getWorkerCommand } from "../isolated-runner.ts";
+import
+{
+    createTransientClassBuilder,
+    createTransientFactoryWithFiveDependenciesBuilder,
+    createTransientFactoryWithTenDependenciesBuilder,
+    createTransientFactoryDeepWideGraphBuilder,
+    createCachedFactoryDeepWideGraphBuilder
+} from "./resolution.ts";
+
+const workloads =
+[
+    { name: "transientClass", createBuilder: createTransientClassBuilder },
+    { name: "factoryFiveDependencies", createBuilder: createTransientFactoryWithFiveDependenciesBuilder },
+    { name: "factoryTenDependencies", createBuilder: createTransientFactoryWithTenDependenciesBuilder },
+    { name: "factoryDeepWideGraph", createBuilder: createTransientFactoryDeepWideGraphBuilder },
+    { name: "cachedFactoryDeepWideGraph", createBuilder: createCachedFactoryDeepWideGraphBuilder }
+];
+
+const configurations =
+[
+    { name: "scope-di", codeGeneration: false, isolation: false },
+    { name: "scope-di-codegen", codeGeneration: true, isolation: false },
+    { name: "scope-di-module-reload", codeGeneration: false, isolation: true },
+    { name: "scope-di-module-reload-codegen", codeGeneration: true, isolation: true }
+];
+
+export type StartupMeasurement =
+{
+    name: string;
+    registrationMilliseconds: number;
+    buildMilliseconds: number;
+    totalMilliseconds: number;
+    processId: number;
+};
+
+function measureStartup(name: string): Promise<StartupMeasurement> | StartupMeasurement
+{
+    const workload = workloads.find(workload => name.endsWith(`:${workload.name}`));
+    const configuration = configurations.find(configuration => name.startsWith(`${configuration.name}:`));
+
+    if(!workload || !configuration)
+        throw new Error(`Unknown startup case: ${name}`);
+
+    const registrationStartedAt = performance.now();
+    const builder = workload.createBuilder(configuration.codeGeneration);
+    const registrationFinishedAt = performance.now();
+    const scope = configuration.isolation
+        ? builder.setAllowRuntimeModuleIsolation(true).build()
+        : builder.build();
+
+    const complete = () =>
+    {
+        const finishedAt = performance.now();
+
+        return {
+            name,
+            registrationMilliseconds: registrationFinishedAt - registrationStartedAt,
+            buildMilliseconds: finishedAt - registrationFinishedAt,
+            totalMilliseconds: finishedAt - registrationStartedAt,
+            processId: process.pid
+        };
+    };
+
+    // Keep synchronous build timing free of an artificial await boundary.
+    return scope instanceof Promise ? scope.then(complete) : complete();
+}
+
+async function runStartupWorker(runtimeArgs: string[], name: string): Promise<StartupMeasurement>
+{
+    const command = getWorkerCommand(runtimeArgs, name);
+
+    return new Promise
+    (
+        (resolve, reject) =>
+        {
+            const child = spawn(command.executable, command.args, { stdio: ["ignore", "pipe", "inherit"] });
+            let output = "";
+
+            child.stdout.setEncoding("utf8");
+            child.stdout.on("data", (chunk: string) => output += chunk);
+            child.on("error", reject);
+            child.on
+            (
+                "close",
+                (code, signal) =>
+                {
+                    if(code !== 0)
+                    {
+                        reject(new Error(`Startup ${name} failed: ${signal ?? code}.`));
+                        return;
+                    }
+
+                    try
+                    {
+                        const measurement = JSON.parse(output) as StartupMeasurement;
+
+                        if(measurement.name !== name || !Number.isFinite(measurement.totalMilliseconds))
+                            throw new Error("Invalid startup measurement.");
+
+                        resolve(measurement);
+                    }
+                    catch(error)
+                    {
+                        reject(error);
+                    }
+                }
+            );
+        }
+    );
+}
+
+export async function runStartupBenchmarks(runtimeArgs: string[])
+{
+    const workerCase = runtimeArgs.find(argument => argument.startsWith("--case="))?.slice("--case=".length);
+
+    if(workerCase !== undefined)
+    {
+        const originalWarn = console.warn;
+        const warnings: unknown[][] = [];
+        console.warn = (...parameters: unknown[]) =>
+        {
+            warnings.push(parameters);
+            originalWarn(...parameters);
+        };
+
+        try
+        {
+            const measurement = await measureStartup(workerCase);
+
+            if(warnings.length > 0)
+                throw new Error(`Startup ${workerCase} emitted warnings; refusing to report a fallback.`);
+
+            return measurement;
+        }
+        finally
+        {
+            console.warn = originalWarn;
+        }
+    }
+
+    const names = workloads.flatMap(workload => configurations.map(configuration => `${configuration.name}:${workload.name}`));
+    const repetitions = getRepetitions(runtimeArgs);
+    const measurements: StartupMeasurement[] = [];
+
+    // One build per process: unique isolation modules are retained by the runtime.
+    for(let repetition = 0; repetition < repetitions; ++repetition)
+    {
+        const orderedNames = repetition % 2 === 0 ? names : names.slice().reverse();
+
+        for(const name of orderedNames)
+        {
+            console.error(`[startup ${measurements.length + 1}/${names.length * repetitions}] ${name}`);
+            measurements.push(await runStartupWorker(runtimeArgs, name));
+        }
+    }
+
+    return { kind: "single-build-per-process", repetitions, measurements };
+}

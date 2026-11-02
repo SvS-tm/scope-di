@@ -63,12 +63,19 @@ function summarize(runs: ProcessRun[]): ProcessSummary
     };
 }
 
-function getWorkerCommand(runtimeArgs: string[], name: string)
+export function getWorkerCommand(runtimeArgs: string[], name: string)
 {
     const entryPoint = fileURLToPath(new URL("./main.ts", import.meta.url));
     const benchmarkArgs = runtimeArgs.filter
     (
-        argument => argument.startsWith("--mode=") || argument.startsWith("--iterations=")
+        (argument) =>
+        (
+            argument.startsWith("--mode=")
+                ||
+            argument.startsWith("--iterations=")
+                ||
+            argument === "--startup"
+        )
     );
     benchmarkArgs.push("--json", "--repetitions=1", `--case=${name}`);
 

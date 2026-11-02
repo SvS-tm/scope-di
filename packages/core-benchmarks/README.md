@@ -9,7 +9,7 @@ The `warmResolveTransientFactoryWithChangingShape` case uses one transient facto
 
 ## Runtime Setup
 
-The experimental `scope-di-module-reload` and `scope-di-module-reload-codegen` cases initialize scopes with `await builder.setAllowRuntimeModuleIsolation().buildAsync()`. Each sync transient descriptor loads a separate instance of the emitted strategy module with a unique query parameter; compilation creates its strategy from that module before the scope is returned. Warm resolution reuses the closure. These cases cover deep-chain factories and factories with five, six, or ten dependencies. Initialization happens outside the timed callback, so these measurements do not include module-loading cost. The package build emits `dist/isolated-transient-strategies.mjs`; browser deployments must serve this asset beside the package entry, and bundler ignore directives alone do not copy them.
+The `scope-di-module-reload` and `scope-di-module-reload-codegen` cases initialize scopes with `await builder.setAllowRuntimeModuleIsolation(true).build()`. Every existing warm resolution workload runs in all four Scope DI modes: both flags off, code generation only, module isolation only, and both flags on. All modes reuse the same workload builders. Combined mode follows the library's strategy selection; it does not apply both mechanisms to every descriptor. Initialization happens outside the timed callback. Module isolation requires the emitted files under `dist/chunks` to remain available at runtime.
 
 Benchmarks run on Node.js, Bun, and Deno. The repository pins the runtime versions and pnpm, which downloads the required runtimes automatically during installation. This keeps benchmark runs consistent across machines without relying on globally installed runtime versions.
 
@@ -20,6 +20,16 @@ Each benchmark case runs in a fresh process: one scenario, one library, and one 
 After an interrupted complete run, `pnpm bench:json:complete --resume` reuses completed library JSON files in the output directory. Use it only when benchmark code, dependencies, and runtime versions are unchanged; a normal run always measures everything again.
 
 Raw worker results are also saved incrementally under `dist/isolated-runs`, so completed measurements remain available if a run is interrupted. For example, `pnpm bench:tsx:fast --filter=warmResolveTransientFactoryWith --repetitions=5` repeats the five-, six-, and ten-dependency scenarios.
+
+Any warning emitted during a worker measurement rejects that result. Code generation or module isolation falling back cannot silently produce a timing under the requested mode's name.
+
+### Startup measurements
+
+An unfiltered `pnpm bench:json:complete` run also measures Scope DI startup on Node, Bun, and Deno. Each runtime gets a separate `.startup.json` file and `.startup.md` report alongside its resolution results. Startup uses five workloads in all four modes and five repetitions by default. Each worker registers and builds exactly one scope. Process launch and initial package imports are excluded; registration, build, and their combined elapsed times are recorded separately in milliseconds. These are single fresh-process observations, not calibrated Mitata resolution measurements or competitor rankings. The existing registration cases remain the competitor setup comparison.
+
+To run startup alone, use `pnpm bench:tsx:json:complete --startup`, or the equivalent Bun/Deno command. `--repetitions=N` controls the number of independent measurements. Startup is measured afresh even with `--resume`; filtered resolution runs skip it.
+
+A fresh process avoids accumulating the unique module instances retained by runtime module caches. The repeated cold-resolution cases still cover flags-off and codegen modes only. Startup exposes isolation setup cost without placing unbounded module loading inside Mitata's calibration loop. It does not measure first resolution, async dependency resolution, or retained module memory.
 
 ## Compared Libraries
 
