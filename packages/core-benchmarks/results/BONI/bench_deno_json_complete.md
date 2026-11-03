@@ -548,7 +548,7 @@ Library results were collected independently. Rankings compare the case measurem
 
 ## Runtime Matrix
 
-| Runtime | Version | Machine | Mode | Iterations | Result file |
+| Runtime | Version | Machine | Mode | Registrations per batch | Result file |
 | --- | --- | --- | --- | ---: | --- |
 | Deno | 2.9.6 | Boni / AMD Ryzen 7 3800X 8-Core Processor / win32 10.0.22631 x64 | complete | 300 | [`bench_deno_json_complete.json`](./bench_deno_json_complete.json) |
 

@@ -548,7 +548,7 @@ Library results were collected independently. Rankings compare the case measurem
 
 ## Runtime Matrix
 
-| Runtime | Version | Machine | Mode | Iterations | Result file |
+| Runtime | Version | Machine | Mode | Registrations per batch | Result file |
 | --- | --- | --- | --- | ---: | --- |
 | Deno | 2.9.6 | ALIEN / 13th Gen Intel(R) Core(TM) i9-13900HX / win32 10.0.26300 x64 | complete | 300 | [`bench_deno_json_complete.json`](./bench_deno_json_complete.json) |
 

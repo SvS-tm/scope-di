@@ -464,6 +464,67 @@ secondScope.resolve("b");
 
 This keeps scope instances stable and predictable.
 
+## Runtime Optimizations
+
+Runtime code generation and module isolation are disabled by default. Enable them on the builder before calling `build()`. Continue configuring the builder returned by each setter so TypeScript keeps track of the selected options.
+
+### Building Without Module Isolation
+
+`build()` returns a scope directly by default. Enabling code generation alone keeps the same return type.
+
+```ts
+const builder = configureRootScope()
+    .map("name")
+        .asValue("scope-di");
+
+const scope = builder.build();
+const codegenScope = builder
+    .setAllowRuntimeCodeGeneration(true)
+    .build();
+```
+
+<img src="./docs/assets/code-gen.gif" alt="scope-di IntelliSense showing the synchronous build return type with code generation enabled" width="100%" />
+
+### Building With Module Isolation
+
+Setting module isolation to `true` or `"auto"` makes `build()` return a `Promise`. Await it before resolving dependencies. The return type stays asynchronous when code generation is also enabled or when module loading falls back.
+
+```ts
+const scope = await configureRootScope()
+    .setAllowRuntimeModuleIsolation(true)
+    .map("name")
+        .asValue("scope-di")
+    .build();
+
+scope.resolve("name");
+```
+
+<img src="./docs/assets/module-isolation.gif" alt="scope-di IntelliSense showing the asynchronous build return type with module isolation enabled" width="100%" />
+
+If the module isolation flag's type at the call site includes both `false` and either `true` or `"auto"`, TypeScript infers a union of the scope type and `Promise` of that scope type. You can use `await` in either case. Both flags accept `"auto"` to let the DI engine decide whether to use the optimization. The selection policy may change between releases.
+
+### Choosing an Optimization
+
+#### Runtime Code Generation
+
+The DI engine can generate a function for a dependency that resolves its inputs and calls its constructor or factory. Tailoring that function to the dependency gives the JavaScript engine a more specific call path to optimize. This can help when the same factory takes several dependencies and runs repeatedly.
+
+Try code generation when a long-lived scope spends time resolving transient dependencies. Compare the first resolution from a fresh scope with repeated resolutions. The first resolution can cost substantially more with generation enabled. If the runtime or Content Security Policy blocks code generation, the builder logs a warning and uses a fallback strategy.
+
+#### Runtime Module Isolation
+
+The DI engine can give transient dependencies separate instances of the modules that contain their creation strategies. Shared code can see many different object shapes across a graph. Separate module instances let the JavaScript engine optimize those paths independently, which can help when each dependency consistently produces the same kind of object.
+
+Try module isolation for long-lived scopes that repeatedly resolve deep transient graphs. The benchmark runs show its clearest gains on Node.js and Deno. Loading module instances adds to the cost of building a scope, so compare build time and repeated resolution on your runtime, especially if you create scopes frequently.
+
+Keep the emitted chunks available at runtime. Deno needs read permission for local chunk imports. In browsers, serve the chunks and allow their URLs through CSP and CORS where applicable.
+
+#### Using Both Optimizations
+
+Enable both options to give the DI engine both strategies to choose from. This can help when the graph contains dependencies with different creation costs. Compare combined mode with each option on its own to see whether it improves the paths you resolve most often and whether the added build time pays off.
+
+The DI engine chooses the strategy. That choice is an implementation detail that may change between releases. The benchmark reports below include warm resolution and scope build costs for each mode.
+
 ## Benchmarks
 
 Performance comparison notes and result tables live in the [scope-di benchmark report](../core-benchmarks/README.md).
