@@ -1,6 +1,6 @@
-import { spawn } from "node:child_process";
 import { getRepetitions, getWorkerCommand } from "../isolated-runner.ts";
 import { createBenchmarkProgress } from "../progress.ts";
+import { runJsonWorker } from "../json-worker.ts";
 import
 {
     createTransientClassBuilder,
@@ -72,42 +72,24 @@ async function runStartupWorker(runtimeArgs: string[], name: string): Promise<St
 {
     const command = getWorkerCommand(runtimeArgs, name);
 
-    return new Promise
+    return runJsonWorker
     (
-        (resolve, reject) =>
+        command,
+        name,
+        (value) =>
         {
-            const child = spawn(command.executable, command.args, { stdio: ["ignore", "pipe", "inherit"] });
-            let output = "";
+            const measurement = value as StartupMeasurement;
+            const times =
+            [
+                measurement.registrationMilliseconds,
+                measurement.buildMilliseconds,
+                measurement.totalMilliseconds
+            ];
 
-            child.stdout.setEncoding("utf8");
-            child.stdout.on("data", (chunk: string) => output += chunk);
-            child.on("error", reject);
-            child.on
-            (
-                "close",
-                (code, signal) =>
-                {
-                    if(code !== 0)
-                    {
-                        reject(new Error(`Startup ${name} failed: ${signal ?? code}.`));
-                        return;
-                    }
+            if(measurement.name !== name || !times.every(time => Number.isFinite(time) && time >= 0))
+                throw new Error("Invalid startup measurement.");
 
-                    try
-                    {
-                        const measurement = JSON.parse(output) as StartupMeasurement;
-
-                        if(measurement.name !== name || !Number.isFinite(measurement.totalMilliseconds))
-                            throw new Error("Invalid startup measurement.");
-
-                        resolve(measurement);
-                    }
-                    catch(error)
-                    {
-                        reject(error);
-                    }
-                }
-            );
+            return measurement;
         }
     );
 }

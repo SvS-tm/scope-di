@@ -1,9 +1,9 @@
-import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { run } from "mitata";
 import { createBenchmarkProgress, logBenchmarkProgress } from "./progress.ts";
+import { runJsonWorker } from "./json-worker.ts";
 
 type MitataResult = Awaited<ReturnType<typeof run>>;
 type BenchmarkResult = Omit<MitataResult, "context"> & { context: ReturnType<typeof getProcessContext> };
@@ -122,47 +122,34 @@ function runWorker(runtimeArgs: string[], name: string)
 {
     const command = getWorkerCommand(runtimeArgs, name);
 
-    return new Promise
+    return runJsonWorker
     (
-        (resolve, reject) =>
+        command,
+        name,
+        (value) =>
         {
-            const child = spawn(command.executable, command.args, { stdio: ["ignore", "pipe", "inherit"] });
-            let output = "";
+            const result = value as BenchmarkResult;
 
-            child.stdout.setEncoding("utf8");
-            child.stdout.on("data", (chunk: string) => output += chunk);
-            child.on("error", reject);
-            child.on
+            if(result.benchmarks.length !== 1 || result.benchmarks[0]?.alias !== name)
+                throw new Error("Worker must return exactly the requested benchmark case.");
+
+            const runs = result.benchmarks[0].runs;
+
+            if
             (
-                "close",
-                (code, signal) =>
-                {
-                    if(code !== 0)
-                    {
-                        reject(new Error(`Benchmark ${name} failed: ${signal ?? `exit code ${code}`}.`));
-                        return;
-                    }
+                runs.length !== 1
+                    ||
+                runs[0]?.error !== undefined
+                    ||
+                !runs[0]?.stats
+                    ||
+                !Number.isFinite(runs[0].stats.avg)
+                    ||
+                !Number.isFinite(runs[0].stats.p50)
+            )
+                throw new Error("Worker must return one successful measurement.");
 
-                    try
-                    {
-                        const result = JSON.parse(output) as BenchmarkResult;
-
-                        if(result.benchmarks.length !== 1 || result.benchmarks[0]?.alias !== name)
-                            throw new Error("Worker must return exactly the requested benchmark case.");
-
-                        const runs = result.benchmarks[0].runs;
-
-                        if(runs.length !== 1 || !runs[0]?.stats || !Number.isFinite(runs[0].stats.avg) || !Number.isFinite(runs[0].stats.p50))
-                            throw new Error("Worker must return one successful measurement.");
-
-                        resolve(result);
-                    }
-                    catch(error)
-                    {
-                        reject(new Error(`Invalid benchmark output for ${name}.`, { cause: error }));
-                    }
-                }
-            );
+            return result;
         }
     );
 }
