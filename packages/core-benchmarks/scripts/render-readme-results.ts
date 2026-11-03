@@ -575,7 +575,7 @@ function getMode(result: BenchmarkResult)
     return result.metadata?.benchmark?.mode ?? "not recorded";
 }
 
-function getIterations(result: BenchmarkResult)
+function getRegistrationBatchSize(result: BenchmarkResult)
 {
     return (
         result.metadata?.benchmark?.iterations
@@ -765,7 +765,7 @@ function renderMemoryRows(resultView: ResultView)
 
 function renderMatrixRows(resultView: ResultView)
 {
-    return `| ${resultView.runtime} | ${getRuntimeVersion(resultView.result)} | ${getMachine(resultView.result)} | ${getMode(resultView.result)} | ${getIterations(resultView.result)} | [\`${resultView.file}\`](${resultView.link}) |`;
+    return `| ${resultView.runtime} | ${getRuntimeVersion(resultView.result)} | ${getMachine(resultView.result)} | ${getMode(resultView.result)} | ${getRegistrationBatchSize(resultView.result)} | [\`${resultView.file}\`](${resultView.link}) |`;
 }
 
 function renderSourceRows(resultView: ResultView)
@@ -856,7 +856,7 @@ function renderReport(resultView: ResultView)
         "",
         "## Runtime Matrix",
         "",
-        "| Runtime | Version | Machine | Mode | Iterations | Result file |",
+        "| Runtime | Version | Machine | Mode | Registrations per batch | Result file |",
         "| --- | --- | --- | --- | ---: | --- |",
         renderMatrixRows(resultView),
         "",
