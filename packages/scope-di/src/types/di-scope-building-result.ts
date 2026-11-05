@@ -1,6 +1,6 @@
-import { DiScope } from "../abstractions";
-import { DiFeatures } from "./di-features";
-import { RegisteredDependencies } from "./registered-dependencies";
+import type { DiScope } from "../abstractions";
+import type { DiFeatures } from "./di-features";
+import type { RegisteredDependencies } from "./registered-dependencies";
 
 /**
  * false builds synchronously; true and "auto" always return a Promise.

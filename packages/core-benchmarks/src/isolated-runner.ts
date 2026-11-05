@@ -1,8 +1,9 @@
-import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { run } from "mitata";
+import { createBenchmarkProgress, logBenchmarkProgress } from "./progress.ts";
+import { runJsonWorker } from "./json-worker.ts";
 
 type MitataResult = Awaited<ReturnType<typeof run>>;
 type BenchmarkResult = Omit<MitataResult, "context"> & { context: ReturnType<typeof getProcessContext> };
@@ -63,12 +64,19 @@ function summarize(runs: ProcessRun[]): ProcessSummary
     };
 }
 
-function getWorkerCommand(runtimeArgs: string[], name: string)
+export function getWorkerCommand(runtimeArgs: string[], name: string)
 {
     const entryPoint = fileURLToPath(new URL("./main.ts", import.meta.url));
     const benchmarkArgs = runtimeArgs.filter
     (
-        argument => argument.startsWith("--mode=") || argument.startsWith("--iterations=")
+        (argument) =>
+        (
+            argument.startsWith("--mode=")
+                ||
+            argument.startsWith("--iterations=")
+                ||
+            argument === "--startup"
+        )
     );
     benchmarkArgs.push("--json", "--repetitions=1", `--case=${name}`);
 
@@ -82,7 +90,8 @@ function getWorkerCommand(runtimeArgs: string[], name: string)
     {
         return {
             executable: runtime.Deno.execPath(),
-            args: [
+            args:
+            [
                 "run", "--allow-sys", "--allow-env", "--allow-run=git",
                 // Query-based strategy imports need read permission even though static imports are allowed.
                 `--allow-read=${fileURLToPath(new URL("../../scope-di/dist/", import.meta.url))}`,
@@ -96,8 +105,9 @@ function getWorkerCommand(runtimeArgs: string[], name: string)
     {
         return {
             executable: process.execPath,
-            args: [
-                "--tsconfig-override", fileURLToPath(new URL("../tsconfig.build.json", import.meta.url)),
+            args:
+            [
+                "--tsconfig-override", fileURLToPath(new URL("../.build/tsconfig.build.json", import.meta.url)),
                 "--expose-gc", entryPoint, ...benchmarkArgs
             ]
         };
@@ -112,47 +122,34 @@ function runWorker(runtimeArgs: string[], name: string)
 {
     const command = getWorkerCommand(runtimeArgs, name);
 
-    return new Promise
+    return runJsonWorker
     (
-        (resolve, reject) =>
+        command,
+        name,
+        (value) =>
         {
-            const child = spawn(command.executable, command.args, { stdio: ["ignore", "pipe", "inherit"] });
-            let output = "";
+            const result = value as BenchmarkResult;
 
-            child.stdout.setEncoding("utf8");
-            child.stdout.on("data", (chunk: string) => output += chunk);
-            child.on("error", reject);
-            child.on
+            if(result.benchmarks.length !== 1 || result.benchmarks[0]?.alias !== name)
+                throw new Error("Worker must return exactly the requested benchmark case.");
+
+            const runs = result.benchmarks[0].runs;
+
+            if
             (
-                "close",
-                (code, signal) =>
-                {
-                    if(code !== 0)
-                    {
-                        reject(new Error(`Benchmark ${name} failed: ${signal ?? `exit code ${code}`}.`));
-                        return;
-                    }
+                runs.length !== 1
+                    ||
+                runs[0]?.error !== undefined
+                    ||
+                !runs[0]?.stats
+                    ||
+                !Number.isFinite(runs[0].stats.avg)
+                    ||
+                !Number.isFinite(runs[0].stats.p50)
+            )
+                throw new Error("Worker must return one successful measurement.");
 
-                    try
-                    {
-                        const result = JSON.parse(output) as BenchmarkResult;
-
-                        if(result.benchmarks.length !== 1 || result.benchmarks[0]?.alias !== name)
-                            throw new Error("Worker must return exactly the requested benchmark case.");
-
-                        const runs = result.benchmarks[0].runs;
-
-                        if(runs.length !== 1 || !runs[0]?.stats || !Number.isFinite(runs[0].stats.avg) || !Number.isFinite(runs[0].stats.p50))
-                            throw new Error("Worker must return one successful measurement.");
-
-                        resolve(result);
-                    }
-                    catch(error)
-                    {
-                        reject(new Error(`Invalid benchmark output for ${name}.`, { cause: error }));
-                    }
-                }
-            );
+            return result;
         }
     );
 }
@@ -160,21 +157,16 @@ function runWorker(runtimeArgs: string[], name: string)
 export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string[])
 {
     const repetitions = getRepetitions(runtimeArgs);
-    const option = (key: string) => runtimeArgs.find(argument => argument.startsWith(key + "="))?.slice(key.length + 1);
-    const progressOffset = Number(option("--progress-offset") ?? 0);
-    const progressTotal = Number(option("--progress-total") ?? names.length * repetitions);
-    const startedAt = Number(option("--progress-started-at") ?? Date.now());
-    const runtimeLabel = option("--progress-runtime");
+    const progress = createBenchmarkProgress(runtimeArgs, names.length * repetitions);
     let firstResult: BenchmarkResult | undefined;
     const measurements = new Map<string, { benchmark: BenchmarkTrial; runs: ProcessRun[] }>();
-    let completed = 0;
     const rawResultsDirectory = fileURLToPath(new URL(`../dist/isolated-runs/${Date.now()}-${process.pid}/`, import.meta.url));
 
     if(names.length === 0)
         throw new Error("No benchmark cases match the requested mode and filter.");
 
     mkdirSync(rawResultsDirectory, { recursive: true });
-    console.error(`Raw worker results: ${rawResultsDirectory}`);
+    logBenchmarkProgress(`Raw worker results: ${rawResultsDirectory}`);
 
     // Run sequentially: concurrent workers would compete for CPU and memory during measurement.
     for(let repetition = 0; repetition < repetitions; ++repetition)
@@ -184,11 +176,11 @@ export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string
 
         for(const name of orderedNames)
         {
-            const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-            const elapsed = `${Math.floor(elapsedSeconds / 3600).toString().padStart(2, "0")}:${Math.floor(elapsedSeconds / 60 % 60).toString().padStart(2, "0")}:${(elapsedSeconds % 60).toString().padStart(2, "0")}`;
-            const totalCompleted = progressOffset + completed;
-            console.error(`[total ${totalCompleted}/${progressTotal} ${(100 * totalCompleted / progressTotal).toFixed(1)}% | elapsed ${elapsed}] ${runtimeLabel ? runtimeLabel + " " : ""}[${++completed}/${names.length * repetitions}] ${name} (repetition ${repetition + 1}/${repetitions})`);
-            const result = await runWorker(runtimeArgs, name);
+            const result = await progress.measure
+            (
+                `${name} (repetition ${repetition + 1}/${repetitions})`,
+                () => runWorker(runtimeArgs, name)
+            );
             const file = path.join(rawResultsDirectory, `${name.replace(/[^A-Za-z0-9_-]/g, "_")}-${repetition + 1}.json`);
             writeFileSync(file, JSON.stringify(result));
             firstResult ??= result;
@@ -213,7 +205,7 @@ export async function runIsolatedBenchmarks(names: string[], runtimeArgs: string
         rawResultsDirectory,
         benchmarks: names.map
         (
-            name =>
+            (name) =>
             {
                 const measurement = measurements.get(name)!;
 

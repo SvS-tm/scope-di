@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { TrackedPromise, TrackedPromiseStatus } from "@svs-tm/system";
-import { AllowedDependencyKey, DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
+import { type AllowedDependencyKey, type DependencyDescriptor, DependencyDescriptorType, DependencyLifetime } from "../../types";
 import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 
 describe

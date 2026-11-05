@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-sloppy-imports
 import "reflect-metadata";
-import { container, DependencyContainer, instanceCachingFactory, Lifecycle } from "tsyringe";
+import { container, type DependencyContainer, instanceCachingFactory, Lifecycle } from "tsyringe";
 import type { k_state } from "mitata";
 
 function createIsolatedContainer(): DependencyContainer 

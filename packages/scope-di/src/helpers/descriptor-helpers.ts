@@ -1,5 +1,5 @@
-import { DependencyDescriptor, DependencyDescriptorType } from "../types";
-import { AsyncDependencyDescriptor } from "../types/async-dependency-descriptor";
+import { type DependencyDescriptor, DependencyDescriptorType } from "../types";
+import type { AsyncDependencyDescriptor } from "../types/async-dependency-descriptor";
 
 export function isAsyncDescriptor(descriptor: DependencyDescriptor): descriptor is AsyncDependencyDescriptor
 {

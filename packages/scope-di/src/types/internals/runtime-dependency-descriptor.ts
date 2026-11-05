@@ -1,6 +1,6 @@
-import { AllowedDependencyKey } from "../allowed-dependency-key";
-import { DependencyDescriptor } from "../dependency-descriptor";
-import { InstantiationStrategy } from "../instantiation-strategy";
+import type { AllowedDependencyKey } from "../allowed-dependency-key";
+import type { DependencyDescriptor } from "../dependency-descriptor";
+import type { InstantiationStrategy } from "../instantiation-strategy";
 
 export type RuntimeDependencyDescriptor
 <

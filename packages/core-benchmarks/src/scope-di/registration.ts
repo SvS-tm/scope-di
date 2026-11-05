@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-sloppy-imports
 import { configureRootScope, DependencyLifetime } from "@svs-tm/scope-di";
-import { k_state } from "mitata";
+import type { k_state } from "mitata";
 
 export function *registrationClass(state: k_state)
 {
@@ -20,7 +20,7 @@ export function *registrationClass(state: k_state)
         }
     
         builder.build();
-    }
+    };
 }
 
 export function *registrationValue(state: k_state)
@@ -41,7 +41,7 @@ export function *registrationValue(state: k_state)
         }
     
         builder.build();
-    }
+    };
 }
 
 export function *registrationFactory(state: k_state)
@@ -62,5 +62,5 @@ export function *registrationFactory(state: k_state)
         }
     
         builder.build();
-    }
+    };
 }

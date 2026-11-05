@@ -1,10 +1,13 @@
 {
-  "extends": "./tsconfig.common.json",
-  "compilerOptions": {
-    "paths": {
-      "@svs-tm/system": [
-        "../system/src"
-      ]
-    }
-  }
+    "extends": "./.build/tsconfig.common.json",
+    "compilerOptions":
+    {
+        "paths":
+        {
+            "@svs-tm/system": ["../system/src"]
+        },
+        "noEmit": true,
+        "allowImportingTsExtensions": true
+    },
+    "include": ["src/**/*", ".build/**/*.ts"]
 }

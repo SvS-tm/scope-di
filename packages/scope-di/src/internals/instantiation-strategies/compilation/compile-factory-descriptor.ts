@@ -2,7 +2,7 @@ import { Logging } from "../../../helpers/internals/logging";
 import { createIsolatedFactoryStrategy } from "../strategies/sync/isolated/factory/create-isolated-factory-strategy";
 import { createPredefinedFactoryStrategy } from "../strategies/sync/predefined/factory/create-predefined-factory-strategy";
 import type * as IsolatedTransientStrategies from "../strategies/isolated-transient-strategies";
-import { Writable } from "@svs-tm/system";
+import type { Writable } from "@svs-tm/system";
 import { DependencyLifetime } from "../../../types/dependency-lifetime";
 import type { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
 import type { FactoryDependencyDescriptor } from "../../../types/factory-dependency-descriptor";

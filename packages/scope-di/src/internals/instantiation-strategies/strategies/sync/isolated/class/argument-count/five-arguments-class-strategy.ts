@@ -11,7 +11,7 @@ export function createFiveArgumentsClassStrategy<T_Dependency>
     const constructor = descriptor.constructor;
     const [resolveFirst, resolveSecond, resolveThird, resolveFourth, resolveFifth] = resolvers;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = new constructor(resolveFirst(scope), resolveSecond(scope), resolveThird(scope), resolveFourth(scope), resolveFifth(scope));
 

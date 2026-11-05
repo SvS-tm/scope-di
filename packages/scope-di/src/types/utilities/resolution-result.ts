@@ -18,7 +18,8 @@ export type ResolutionResult
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_DependencyResolutionKey extends DependencyResolutionKey<AllowedDependencyKey>
-> = 
+>
+    =
 (
     T_DependencyResolutionKey extends DependencyResolutionKey<infer T_DependencyMappingKey>
         ? T_DependencyResolutionKey extends DependenciesCollectionResolutionKey<any>

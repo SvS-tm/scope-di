@@ -1,11 +1,11 @@
 import type { AllowedDependencyKey } from "../types/allowed-dependency-key";
 import type { DependencyMappingKey } from "../types/dependency-mapping-key";
-import { DiFeatures } from "../types/di-features";
-import { DiScopeBuildingResult } from "../types/di-scope-building-result";
+import type { DiFeatures } from "../types/di-features";
+import type { DiScopeBuildingResult } from "../types/di-scope-building-result";
 import type { FeatureFlag } from "../types/feature-flag";
 import type { RegisteredDependencies } from "../types/registered-dependencies";
 import type { RemoveDependenciesCollection } from "../types/utilities/remove-dependencies-collection";
-import { SetFeature } from "../types/utilities/set-feature";
+import type { SetFeature } from "../types/utilities/set-feature";
 import type { DiMappingBuilder } from "./di-mapping-builder";
 
 export type DiScopeBuilder

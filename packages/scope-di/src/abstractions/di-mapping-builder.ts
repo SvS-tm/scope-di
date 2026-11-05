@@ -2,14 +2,15 @@ import type { Constructor } from "@svs-tm/system";
 import type { AddDependency, AllowedDependencyKey, DependencyDescriptorType, DependencyFactory, DependencyMappingKey, DependencyLifetime, RegisteredDependencies, DependencyResolutionKey } from "../types";
 import type { DiDependentMappingBuilder } from "./di-dependent-mapping-builder";
 import type { DiScopeBuilder } from "./di-scope-builder";
-import { DiFeatures } from "../types/di-features";
+import type { DiFeatures } from "../types/di-features";
 
 export type DiMappingBuilder
 <
     T_RegisteredDependencies extends RegisteredDependencies,
     T_Features extends DiFeatures,
     T_DependencyMappingKey extends AllowedDependencyKey 
-> =
+>
+    =
 {
     asValue<const T_Abstraction>
     (

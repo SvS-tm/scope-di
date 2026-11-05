@@ -15,6 +15,6 @@ describe
 
                 expect(() => throwError(error)).toThrow(error);
             }
-        )
+        );
     }
 );

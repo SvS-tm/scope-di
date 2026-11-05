@@ -1,11 +1,11 @@
 import type { ClassDependencyDescriptor } from "../../../../../../types/class-dependency-descriptor";
 import { DependencyLifetime } from "../../../../../../types/dependency-lifetime";
-import { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
-import { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
+import type { RuntimeDependencyDescriptor } from "../../../../../../types/internals/runtime-dependency-descriptor";
+import type { AllowedDependencyKey } from "../../../../../../types/allowed-dependency-key";
 import { Reflection } from "@svs-tm/system";
 import type { DefaultDiScope } from "../../../../../scope/default-di-scope";
 import { generateIdentifier } from "../../../../../../helpers/internals/identifier-helpers";
-import { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../types/instantiation-strategy";
 
 import { createSyncResolver } from "../../create-sync-resolver";
 

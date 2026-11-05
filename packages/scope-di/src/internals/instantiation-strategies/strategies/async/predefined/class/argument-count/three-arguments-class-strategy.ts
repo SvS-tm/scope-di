@@ -1,8 +1,8 @@
 import type { AsyncClassDependencyDescriptor } from "../../../../../../../types/async-class-dependency-descriptor";
-import { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
 import { createAsyncClassStrategy } from "../create-async-class-strategy";
-import { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
-import { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
+import type { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
+import type { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
 
 export function createThreeArgumentsAsyncClassStrategy<T_Dependency>
 (

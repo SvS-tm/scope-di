@@ -5,7 +5,7 @@ import type { InstantiationStrategy } from "../../../../../../../types/instantia
 export function createZeroArgumentsAsyncClassStrategy<T_Dependency>(descriptor: AsyncClassDependencyDescriptor<T_Dependency>): InstantiationStrategy<Promise<T_Dependency>>
 {
     const constructor = descriptor.constructor;
-    return scope =>
+    return (scope) =>
     {
         const dependency = TrackedPromise.resolved(new constructor());
         scope.trackTransientAsyncDependency(dependency);

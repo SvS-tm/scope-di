@@ -1,13 +1,15 @@
 {
-  "extends": "./tsconfig.common.json",
-  "compilerOptions": {
-    "paths": {
-      "@svs-tm/system": [
-        "../system/src"
-      ],
-      "@svs-tm/scope-di": [
-        "../scope-di/src"
-      ]
-    }
-  }
+    "extends": "./.build/tsconfig.common.json",
+    "compilerOptions":
+    {
+        "lib": ["ESNext"],
+        "paths":
+        {
+            "@svs-tm/system": ["../system/src"],
+            "@svs-tm/scope-di": ["../scope-di/src"]
+        },
+        "noEmit": true,
+        "allowImportingTsExtensions": true
+    },
+    "include": ["src/**/*", ".build/**/*.ts", "../scope-di/src/types/**/*.d.ts"]
 }

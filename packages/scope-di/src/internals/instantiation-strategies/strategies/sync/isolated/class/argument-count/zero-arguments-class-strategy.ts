@@ -9,7 +9,7 @@ export function createZeroArgumentsClassStrategy<T_Dependency>
 {
     const constructor = descriptor.constructor;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = new constructor();
 

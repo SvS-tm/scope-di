@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
-import { AllowedDependencyKey } from "../../types/allowed-dependency-key";
-import { DependencyDescriptor } from "../../types/dependency-descriptor";
+import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
+import type { DependencyDescriptor } from "../../types/dependency-descriptor";
 import { DependencyDescriptorType, DependencyLifetime } from "../../types";
 import { createDefaultDiScope } from "./default-di-scope.test-helpers";
 

@@ -1,8 +1,8 @@
 import type { AsyncFactoryDependencyDescriptor } from "../../../../../../../types/async-factory-dependency-descriptor";
-import { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
+import type { InstantiationStrategy } from "../../../../../../../types/instantiation-strategy";
 import { createAsyncFactoryStrategy } from "../create-async-factory-strategy";
-import { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
-import { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
+import type { AllowedDependencyKey } from "../../../../../../../types/allowed-dependency-key";
+import type { RuntimeDependencyDescriptor } from "../../../../../../../types/internals/runtime-dependency-descriptor";
 
 export function createOneArgumentAsyncFactoryStrategy<T_Dependency>
 (

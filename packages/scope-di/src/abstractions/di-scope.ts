@@ -6,8 +6,8 @@ import type { AwaitedResolutionResult } from "../types/utilities/awaited-resolut
 import type { AwaitedResolvedDependencies } from "../types/utilities/awaited-resolved-dependencies";
 import type { ResolutionResult } from "../types/utilities/resolution-result";
 import type { ResolvedDependencies } from "../types/utilities/resolved-dependencies";
-import { DiDependenciesRegistry } from "./di-dependencies-registry";
-import { DependencyDescriptor } from "../types";
+import type { DiDependenciesRegistry } from "./di-dependencies-registry";
+import type { DependencyDescriptor } from "../types";
 
 export type DiScope<T_RegisteredDependencies extends RegisteredDependencies> = 
 (

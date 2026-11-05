@@ -1,5 +1,5 @@
 import { isSafeReference } from "@svs-tm/system";
-import React, { Context, useContext } from "react";
+import React, { type Context, useContext } from "react";
 
 export const useContextValue = <T_Value>(context: Context<T_Value>) =>
 {

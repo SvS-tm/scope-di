@@ -1,4 +1,4 @@
-import { FeatureFlag } from "./feature-flag";
+import type { FeatureFlag } from "./feature-flag";
 
 export type DiFeatures
 <

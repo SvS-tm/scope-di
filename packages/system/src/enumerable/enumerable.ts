@@ -1,5 +1,5 @@
-import { AggregationResult } from "./aggregation-result";
-import { AggregationTerminator } from "./aggregation-terminator";
+import type { AggregationResult } from "./aggregation-result";
+import type { AggregationTerminator } from "./aggregation-terminator";
 import { aggregationTerminatorMarker } from "./internals/aggregation-terminator-marker";
 
 export class Enumerable<T_Item>

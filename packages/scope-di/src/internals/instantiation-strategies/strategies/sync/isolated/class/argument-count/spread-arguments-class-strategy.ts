@@ -10,7 +10,7 @@ export function createSpreadArgumentsClassStrategy<T_Dependency>
 {
     const constructor = descriptor.constructor;
 
-    return scope =>
+    return (scope) =>
     {
         const dependency = new constructor(...resolvers.map(resolveDependency => resolveDependency(scope)));
 

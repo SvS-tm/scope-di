@@ -1,4 +1,4 @@
-import { IsAny } from "./is-any";
+import type { IsAny } from "./is-any";
 
 export type IsUnknown<T_Type, T_True = true, T_False = false> = 
 (

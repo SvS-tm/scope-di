@@ -1,17 +1,18 @@
 export type ConstStringEnumValues
 <
-    TEnum extends Record<string, string>,
-    TKeys extends keyof TEnum = keyof TEnum
-> =
+    T_Enum extends Record<string, string>,
+    T_Keys extends keyof T_Enum = keyof T_Enum
+>
+    =
 (
-    TEnum[TKeys] extends `${infer TValue}` 
-        ? TValue
+    T_Enum[T_Keys] extends `${infer T_Value}`
+        ? T_Value
         : never
 );
 
 export type ConstStringEnum
 <
-    TEnum extends Record<string, string>,
-    TKeys extends keyof TEnum = keyof TEnum
-> =
-    ConstStringEnumValues<TEnum, TKeys> | TEnum[TKeys];
+    T_Enum extends Record<string, string>,
+    T_Keys extends keyof T_Enum = keyof T_Enum
+>
+    = ConstStringEnumValues<T_Enum, T_Keys> | T_Enum[T_Keys];

@@ -43,9 +43,13 @@ export function getTestDescriptorBuckets
 (
     scope: DefaultDiScope<RegisteredDependencies>,
     keys: DependencyResolutionKey<AllowedDependencyKey>[]
-): RuntimeDependencyDescriptorsBucket[]
+)
+    : RuntimeDependencyDescriptorsBucket[]
 {
-    return keys.map(key => Array.isArray(key)
-        ? scope.registry.resolveCollectionDescriptorsByKey(key[0])
-        : scope.registry.resolveSingularDescriptorByKey(key));
+    return keys.map
+    (
+        (key) => Array.isArray(key)
+            ? scope.registry.resolveCollectionDescriptorsByKey(key[0])
+            : scope.registry.resolveSingularDescriptorByKey(key)
+    );
 }

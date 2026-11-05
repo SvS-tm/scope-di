@@ -8,7 +8,7 @@ import type { AllowedDependencyKey } from "../../types/allowed-dependency-key";
 import { DependencyLifetime } from "../../types/dependency-lifetime";
 import type { DependencyMappingKey } from "../../types/dependency-mapping-key";
 import type { DependencyResolutionKey } from "../../types/dependency-resolution-key";
-import { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
+import type { RuntimeDependencyDescriptor } from "../../types/internals/runtime-dependency-descriptor";
 import type { RegisteredDependencies } from "../../types/registered-dependencies";
 import type { AwaitedResolutionResult } from "../../types/utilities/awaited-resolution-result";
 import type { ResolutionResult } from "../../types/utilities/resolution-result";

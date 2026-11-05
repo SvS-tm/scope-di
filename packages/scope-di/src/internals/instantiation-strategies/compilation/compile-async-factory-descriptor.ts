@@ -3,7 +3,7 @@ import { createIsolatedAsyncFactoryStrategy } from "../strategies/async/isolated
 import { createPredefinedAsyncFactoryStrategy } from "../strategies/async/predefined/factory/create-predefined-async-factory-strategy";
 import { DependencyLifetime } from "../../../types/dependency-lifetime";
 import type * as IsolatedTransientStrategies from "../strategies/isolated-transient-strategies";
-import { Writable } from "@svs-tm/system";
+import type { Writable } from "@svs-tm/system";
 import type { AllowedDependencyKey } from "../../../types/allowed-dependency-key";
 import type { AsyncFactoryDependencyDescriptor } from "../../../types/async-factory-dependency-descriptor";
 import type { RuntimeDependencyDescriptor } from "../../../types/internals/runtime-dependency-descriptor";

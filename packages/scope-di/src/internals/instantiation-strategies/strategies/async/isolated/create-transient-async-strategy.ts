@@ -14,7 +14,7 @@ export function createTransientAsyncStrategy<T_Dependency>
 )
     : InstantiationStrategy<Promise<T_Dependency>>
 {
-    return scope =>
+    return (scope) =>
     {
         const dependencies = resolveAsyncDependencies(scope, buckets);
         const dependency = dependencies[TrackedPromise.status] === TrackedPromiseStatus.Success

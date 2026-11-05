@@ -1,0 +1,27 @@
+{
+    "compilerOptions":
+    {
+        "importHelpers": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "exactOptionalPropertyTypes": true,
+        "useDefineForClassFields": true,
+        "resolveJsonModule": true,
+        "types": ["node"]
+    },
+    "include": ["../src/**/*"],
+    "exclude": ["../dist", "../node_modules"]
+}
