@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { libraryNames } from "../src/libraries.ts";
 import { getRepetitions, type ProcessSummary } from "../src/isolated-runner.ts";
+import { logBenchmarkProgress } from "../src/progress.ts";
+import type { StartupMeasurement } from "../src/scope-di/startup.ts";
 
 type BenchmarkStats =
 {
@@ -86,6 +88,7 @@ type ResultView =
     file: string;
     link: string;
     result: BenchmarkResult;
+    startupReport?: string;
 };
 
 type ScriptArguments =
@@ -309,14 +312,15 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
         throw new Error("Could not list benchmark cases for total progress.");
 
     const names = JSON.parse(listedCases.stdout) as string[];
-    const total = names.length * repetitions * completeBenchmarks.length;
+    const startupCount = filter === undefined ? 20 * repetitions : 0;
+    const total = (names.length * repetitions + startupCount) * completeBenchmarks.length;
     let completed = 0;
 
     const reportProgress = () =>
     {
         const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
         const elapsed = `${Math.floor(elapsedSeconds / 3600).toString().padStart(2, "0")}:${Math.floor(elapsedSeconds / 60 % 60).toString().padStart(2, "0")}:${(elapsedSeconds % 60).toString().padStart(2, "0")}`;
-        console.error(`[total ${completed}/${total} ${(100 * completed / total).toFixed(1)}% | elapsed ${elapsed}]`);
+        logBenchmarkProgress(`[total ${completed}/${total} ${(100 * completed / total).toFixed(1)}% | elapsed ${elapsed}]`);
     };
 
     mkdirSync(outDir, { recursive: true });
@@ -330,7 +334,38 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
 
         const outputFile = path.join(outDir, benchmark.outputFile);
 
-        console.error(`Running ${benchmark.script}...`);
+        logBenchmarkProgress(`Running ${benchmark.script}...`);
+
+        if(filter === undefined)
+        {
+            const startupFile = path.join(outDir, benchmark.outputFile.replace(".json", ".startup.json"));
+            const startup = spawnSync
+            (
+                `${command} --startup --repetitions=${repetitions} --progress-offset=${completed} --progress-total=${total} --progress-started-at=${startedAt} --progress-runtime=${benchmark.outputFile.match(/^bench_([^_]+)/)?.[1]}`,
+                {
+                    cwd: packageDirectory,
+                    shell: true,
+                    encoding: "utf8",
+                    stdio: ["ignore", "pipe", "inherit"]
+                }
+            );
+
+            if(startup.error)
+                throw startup.error;
+
+            if(startup.status !== 0)
+                throw new Error(`Startup benchmarks failed for ${benchmark.script}.`);
+
+            const startupResult = JSON.parse(startup.stdout) as { measurements: StartupMeasurement[] };
+
+            if(startupResult.measurements.length !== 20 * repetitions)
+                throw new Error(`Incomplete startup measurements for ${benchmark.script}.`);
+
+            writeFileSync(startupFile, startup.stdout);
+            writeFileSync(startupFile.replace(".json", ".md"), renderStartupReport(startupResult.measurements));
+            completed += startupResult.measurements.length;
+            reportProgress();
+        }
 
         const libraryDirectory = path.join(outDir, path.basename(benchmark.outputFile, ".json"));
         mkdirSync(libraryDirectory, { recursive: true });
@@ -360,13 +395,13 @@ function runCompleteBenchmarks(outDir: string, filter: string | undefined, repet
                 continue;
 
             const runtime = benchmark.outputFile.match(/^bench_([^_]+)/)?.[1];
-            console.error(`Running ${benchmark.script} for ${library}...`);
+            logBenchmarkProgress(`Running ${benchmark.script} for ${library}...`);
 
             const libraryFile = path.join(libraryDirectory, `${library}.json`);
             const savedOutput = resume && existsSync(libraryFile) ? readFileSync(libraryFile, "utf8") : undefined;
 
             if(savedOutput)
-                console.error(`Reusing completed results: ${libraryFile}`);
+                logBenchmarkProgress(`Reusing completed results: ${libraryFile}`);
 
             const child = savedOutput === undefined ? spawnSync
             (
@@ -540,7 +575,7 @@ function getMode(result: BenchmarkResult)
     return result.metadata?.benchmark?.mode ?? "not recorded";
 }
 
-function getIterations(result: BenchmarkResult)
+function getRegistrationBatchSize(result: BenchmarkResult)
 {
     return (
         result.metadata?.benchmark?.iterations
@@ -730,7 +765,7 @@ function renderMemoryRows(resultView: ResultView)
 
 function renderMatrixRows(resultView: ResultView)
 {
-    return `| ${resultView.runtime} | ${getRuntimeVersion(resultView.result)} | ${getMachine(resultView.result)} | ${getMode(resultView.result)} | ${getIterations(resultView.result)} | [\`${resultView.file}\`](${resultView.link}) |`;
+    return `| ${resultView.runtime} | ${getRuntimeVersion(resultView.result)} | ${getMachine(resultView.result)} | ${getMode(resultView.result)} | ${getRegistrationBatchSize(resultView.result)} | [\`${resultView.file}\`](${resultView.link}) |`;
 }
 
 function renderSourceRows(resultView: ResultView)
@@ -741,11 +776,55 @@ function renderSourceRows(resultView: ResultView)
     ].join("\n");
 }
 
+function renderStartupReport(measurements: StartupMeasurement[])
+{
+    const median = (values: number[]) =>
+    {
+        const sorted = values.slice().sort((left, right) => left - right);
+        const middle = Math.floor(sorted.length / 2);
+
+        return sorted.length % 2 === 0
+            ? (sorted[middle - 1]! + sorted[middle]!) / 2
+            : sorted[middle]!;
+    };
+
+    const names = [...new Set(measurements.map(measurement => measurement.name))];
+    const rows = names.map
+    (
+        (name) =>
+        {
+            const runs = measurements.filter(measurement => measurement.name === name);
+            const totals = runs.map(measurement => measurement.totalMilliseconds);
+            const registration = median(runs.map(measurement => measurement.registrationMilliseconds));
+            const build = median(runs.map(measurement => measurement.buildMilliseconds));
+
+            return `| ${name} | ${runs.length} | ${registration.toFixed(3)} | ${build.toFixed(3)} | ${median(totals).toFixed(3)} | ${Math.min(...totals).toFixed(3)} - ${Math.max(...totals).toFixed(3)} |`;
+        }
+    );
+
+    return [
+        "# Scope DI Startup",
+        "",
+        "One scope is registered and built per fresh process. Process launch and initial imports are excluded. Times are milliseconds; each column shows its own median across processes. These measurements are separate from calibrated resolution timings and competitor registration comparisons.",
+        "",
+        "| Workload / configuration | Processes | Registration (ms) | Build (ms) | Total (ms) | Total range (ms) |",
+        "| --- | ---: | ---: | ---: | ---: | --- |",
+        ...rows,
+        ""
+    ]
+        .join("\n");
+}
+
 function renderReport(resultView: ResultView)
 {
     return [
         `# ${resultView.runtime} Benchmark Report`,
         "",
+        ...(
+            resultView.startupReport
+                ? [`[Scope DI startup report](${resultView.startupReport})`, ""]
+                : []
+        ),
         ...(resultView.result.benchmarks.some(benchmark => benchmark.summary)
             ? [
                 "Each case is measured in fresh processes. Time is the median of process medians; the range shows the minimum and maximum process medians. Allocations are the median of process allocation averages. Raw JSON retains every process measurement.",
@@ -777,7 +856,7 @@ function renderReport(resultView: ResultView)
         "",
         "## Runtime Matrix",
         "",
-        "| Runtime | Version | Machine | Mode | Iterations | Result file |",
+        "| Runtime | Version | Machine | Mode | Registrations per batch | Result file |",
         "| --- | --- | --- | --- | ---: | --- |",
         renderMatrixRows(resultView),
         "",
@@ -820,6 +899,11 @@ const results = inputFiles.map
             runtime: getRuntimeLabel(result, filePath),
             file: path.basename(filePath),
             link: getResultFileLink(filePath, scriptArguments.linkBase),
+            ...(
+                existsSync(filePath.replace(".json", ".startup.md"))
+                    ? { startupReport: getResultFileLink(filePath.replace(".json", ".startup.md"), scriptArguments.linkBase) }
+                    : {}
+            ),
             result
         };
     }

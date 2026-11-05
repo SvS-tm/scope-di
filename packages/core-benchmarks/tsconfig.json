@@ -2,6 +2,7 @@
     "extends": "./.build/tsconfig.common.json",
     "compilerOptions":
     {
+        "lib": ["ESNext"],
         "paths":
         {
             "@svs-tm/system": ["../system/src"],

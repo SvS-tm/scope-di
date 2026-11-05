@@ -5,6 +5,7 @@ import * as scopeDiRegistration from "./scope-di/registration.ts";
 import * as scopeDiResolution from "./scope-di/resolution.ts";
 import * as scopeDiModuleReload from "./scope-di/module-reload.ts";
 import * as scopeDiDiagnostics from "./scope-di/diagnostics.ts";
+import { runStartupBenchmarks } from "./scope-di/startup.ts";
 import * as inversifyRegistration from "./inversify/registration.ts";
 import * as inversifyResolution from "./inversify/resolution.ts";
 import * as tsyringeRegistration from "./tsyringe/registration.ts";
@@ -20,6 +21,7 @@ import * as needleDiResolution from "./needle-di/resolution.ts";
 import { bench, boxplot, summary, run, group, type k_state } from "mitata";
 import { getProcessContext, getRepetitions, runIsolatedBenchmarks } from "./isolated-runner.ts";
 import { libraryNames } from "./libraries.ts";
+import { logBenchmarkProgress } from "./progress.ts";
 
 type BenchmarkAction = (state: k_state) => Generator<unknown, void, unknown> | AsyncGenerator<unknown, void, unknown>;
 
@@ -1025,6 +1027,15 @@ async function executeBenchmarks()
     if(!selectedBenchmarks.some(({ runs }) => runs.some(({ name }) => name === workerCase)))
         throw new Error(`Unknown benchmark case for ${mode} mode: ${workerCase}`);
 
+    // Fallbacks must not produce results under the requested optimization's name.
+    const warnings: unknown[][] = [];
+    const originalWarn = console.warn;
+    console.warn = (...parameters: unknown[]) =>
+    {
+        warnings.push(parameters);
+        originalWarn(...parameters);
+    };
+
     for(const { name, runs } of selectedBenchmarks)
     {
         group
@@ -1042,7 +1053,25 @@ async function executeBenchmarks()
                             {
                                 for(const { name, action, baseline, codeGeneration } of runs)
                                 {
-                                    bench(name, action)
+                                    const measuredAction = async function *(state: k_state)
+                                    {
+                                        logBenchmarkProgress(`Worker ${process.pid} SETUP ${name}`);
+                                        const generator = action(state);
+                                        const sample = await generator.next();
+
+                                        if(sample.done)
+                                            throw new Error(`Benchmark ${name} did not provide a measurement callback.`);
+
+                                        logBenchmarkProgress(`Worker ${process.pid} MEASURING ${name} (setup complete; calibration, timing and GC)`);
+                                        yield sample.value;
+
+                                        if(!(await generator.next()).done)
+                                            throw new Error(`Benchmark ${name} yielded more than once.`);
+
+                                        logBenchmarkProgress(`Worker ${process.pid} MEASURED ${name}`);
+                                    };
+
+                                    bench(name, measuredAction)
                                         .gc("inner")
                                         .baseline(baseline)
                                         .args
@@ -1062,12 +1091,34 @@ async function executeBenchmarks()
 
     const metadata = createBenchmarkMetadata(mode, filter, outputFormat, iterations[0]);
 
-    const result = await run
-    (
-        { colors: false, format: "quiet", throw: true, filter: new RegExp(`^${escapeRegExp(workerCase)}$`) }
-    );
+    let result: Awaited<ReturnType<typeof run>>;
+
+    try
+    {
+        result = await run
+        (
+            { colors: false, format: "quiet", throw: true, filter: new RegExp(`^${escapeRegExp(workerCase)}$`) }
+        );
+    }
+    finally
+    {
+        console.warn = originalWarn;
+    }
+
+    if(warnings.length > 0)
+        throw new Error(`Benchmark ${workerCase} emitted warnings; refusing to report a potentially downgraded configuration.`);
 
     console.log(JSON.stringify({ metadata, ...result, context: getProcessContext(result.context) }));
 }
 
-await executeBenchmarks();
+if(runtimeArgs.includes("--startup"))
+{
+    const result = await runStartupBenchmarks(runtimeArgs);
+    const metadata = workerCase === undefined
+        ? createBenchmarkMetadata(mode, filter, outputFormat, iterations[0])
+        : undefined;
+
+    console.log(JSON.stringify(metadata === undefined ? result : { metadata, ...result }));
+}
+else
+    await executeBenchmarks();

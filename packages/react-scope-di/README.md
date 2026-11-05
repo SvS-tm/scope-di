@@ -6,7 +6,7 @@ HOC-first React dependency injection for `@svs-tm/scope-di`.
 
 Use this package when you want React components to consume dependencies from a typed `scope-di` graph while keeping dependency injection outside the public component props.
 
-The primary API is HOC-style resolution: `resolve()` and `resolveAsync()`. Hooks are available for corner cases, but they should be used under a stable scope boundary. Creating scopes, tools, or resolved components during render can cause repeated resolution and render loops.
+The primary API is HOC-style resolution: `resolve()` and `resolveAsync()`. Hooks are available for corner cases and can use the root scope directly. Creating scopes, tools, or resolved components during render can cause repeated resolution and render loops.
 
 - Keep dependencies out of public component props.
 - Preserve typed dependency tuples at the renderer boundary.
@@ -68,7 +68,7 @@ That makes HOCs the recommended interface for normal application components.
 | Inject awaited async dependencies into a component. | `resolveAsync()` |
 | Give a component its own child scope. | `createNewScope: true` in HOC options. |
 | Reuse global and local error/pending UI. | HOC options. |
-| Resolve dependencies inside a custom integration point. | Hooks, under a stable `DiScope`. |
+| Resolve dependencies inside a custom integration point. | Hooks, with an optional `DiScope` for a child scope. |
 
 ## Quick Start
 
@@ -282,7 +282,7 @@ Local fallbacks take priority over global fallbacks.
 
 ## Component Scopes
 
-`DiScope` creates a stable React scope boundary for resolved components in the subtree.
+`DiScope` creates a child scope for dependency resolution in its subtree. Without an enclosing `DiScope`, resolution uses the root scope passed to `createReactDiTools()`.
 
 ```tsx
 function App()
@@ -319,7 +319,7 @@ const RequestPanel = resolve
 );
 ```
 
-The child scope is disposed when the component unmounts. This is useful for scoped dependencies that should live exactly as long as that component subtree.
+On unmount, React Scope DI calls `[Symbol.dispose]()` on the child scope. Asynchronous cleanup can finish after unmount. See [Scopes And Disposal](../scope-di/README.md#scopes-and-disposal) for the core behavior.
 
 ## Collections
 
@@ -356,7 +356,7 @@ const Toolbar = resolve
 
 Hooks exist for corner cases where an HOC does not fit: custom render integrations, very small local adapters, or code that needs direct access to dependency tuples.
 
-Use hooks only under a stable `DiScope` boundary. Do not create a DI scope, call `createReactDiTools(scope)`, or create wrapper components inside a component render path. If the scope or resolved component identity changes every render, dependency resolution can repeatedly change component state and cause render loops.
+Both hooks use the nearest enclosing `DiScope` when present and fall back to the root scope passed to `createReactDiTools()`. Add a `DiScope` wrapper when the subtree needs its own child scope. Do not create a DI scope, call `createReactDiTools(scope)`, or create wrapper components inside a component render path. If the scope or resolved component identity changes every render, dependency resolution can repeatedly change component state and cause render loops.
 
 ### useDependencies
 
